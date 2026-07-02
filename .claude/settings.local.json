@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git *)",
+      "Bash(php --version)",
+      "Bash(composer --version)",
+      "Bash(chmod -R 777 GateAI/bootstrap GateAI/database GateAI/storage)",
+      "Bash(rm -rf GateAI/bootstrap GateAI/database GateAI/storage)",
+      "Bash(cmd.exe *)",
+      "Bash(powershell.exe *)",
+      "Bash(composer create-project *)",
+      "Bash(composer install *)",
+      "Bash(php artisan *)"
+    ]
+  }
+}
