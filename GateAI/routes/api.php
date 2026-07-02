@@ -1,19 +1,11 @@
 <?php
 
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\WeatherController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register API routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "api" middleware group. Make something great!
-|
-*/
-
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::prefix('weather')->group(function () {
+    Route::get('current', [WeatherController::class, 'current']);// 当前天气
+    Route::get('hourly', [WeatherController::class, 'hourly']);// 小时天气
+    Route::get('daily', [WeatherController::class, 'daily']);// 日天气
+    Route::get('snapshot', [WeatherController::class, 'snapshot']);// 快照天气
 });

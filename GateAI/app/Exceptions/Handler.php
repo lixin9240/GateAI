@@ -1,30 +1,76 @@
 <?php
-
+// 异常处理程序
 namespace App\Exceptions;
 
+use App\Enums\ResponseCode;
+use App\Support\Result;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
 {
-    /**
-     * The list of the inputs that are never flashed to the session on validation exceptions.
-     *
-     * @var array<int, string>
-     */
     protected $dontFlash = [
         'current_password',
         'password',
         'password_confirmation',
     ];
 
-    /**
-     * Register the exception handling callbacks for the application.
-     */
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
             //
         });
+    }
+
+    public function render($request, Throwable $e)
+    {
+        if ($e instanceof ValidationException) {
+            return Result::error(
+                ResponseCode::PARAM_ERROR,
+                collect($e->errors())->flatten()->first()
+            );
+        }
+
+        if ($e instanceof AuthenticationException) {
+            return Result::error(ResponseCode::UNAUTHORIZED);
+        }
+
+        if ($e instanceof ModelNotFoundException) {
+            return Result::error(ResponseCode::DATA_NOT_FOUND);
+        }
+
+        if ($e instanceof NotFoundHttpException) {
+            return Result::error(ResponseCode::DATA_NOT_FOUND, '接口不存在');
+        }
+
+        if ($e instanceof BusinessException) {
+            return Result::error($e->codeEnum, $e->getMessage());
+        }
+
+        if ($e instanceof QueryException) {
+            Log::channel('exception')->error('数据库异常', [
+                'trace_id' => $request->attributes->get('trace_id'),
+                'sql'      => $e->getSql(),
+                'bindings' => $e->getBindings(),
+                'message'  => $e->getMessage(),
+            ]);
+
+            return Result::error(ResponseCode::DATABASE_ERROR);
+        }
+
+        Log::channel('exception')->error($e->getMessage(), [
+            'trace_id' => $request->attributes->get('trace_id'),
+            'file'     => $e->getFile(),
+            'line'     => $e->getLine(),
+            'trace'    => $e->getTraceAsString(),
+        ]);
+
+        return Result::error(ResponseCode::SYSTEM_ERROR);
     }
 }
