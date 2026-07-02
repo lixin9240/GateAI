@@ -58,16 +58,35 @@ return [
             'ignore_exceptions' => false,
         ],
 
+            'path'   => storage_path('logs/business.log'),// 业务日志
+            'level'  => 'info',
+            'days'   => 14,
+        ],
+
+        'exception' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/exception.log'),// 异常日志
+            'level'  => 'error',
+            'days'   => 30,
+        ],
+
+        'api' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/api.log'),// API日志
+            'level'  => 'info',
+            'days'   => 7,
+        ],
+
         'single' => [
             'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path('logs/laravel.log'),// Laravel日志
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path('logs/laravel.log'),// Laravel日志
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
             'replace_placeholders' => true,
