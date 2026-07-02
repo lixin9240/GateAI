@@ -58,6 +58,8 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'business' => [
+            'driver' => 'daily',
             'path'   => storage_path('logs/business.log'),// 业务日志
             'level'  => 'info',
             'days'   => 14,
