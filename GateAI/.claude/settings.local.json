@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan *)",
+      "Bash(php -l app/Enums/ResponseCode.php)",
+      "Bash(php -l app/Support/Result.php)",
+      "Bash(php -l app/Exceptions/BusinessException.php)",
+      "Bash(php -l app/Http/Middleware/TraceIdMiddleware.php)",
+      "Bash(php -l app/Services/Weather/Drivers/OpenMeteoDriver.php)"
+    ]
+  }
+}
