@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
 use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
+use App\Http\Controllers\Api\Fmy\EquipmentController;
 use App\Http\Controllers\Api\Fmy\MonitorController;
 use App\Http\Controllers\WjcController;
 use Illuminate\Support\Facades\Route;
@@ -144,6 +145,7 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
     Route::post('/auth/change-pwd', [FmyAuthController::class, 'changePassword']);
     //登录日志查询
     Route::get('/login-logs', [FmyAuthController::class, 'loginLogs']);
+
     // 2. 监控大屏模块
     //获取全部设备列表
     Route::get('/equipment/all-list', [MonitorController::class, 'allList']);
@@ -151,4 +153,16 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
     Route::get('/monitoring/realtime', [MonitorController::class, 'realtime']);
     //趋势图表数据
     Route::get('/monitoring/trend', [MonitorController::class, 'trend']);
+
+    // 3. 设备管理模块（对应总接口文档第 7 章）
+    //列表
+    Route::get('/equipment/list',              [EquipmentController::class, 'index']);
+    //导出
+    Route::get('/equipment/export',       [EquipmentController::class, 'export']);
+    //详情
+    Route::get('/equipment/{id}',         [EquipmentController::class, 'show']);
+    //远程重启
+    Route::post('/equipment/{id}/restart',[EquipmentController::class, 'restart']);
+    //状态变更
+    Route::put('/equipment/{id}/status',  [EquipmentController::class, 'updateStatus']);
 });
