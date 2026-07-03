@@ -16,7 +16,6 @@ use App\Http\Controllers\Wjc\WjcAlarmController;
 use App\Http\Controllers\Wjc\WjcDispatchController;
 use App\Http\Controllers\Wjc\WjcReservoirController;
 use App\Http\Controllers\Wjc\WjcEdgeNodeController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // 公开接口
@@ -136,31 +135,4 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);
         Route::delete('users/{id}', [UserManagementController::class, 'destroy']);
     });
-});
-
-// AI 推理测试路由
-Route::post('/infer', function (Request $request) {
-    $sensor = [
-        'upstream_level'   => $request->input('upstream_level', 180),
-        'downstream_level' => $request->input('downstream_level', 120),
-        'inflow'           => $request->input('inflow', 200),
-        'rainfall'         => $request->input('rainfall', 0),
-        'temperature'      => $request->input('temperature', 20),
-        'gate1_opening'    => $request->input('gate1_opening', 0.3),
-        'gate2_opening'    => $request->input('gate2_opening', 0.2),
-        'gate3_opening'    => $request->input('gate3_opening', 0.4),
-    ];
-
-    $result = \App\Services\HydropowerService::infer($sensor);
-
-    if (!$result) {
-        return response()->json(['code' => 90003, 'msg' => 'AI推理失败', 'success' => false]);
-    }
-
-    return response()->json([
-        'code'    => 0,
-        'msg'     => '操作成功',
-        'success' => true,
-        'data'    => $result,
-    ]);
 });
