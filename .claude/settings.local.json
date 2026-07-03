@@ -10,7 +10,14 @@
       "Bash(powershell.exe *)",
       "Bash(composer create-project *)",
       "Bash(composer install *)",
-      "Bash(php artisan *)"
+      "Bash(php artisan *)",
+      "Bash(php GateAI/artisan db:monitor)",
+      "Bash(php GateAI/artisan tinker --execute=\"echo json_encode\\(DB::select\\('SHOW TABLES'\\), JSON_UNESCAPED_UNICODE\\);\")",
+      "Bash(php GateAI/artisan --version)",
+      "Bash(cp GateAI/storage/ai/*.md GateAI/ 2>&1 && echo \"完成\" && echo \"\" && echo \"=== GateAI/ 下的所有文档 ===\" && ls GateAI/*.md)"
+    ],
+    "additionalDirectories": [
+      "c:\\projects\\GateAI\\GateAI\\storage\\ai"
     ]
   }
 }

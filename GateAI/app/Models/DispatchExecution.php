@@ -9,12 +9,12 @@ class DispatchExecution extends Model
     protected $table = 'dispatch_executions';
 
     protected $fillable = [
-        'plan_id',
-        'equipment_id',
-        'action_type',
-        'target_value',
-        'executed_at',
-        'operator_id',
+        'plan_id',      // 调度计划ID
+        'equipment_id', // 设备ID
+        'action_type',  // 动作类型
+        'target_value', // 目标值
+        'executed_at',  // 执行时间
+        'operator_id',  // 操作人
     ];
 
     protected $casts = [

@@ -1,0 +1,52 @@
+{
+  "file": "dqn_physics_v5.0.pth",
+  "name": "Physics-Informed DQN v5.0",
+  "version": "5.0.0",
+  "type": "dqn_decision",
+  "framework": "pytorch",
+  "description": "Dueling Double DQN + 软更新 + 影子水位奖励塑形。4000轮4场景(normal/flood/drought/storm)训练。Best=81.7, 稳定性=0.96, 12维增强状态, LayerNorm, 零初始化Q值",
+  "accuracy": 85.4,
+  "training_date": "2026-07-02",
+  "size_mb": 1.1,
+  "md5": "be40b6b15387da97f382bc554674951e",
+  "params": {
+    "state_dim": 12,
+    "action_dim": 125,
+    "num_gates": 3,
+    "action_bins": 5,
+    "hidden_size": 256,
+    "num_layers": 4,
+    "param_count": 284798
+  },
+  "training": {
+    "episodes": 4000,
+    "best_avg100": 81.7,
+    "final_avg100": 78.5,
+    "stability_ratio": 0.96,
+    "scenarios": {
+      "normal": {
+        "eps": 1181,
+        "last20_avg": 84.6
+      },
+      "flood": {
+        "eps": 1019,
+        "last20_avg": 73.5
+      },
+      "drought": {
+        "eps": 1009,
+        "last20_avg": 84.0
+      },
+      "storm": {
+        "eps": 791,
+        "last20_avg": 71.7
+      }
+    },
+    "algorithm": "Dueling_Double_DQN",
+    "features": [
+      "soft_update(tau=0.003)",
+      "reward_clip[-50,50]",
+      "zero_init_Q",
+      "physics_reward_shaping"
+    ]
+  }
+}

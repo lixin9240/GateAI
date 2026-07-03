@@ -1,6 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\GYZ\SettingsModelController;
+use App\Http\Controllers\Api\GYZ\SettingsThresholdController;
+use App\Http\Controllers\Api\GYZ\SettingsWeightController;
+use App\Http\Controllers\Api\GYZ\UserManagementController;
 use App\Http\Controllers\Api\LX\EdgeController;
 use App\Http\Controllers\Api\LX\HistoryController;
 use App\Http\Controllers\Api\LX\IncidentController;
@@ -8,7 +12,13 @@ use App\Http\Controllers\Api\LX\PhysicalController;
 use App\Http\Controllers\Api\LX\ScenarioController;
 use App\Http\Controllers\Api\LX\SimulationController;
 use App\Http\Controllers\Api\WeatherController;
-use App\Http\Controllers\Api\WjcController;
+use App\Http\Controllers\Api\Wjc\WjcAlarmController;
+use App\Http\Controllers\Api\Wjc\WjcDispatchController;
+use App\Http\Controllers\Api\Wjc\WjcReservoirController;
+use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
+use Illuminate\Http\Request;
+use App\Http\Controllers\FmyController;
+use App\Http\Controllers\WjcController;
 use Illuminate\Support\Facades\Route;
 
 // 公开接口
@@ -18,7 +28,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
-    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气
+    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气（（实时+3日预报））
 });
 
 // 需要认证的接口
@@ -28,23 +38,49 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
     // 3. 告警管理模块
     Route::prefix('alarms')->group(function () {
-        Route::get('/', [WjcController::class, 'index']);
-        Route::put('/{id}/acknowledge', [WjcController::class, 'acknowledge']);
-        Route::put('/{id}/dispose', [WjcController::class, 'dispose']);
-        Route::get('/exceed-logs', [WjcController::class, 'exceedLogs']);
+        Route::get('/', [WjcAlarmController::class, 'index']);
+        Route::put('/{id}/acknowledge', [WjcAlarmController::class, 'acknowledge']);
+        Route::put('/{id}/dispose', [WjcAlarmController::class, 'dispose']);
+        Route::get('/exceed-logs', [WjcAlarmController::class, 'exceedLogs']);
     });
 
     // 4. 调度决策模块
     Route::prefix('dispatch')->group(function () {
-        Route::get('/predictions', [WjcController::class, 'predictions']);
-        Route::get('/decisions', [WjcController::class, 'decisions']);
-        Route::get('/decisions/{id}', [WjcController::class, 'decisionDetail']);
-        Route::post('/execute', [WjcController::class, 'execute']);
-        Route::get('/commands/{command_id}/trace', [WjcController::class, 'traceCommand']);
-        Route::get('/gate-actions', [WjcController::class, 'gateActions']);
-        Route::post('/emergency-stop', [WjcController::class, 'emergencyStop']);
-        Route::put('/stop-recover/{id}', [WjcController::class, 'stopRecover']);
-        Route::get('/emergency-stops', [WjcController::class, 'emergencyStops']);
+        Route::get('/predictions', [WjcDispatchController::class, 'predictions']);
+        Route::get('/decisions', [WjcDispatchController::class, 'decisions']);
+        Route::get('/decisions/{id}', [WjcDispatchController::class, 'decisionDetail']);
+        Route::post('/execute', [WjcDispatchController::class, 'execute']);
+        Route::get('/commands/{command_id}/trace', [WjcDispatchController::class, 'traceCommand']);
+        Route::get('/gate-actions', [WjcDispatchController::class, 'gateActions']);
+        Route::post('/emergency-stop', [WjcDispatchController::class, 'emergencyStop']);
+        Route::put('/stop-recover/{id}', [WjcDispatchController::class, 'stopRecover']);
+        Route::get('/emergency-stops', [WjcDispatchController::class, 'emergencyStops']);
+    });
+
+    // 5. 水库管理
+    Route::prefix('reservoirs')->group(function () {
+        Route::get('/', [WjcReservoirController::class, 'index']);
+        Route::post('/', [WjcReservoirController::class, 'store']);
+        Route::get('/{id}', [WjcReservoirController::class, 'show']);
+        Route::put('/{id}', [WjcReservoirController::class, 'update']);
+        Route::delete('/{id}', [WjcReservoirController::class, 'destroy']);
+    });
+
+    // 6. 边缘节点管理
+    Route::prefix('edge-nodes')->group(function () {
+        Route::get('/', [WjcEdgeNodeController::class, 'index']);
+        Route::post('/', [WjcEdgeNodeController::class, 'store']);
+        Route::get('/{id}', [WjcEdgeNodeController::class, 'show']);
+        Route::post('/{id}/heartbeat', [WjcEdgeNodeController::class, 'heartbeat']);
+        Route::delete('/{id}', [WjcEdgeNodeController::class, 'destroy']);
+    });
+
+    // 7. 气象模块（认证版）
+    Route::prefix('weather')->group(function () {
+        Route::get('current', [WeatherController::class, 'current']);
+        Route::get('hourly', [WeatherController::class, 'hourly']);
+        Route::get('daily', [WeatherController::class, 'daily']);
+        Route::get('snapshot', [WeatherController::class, 'snapshot']);
     });
 
     // 10. 历史查询模块
@@ -54,19 +90,14 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('export/{task_id}/status', [HistoryController::class, 'exportStatus']);
     });
 
-    // 数字孪生模块
+    // 8. 数字孪生模块
     Route::prefix('simulation')->group(function () {
-        // 仿真场景
-        Route::get('scenarios', [ScenarioController::class, 'scenarios']);// 获取仿真场景
-
-        // 仿真任务
-        Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');// 启动仿真任务
-        Route::get('{id}/result', [SimulationController::class, 'result']);// 获取仿真任务结果
-        Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');// 生成仿真报告
-
-        // 故障复盘
-        Route::get('incidents', [IncidentController::class, 'incidents']);// 获取故障复盘
-        Route::post('import-incident', [IncidentController::class, 'importIncident']);// 导入故障复盘
+        Route::get('scenarios', [ScenarioController::class, 'scenarios']);
+        Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');
+        Route::get('{id}/result', [SimulationController::class, 'result']);
+        Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');
+        Route::get('incidents', [IncidentController::class, 'incidents']);
+        Route::post('import-incident', [IncidentController::class, 'importIncident']);
     });
 
     // 11. 边缘端数据上报
@@ -86,4 +117,47 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('physical-parameters', [PhysicalController::class, 'upsert']);
         Route::delete('physical-parameters/{id}', [PhysicalController::class, 'delete']);
     });
+
+    // 9. 系统设置模块
+    Route::prefix('settings')->group(function () {
+        Route::get('thresholds', [SettingsThresholdController::class, 'index']);
+        Route::put('thresholds/{id}', [SettingsThresholdController::class, 'update']);
+        Route::get('weights', [SettingsWeightController::class, 'show']);
+        Route::put('weights', [SettingsWeightController::class, 'update']);
+        Route::get('models', [SettingsModelController::class, 'index']);
+        Route::post('models/upload', [SettingsModelController::class, 'upload']);
+        Route::post('models/{id}/activate', [SettingsModelController::class, 'activate']);
+        Route::post('models/{id}/rollback', [SettingsModelController::class, 'rollback']);
+        Route::delete('models/{id}', [SettingsModelController::class, 'destroy']);
+        Route::post('models/{id}/deploy', [SettingsModelController::class, 'deploy']);
+        Route::get('users', [UserManagementController::class, 'index']);
+        Route::post('users', [UserManagementController::class, 'store']);
+        Route::put('users/{id}', [UserManagementController::class, 'update']);
+        Route::post('users/{id}/reset-password', [UserManagementController::class, 'resetPassword']);
+        Route::post('users/{id}/lock', [UserManagementController::class, 'lock']);
+        Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);
+        Route::delete('users/{id}', [UserManagementController::class, 'destroy']);
+    });
+});
+
+
+// ===== Fmy 模块路由（JWT 认证）=====
+// 公开
+Route::post('/auth/login', [FmyController::class, 'login']);
+// JWT 认证
+Route::middleware(['auth:api', 'token.valid'])->group(function () {
+    // 1. 认证模块
+    //用户登出
+    Route::post('/auth/logout', [FmyController::class, 'logout']);
+    //修改密码
+    Route::post('/auth/change-pwd', [FmyController::class, 'changePassword']);
+    //登录日志查询
+    Route::get('/login-logs', [FmyController::class, 'loginLogs']);
+    // 2. 监控大屏模块
+    //获取全部设备列表
+    Route::get('/equipment/all-list', [FmyController::class, 'allList']);
+    //实时采集数据
+    Route::get('/monitoring/realtime', [FmyController::class, 'realtime']);
+    //趋势图表数据
+    Route::get('/monitoring/trend', [FmyController::class, 'trend']);
 });

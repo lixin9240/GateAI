@@ -48,7 +48,7 @@ class Handler extends ExceptionHandler
         if ($e instanceof AuthenticationException) {
             return Result::error(
                 ResponseCode::UNAUTHORIZED
-            );
+            )->setStatusCode(401);
         }
 
         /**

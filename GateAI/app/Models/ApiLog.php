@@ -11,18 +11,18 @@ class ApiLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'trace_id',
-        'url',
-        'method',
-        'ip',
-        'user_id',
-        'request',
-        'response_status',
-        'duration_ms',
-        'user_agent',
-        'response_body',
-        'request_headers',
-        'created_at',
+        'trace_id',        // 链路追踪ID
+        'url',             // 请求URL
+        'method',          // 请求方法
+        'ip',              // 客户端IP
+        'user_id',         // 用户ID
+        'request',         // 请求参数
+        'response_status', // 响应状态码
+        'duration_ms',     // 耗时（毫秒）
+        'user_agent',      // 客户端UA
+        'response_body',   // 响应内容
+        'request_headers', // 请求头
+        'created_at',      // 记录时间
     ];
 
     protected $casts = [

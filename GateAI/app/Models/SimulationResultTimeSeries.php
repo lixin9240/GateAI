@@ -1,5 +1,5 @@
 <?php
-// 模拟结果时间序列模型
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -8,12 +8,10 @@ class SimulationResultTimeSeries extends Model
 {
     protected $table = 'simulation_result_time_series';
 
-    public $timestamps = false;
-
     protected $fillable = [
-        'result_id', // 关联模拟结果 ID
-        'timestamp', // 时间戳
-        'values', // 值
+        'result_id', // 仿真结果ID
+        'timestamp', // 时间点
+        'values',    // 各指标数值
     ];
 
     protected $casts = [
