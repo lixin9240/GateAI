@@ -9,7 +9,7 @@ class ScenarioService
 {
     public function list(array $filters): LengthAwarePaginator
     {
-        $query = SimulationScenario::query();
+        $query = SimulationScenario::with(['creator', 'updater']);
 
         if (! empty($filters['type'])) {
             $query->where('type', $filters['type']);
