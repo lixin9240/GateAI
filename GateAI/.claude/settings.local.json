@@ -18,7 +18,17 @@
       "Bash(php -l routes/api.php)",
       "Bash(composer require *)",
       "Bash(php -l config/jwt.php)",
-      "Bash(php -l app/Models/User.php)"
+      "Bash(php -l app/Models/User.php)",
+      "Bash(php -l app/Models/SimulationScenario.php)",
+      "Bash(php -l app/Models/SimulationTask.php)",
+      "Bash(php -l app/Models/SimulationResult.php)",
+      "Bash(php -l app/Models/SimulationResultTimeSeries.php)",
+      "Bash(php -l app/Models/SimulationIncident.php)",
+      "Bash(php -l app/Http/Controllers/Api/LX/ScenarioController.php)",
+      "Bash(php -l app/Http/Controllers/Api/LX/SimulationController.php)",
+      "Bash(php -l app/Http/Controllers/Api/LX/IncidentController.php)",
+      "Bash(php -l app/Services/LX/ScenarioService.php)",
+      "Bash(php -l app/Services/LX/SimulationService.php)"
     ]
   }
 }

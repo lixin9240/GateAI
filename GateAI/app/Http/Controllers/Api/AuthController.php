@@ -26,7 +26,7 @@ class AuthController extends Controller
         return Result::success('登录成功', [
             'token'      => $token,
             'token_type' => 'Bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'expires_in' => config('jwt.ttl', 43200) * 60,
         ]);
     }
 
