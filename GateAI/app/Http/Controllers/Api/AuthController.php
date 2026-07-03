@@ -13,11 +13,11 @@ class AuthController extends Controller
     public function login(Request $request): JsonResponse
     {
         $request->validate([
-            'email'    => 'required|email',
+            'account'  => 'required|string',
             'password' => 'required|string',
         ]);
 
-        $token = auth('api')->attempt($request->only('email', 'password'));
+        $token = auth('api')->attempt($request->only('account', 'password'));
 
         if (! $token) {
             return Result::error(ResponseCode::UNAUTHORIZED, '账号或密码错误');

@@ -1,5 +1,8 @@
 <?php
 
+// 抑制 PHP 8.1+ 与 Laravel 10.1 之间的 nullable 类型过时警告
+error_reporting(E_ALL & ~E_DEPRECATED);
+
 /*
 |--------------------------------------------------------------------------
 | Create The Application

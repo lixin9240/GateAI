@@ -1,0 +1,6 @@
+# Hydropower AI Model Checksums
+# Generated: 2026-07-01
+# Verify:  md5sum -c checksums.md5
+#
+# If any hash mismatches, the model file is corrupted.
+# Re-extract from the deployment package or re-train.
