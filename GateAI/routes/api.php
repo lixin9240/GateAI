@@ -92,7 +92,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     });
 
     // 11. 边缘端数据上报
-    Route::prefix('edge')->group(function () {
+    Route::prefix('edge')->middleware(['edge.token'])->group(function () {
         Route::post('monitoring-data', [EdgeController::class, 'reportData'])->name('edge.monitoring');
         Route::post('dispatch-decisions', [EdgeController::class, 'reportDecision'])->name('edge.dispatch');
         Route::put('control-commands/{command_id}/feedback', [EdgeController::class, 'feedback'])->name('edge.feedback');

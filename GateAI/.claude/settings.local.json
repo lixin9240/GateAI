@@ -49,7 +49,9 @@
       "Bash(curl -s \"http://localhost:8899/api/v1/weather/current\")",
       "Bash(php -l app/Services/Weather/Drivers/HeFengDriver.php)",
       "Bash(php -l config/weather.php)",
-      "Bash(php -l app/Services/Weather/Drivers/CaiyunDriver.php)"
+      "Bash(php -l app/Services/Weather/Drivers/CaiyunDriver.php)",
+      "Bash(php -l app/Http/Middleware/VerifyEdgeToken.php)",
+      "Bash(php -l app/Http/Kernel.php)"
     ]
   }
 }

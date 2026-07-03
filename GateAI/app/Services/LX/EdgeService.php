@@ -7,6 +7,7 @@ use App\Models\ControlCommand;
 use App\Models\DispatchDecision;
 use App\Models\GateAction;
 use App\Models\MonitoringData;
+use App\Support\LogHelper;
 use Illuminate\Support\Str;
 
 class EdgeService
@@ -61,6 +62,16 @@ class EdgeService
             'execution_status'    => 'pending',
         ]);
 
+        LogHelper::business('[AI决策] 边缘端上报决策', [
+            'decision_id'        => $decision->id,
+            'decision_mode'      => $data['decision_mode'],
+            'recommended_opening' => $data['recommended_opening'],
+            'confidence'         => $data['confidence'],
+            'reward_score'       => $data['reward_score'] ?? null,
+            'risk_rank'          => $data['risk_rank'],
+            'physics_validation' => $data['physics_validation'] ?? null,
+        ], 'info', 'ai_decision');
+
         return ['decision_id' => $decision->id];
     }
 
@@ -68,10 +79,18 @@ class EdgeService
     {
         $command = ControlCommand::where('command_id', $commandId)->firstOrFail();
 
+        $feedbackAt = now();
+
+        // 全链路耗时：下发 → 回执（ms）
+        $fullDelayMs = $command->sent_at
+            ? $feedbackAt->diffInMilliseconds($command->sent_at)
+            : null;
+
         $command->update([
             'status'           => $data['status'],
             'executed_at'      => $data['executed_at'],
-            'feedback_at'      => now(),
+            'feedback_at'      => $feedbackAt,
+            'full_delay_ms'    => $fullDelayMs,
             'execution_result' => $data['execution_result'] ?? null,
         ]);
 
@@ -90,7 +109,14 @@ class EdgeService
             'acted_at'         => $data['executed_at'],
         ]);
 
-        return ['command_id' => $commandId, 'status' => $data['status']];
+        LogHelper::business('[指令回执] 全链路追踪', [
+            'command_id'    => $commandId,
+            'status'        => $data['status'],
+            'full_delay_ms' => $fullDelayMs,
+            'duration_ms'   => $data['duration_ms'] ?? null,
+        ], 'info', 'command_feedback');
+
+        return ['command_id' => $commandId, 'status' => $data['status'], 'full_delay_ms' => $fullDelayMs];
     }
 
     public function reportAlarm(array $data): array
