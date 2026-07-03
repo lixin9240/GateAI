@@ -17,7 +17,7 @@ use App\Http\Controllers\Api\Wjc\WjcAlarmController;
 use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
-
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // 公开接口
