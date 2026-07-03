@@ -4,13 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -18,9 +19,17 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $fillable = [
-        'name',
-        'email',
+        'account',
         'password',
+        'realname',
+        'role_id',
+        'phone',
+        'force_change_password',
+        'login_fail_count',
+        'lock_expire_time',
+        'login_token',
+        'token_expire_time',
+        'is_enabled',
     ];
 
     /**
@@ -31,6 +40,7 @@ class User extends Authenticatable implements JWTSubject
     protected $hidden = [
         'password',
         'remember_token',
+        'login_token',
     ];
 
     /**
@@ -39,8 +49,12 @@ class User extends Authenticatable implements JWTSubject
      * @var array<string, string>
      */
     protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'password'              => 'hashed',
+        'force_change_password' => 'integer',
+        'login_fail_count'      => 'integer',
+        'lock_expire_time'      => 'datetime',
+        'token_expire_time'     => 'datetime',
+        'is_enabled'            => 'integer',
     ];
 
     public function getJWTIdentifier()
@@ -51,5 +65,29 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims(): array
     {
         return [];
+    }
+
+    /**
+     * 关联角色
+     */
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    /**
+     * 关联登录日志
+     */
+    public function loginLogs()
+    {
+        return $this->hasMany(UserLoginLog::class, 'user_id');
+    }
+
+    /**
+     * 账号是否已锁定
+     */
+    public function isLocked(): bool
+    {
+        return $this->lock_expire_time !== null && now()->lessThan($this->lock_expire_time);
     }
 }

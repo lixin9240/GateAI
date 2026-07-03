@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\WeatherController;
+use App\Http\Controllers\FmyController;
 use App\Http\Controllers\WjcController;
 use Illuminate\Support\Facades\Route;
 
@@ -40,4 +41,26 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::put('/stop-recover/{id}', [WjcController::class, 'stopRecover']);
         Route::get('/emergency-stops', [WjcController::class, 'emergencyStops']);
     });
+});
+
+
+// ===== Fmy 模块路由（JWT 认证）=====
+// 公开
+Route::post('/auth/login', [FmyController::class, 'login']);
+// JWT 认证
+Route::middleware(['auth:api', 'token.valid'])->group(function () {
+    // 1. 认证模块
+    //用户登出
+    Route::post('/auth/logout', [FmyController::class, 'logout']);
+    //修改密码
+    Route::post('/auth/change-pwd', [FmyController::class, 'changePassword']);
+    //登录日志查询
+    Route::get('/login-logs', [FmyController::class, 'loginLogs']);
+    // 2. 监控大屏模块
+    //获取全部设备列表
+    Route::get('/equipment/all-list', [FmyController::class, 'allList']);
+    //实时采集数据
+    Route::get('/monitoring/realtime', [FmyController::class, 'realtime']);
+    //趋势图表数据
+    Route::get('/monitoring/trend', [FmyController::class, 'trend']);
 });
