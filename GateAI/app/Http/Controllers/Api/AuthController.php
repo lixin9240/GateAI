@@ -29,32 +29,32 @@ class AuthController extends Controller
             return Result::error(ResponseCode::FORBIDDEN, '账号已被禁用');
         }
 
-        $token = auth('api')->login($user);
+        $token = JWTAuth::login($user);
 
         return Result::success('登录成功', [
             'token'      => $token,
             'token_type' => 'Bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,
         ]);
     }
 
     public function logout(): JsonResponse
     {
-        auth('api')->logout();
+        JWTAuth::logout();
         return Result::success('已登出');
     }
 
     public function me(): JsonResponse
     {
-        return Result::success('获取用户信息成功', auth('api')->user());
+        return Result::success('获取用户信息成功', JWTAuth::user());
     }
 
     public function refresh(): JsonResponse
     {
         return Result::success('刷新成功', [
-            'token'      => auth('api')->refresh(true),
+            'token'      => JWTAuth::refresh(true),
             'token_type' => 'Bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,
         ]);
     }
 }
