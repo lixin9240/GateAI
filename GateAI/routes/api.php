@@ -12,11 +12,12 @@ use App\Http\Controllers\Api\LX\PhysicalController;
 use App\Http\Controllers\Api\LX\ScenarioController;
 use App\Http\Controllers\Api\LX\SimulationController;
 use App\Http\Controllers\Api\WeatherController;
-use App\Http\Controllers\Wjc\WjcAlarmController;
-use App\Http\Controllers\Wjc\WjcDispatchController;
-use App\Http\Controllers\Wjc\WjcReservoirController;
-use App\Http\Controllers\Wjc\WjcEdgeNodeController;
-use Illuminate\Http\Request;
+
+use App\Http\Controllers\Api\Wjc\WjcAlarmController;
+use App\Http\Controllers\Api\Wjc\WjcDispatchController;
+use App\Http\Controllers\Api\Wjc\WjcReservoirController;
+use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
+
 use Illuminate\Support\Facades\Route;
 
 // 公开接口
