@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class ControlCommand extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'control_commands';
 
     protected $fillable = [

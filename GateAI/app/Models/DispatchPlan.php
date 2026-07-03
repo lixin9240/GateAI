@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class DispatchPlan extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'dispatch_plans';
 
     protected $fillable = [

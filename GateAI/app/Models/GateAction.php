@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class GateAction extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'gate_actions';
 
     public $timestamps = false;

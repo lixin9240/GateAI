@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class LstmPrediction extends Model
 {
+    use HasBeijingTime;
     protected $table = 'lstm_predictions';
 
     public $timestamps = false;
@@ -24,4 +26,9 @@ class LstmPrediction extends Model
         'flow_seq_json'  => 'json',
         'base_time'      => 'datetime',
     ];
+
+    public function equipment()
+    {
+        return $this->belongsTo(Equipment::class, 'equipment_id');
+    }
 }

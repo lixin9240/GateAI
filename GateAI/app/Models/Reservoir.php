@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Reservoir extends Model
 {
-    use SoftDeletes;
+
+    use HasBeijingTime;
 
     protected $table = 'reservoirs';
 

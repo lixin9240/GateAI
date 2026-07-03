@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class EmergencyStop extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'emergency_stops';
 
     public $timestamps = false;

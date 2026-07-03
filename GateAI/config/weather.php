@@ -2,7 +2,7 @@
 // 天气服务配置
 return [
 
-    'default' => env('WEATHER_DRIVER', 'openmeteo'),
+    'default' => env('WEATHER_DRIVER', 'caiyun'),
 
     'fallback_enabled' => env('WEATHER_FALLBACK_ENABLED', false),
 
@@ -16,6 +16,18 @@ return [
             'timeout'       => 10,
             'retry_times'   => 2,
             'retry_sleep'   => 1000,
+        ],
+
+        'hefeng' => [
+            'base_url' => 'https://devapi.qweather.com/v7',
+            'api_key'  => env('HEFENG_API_KEY'),
+            'timeout'  => 10,
+        ],
+
+        'caiyun' => [
+            'base_url' => 'https://api.caiyunapp.com/v2.6',
+            'token'    => env('CAIYUN_TOKEN'),
+            'timeout'  => 10,
         ],
     ],
 

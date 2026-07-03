@@ -9,6 +9,7 @@ use App\Support\Result;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
@@ -20,31 +21,40 @@ class AuthController extends Controller
         ]);
 
         $user = User::where('account', $request->account)->first();
-
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (!$user || !Hash::check($request->password, $user->password)) {
             return Result::error(ResponseCode::UNAUTHORIZED, '账号或密码错误');
         }
 
-        if (! $user->is_enabled) {
-            return Result::error(ResponseCode::ACCOUNT_DISABLED);
+        if (!$user->is_enabled) {
+            return Result::error(ResponseCode::FORBIDDEN, '账号已被禁用');
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
+        $token = JWTAuth::login($user);
 
         return Result::success('登录成功', [
             'token'      => $token,
             'token_type' => 'Bearer',
-            'expires_in' => null,
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,
         ]);
     }
 
     public function logout(): JsonResponse
     {
-        return Result::success('已登出，请客户端丢弃 token');
+        JWTAuth::logout();
+        return Result::success('已登出');
     }
 
     public function me(): JsonResponse
     {
-        return Result::success('获取用户信息成功', auth('api')->user());
+        return Result::success('获取用户信息成功', JWTAuth::user());
+    }
+
+    public function refresh(): JsonResponse
+    {
+        return Result::success('刷新成功', [
+            'token'      => JWTAuth::refresh(true),
+            'token_type' => 'Bearer',
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,
+        ]);
     }
 }

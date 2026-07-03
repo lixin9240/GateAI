@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class EdgeNode extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'edge_nodes';
 
     protected $fillable = [

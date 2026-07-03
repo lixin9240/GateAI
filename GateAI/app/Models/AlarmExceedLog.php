@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class AlarmExceedLog extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'alarm_exceed_logs';
 
     protected $fillable = [

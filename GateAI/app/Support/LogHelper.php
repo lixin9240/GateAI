@@ -11,6 +11,26 @@ use Throwable;
 class LogHelper
 {
     /**
+     * 截断超长数据，防止撑爆数据库字段
+     */
+    private static function safeString(?string $value, int $maxLen = 500): string
+    {
+        if ($value === null) return '';
+        return mb_strlen($value) > $maxLen
+            ? mb_substr($value, 0, $maxLen) . '...[truncated]'
+            : $value;
+    }
+
+    private static function safeJson(array $data, int $maxKb = 64): array
+    {
+        $json = json_encode($data, JSON_UNESCAPED_UNICODE);
+        if ($json === false || strlen($json) <= $maxKb * 1024) {
+            return $data;
+        }
+        return ['_truncated' => true, '_original_size_kb' => round(strlen($json) / 1024, 1)];
+    }
+
+    /**
      * 业务日志（同时写文件和数据库）
      */
     public static function business(string $message, array $context = [], string $level = 'info', ?string $operationType = null): void
@@ -25,17 +45,21 @@ class LogHelper
             'operation_type' => $operationType,
         ]));
 
-        BusinessLog::create([
-            'trace_id'       => $traceId,
-            'channel'        => 'business',
-            'level'          => $level,
-            'message'        => $message,
-            'context'        => $context,
-            'user_id'        => $userId,
-            'ip_address'     => $ip,
-            'operation_type' => $operationType,
-            'created_at'     => now(),
-        ]);
+        try {
+            BusinessLog::create([
+                'trace_id'       => $traceId,
+                'channel'        => 'business',
+                'level'          => $level,
+                'message'        => self::safeString($message, 500),
+                'context'        => self::safeJson($context),
+                'user_id'        => $userId,
+                'ip_address'     => $ip,
+                'operation_type' => $operationType,
+                'created_at'     => now(),
+            ]);
+        } catch (\Throwable) {
+            // 数据库不可用时不影响业务
+        }
     }
 
     /**
@@ -57,18 +81,21 @@ class LogHelper
 
         Log::channel('exception')->error($logMessage, $context);
 
-        ExceptionLog::create([
-            'trace_id'    => $traceId,
-            'message'     => $e->getMessage(),
-            'file'        => $e->getFile(),
-            'line'        => $e->getLine(),
-            'trace'       => $e->getTraceAsString(),
-            'sql'         => $extra['sql'] ?? null,
-            'bindings'    => $extra['bindings'] ?? null,
-            'user_id'     => $userId,
-            'request_url' => request()->fullUrl(),
-            'created_at'  => now(),
-        ]);
+        try {
+            ExceptionLog::create([
+                'trace_id'    => $traceId,
+                'message'     => self::safeString($e->getMessage(), 1000),
+                'file'        => self::safeString($e->getFile(), 255),
+                'line'        => $e->getLine(),
+                'trace'       => self::safeString($e->getTraceAsString(), 65535),
+                'sql'         => self::safeString($extra['sql'] ?? null, 65535),
+                'bindings'    => self::safeJson($extra['bindings'] ?? []),
+                'user_id'     => $userId,
+                'request_url' => self::safeString(request()->fullUrl(), 500),
+                'created_at'  => now(),
+            ]);
+        } catch (\Throwable) {
+        }
     }
 
     /**
@@ -83,18 +110,21 @@ class LogHelper
             'trace_id' => $traceId,
         ]));
 
-        ExceptionLog::create([
-            'trace_id'    => $traceId,
-            'message'     => $message,
-            'file'        => $context['file'] ?? '',
-            'line'        => $context['line'] ?? 0,
-            'trace'       => $context['trace'] ?? '',
-            'sql'         => $context['sql'] ?? null,
-            'bindings'    => $context['bindings'] ?? null,
-            'user_id'     => $userId,
-            'request_url' => request()->fullUrl(),
-            'created_at'  => now(),
-        ]);
+        try {
+            ExceptionLog::create([
+                'trace_id'    => $traceId,
+                'message'     => self::safeString($message, 1000),
+                'file'        => self::safeString($context['file'] ?? '', 255),
+                'line'        => $context['line'] ?? 0,
+                'trace'       => self::safeString($context['trace'] ?? '', 65535),
+                'sql'         => self::safeString($context['sql'] ?? null, 65535),
+                'bindings'    => self::safeJson($context['bindings'] ?? []),
+                'user_id'     => $userId,
+                'request_url' => self::safeString(request()->fullUrl(), 500),
+                'created_at'  => now(),
+            ]);
+        } catch (\Throwable) {
+        }
     }
 
     /**
@@ -104,6 +134,22 @@ class LogHelper
     {
         Log::channel('api')->info('API Request', $data);
 
-        ApiLog::create(array_merge($data, ['created_at' => now()]));
+        try {
+            ApiLog::create([
+                'trace_id'        => $data['trace_id'] ?? request()->attributes->get('trace_id'),
+                'url'             => self::safeString($data['url'] ?? request()->fullUrl(), 500),
+                'method'          => $data['method'] ?? request()->method(),
+                'ip'              => $data['ip'] ?? request()->ip(),
+                'user_id'         => $data['user_id'] ?? auth()->id(),
+                'request'         => self::safeJson($data['request'] ?? [], 256),
+                'response_status' => $data['response_status'] ?? 200,
+                'duration_ms'     => $data['duration_ms'] ?? 0,
+                'user_agent'      => self::safeString($data['user_agent'] ?? '', 500),
+                'response_body'   => self::safeJson($data['response_body'] ?? [], 256),
+                'request_headers' => self::safeJson($data['request_headers'] ?? [], 64),
+                'created_at'      => now(),
+            ]);
+        } catch (\Throwable) {
+        }
     }
 }

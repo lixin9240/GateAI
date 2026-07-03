@@ -28,11 +28,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
-    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气（（实时+3日预报））
 });
 
 // 需要认证的接口
-Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);// 登出
     Route::get('/me', [AuthController::class, 'me']);// 获取用户信息
 
@@ -75,14 +74,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::delete('/{id}', [WjcEdgeNodeController::class, 'destroy']);
     });
 
-    // 7. 气象模块（认证版）
-    Route::prefix('weather')->group(function () {
-        Route::get('current', [WeatherController::class, 'current']);
-        Route::get('hourly', [WeatherController::class, 'hourly']);
-        Route::get('daily', [WeatherController::class, 'daily']);
-        Route::get('snapshot', [WeatherController::class, 'snapshot']);
-    });
-
     // 10. 历史查询模块
     Route::prefix('history')->group(function () {
         Route::get('data', [HistoryController::class, 'data']);
@@ -101,7 +92,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     });
 
     // 11. 边缘端数据上报
-    Route::prefix('edge')->group(function () {
+    Route::prefix('edge')->middleware(['edge.token'])->group(function () {
         Route::post('monitoring-data', [EdgeController::class, 'reportData'])->name('edge.monitoring');
         Route::post('dispatch-decisions', [EdgeController::class, 'reportDecision'])->name('edge.dispatch');
         Route::put('control-commands/{command_id}/feedback', [EdgeController::class, 'feedback'])->name('edge.feedback');
