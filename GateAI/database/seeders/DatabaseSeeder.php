@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             EdgeNodeSeeder::class,
             AlarmSeeder::class,
             EquipmentSeeder::class,
+            MonitoringDataSeeder::class,
         ]);
     }
 }
