@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Wjc;
+namespace App\Http\Controllers\Api\Wjc;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Wjc\WjcReservoirRequest;
