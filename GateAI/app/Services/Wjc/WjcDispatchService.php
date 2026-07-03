@@ -16,14 +16,21 @@ class WjcDispatchService
     /**
      * 4.1 获取 LSTM 预测数据
      */
-    public function getPredictions(int $reservoirId, int $term)
+    public function getPredictions(?int $reservoirId = null, ?int $term = null)
     {
-        return LstmPrediction::whereHas('equipment', function ($q) use ($reservoirId) {
+        $query = LstmPrediction::query();
+
+        if ($reservoirId !== null) {
+            $query->whereHas('equipment', function ($q) use ($reservoirId) {
                 $q->where('reservoir_id', $reservoirId);
-            })
-            ->where('predict_term', $term)
-            ->orderByDesc('base_time')
-            ->first();
+            });
+        }
+
+        if ($term !== null) {
+            $query->where('predict_term', $term);
+        }
+
+        return $query->orderByDesc('base_time')->first();
     }
 
     /**
@@ -60,8 +67,11 @@ class WjcDispatchService
         $commandId = 'CMD-' . date('Ymd') . '-' . Str::random(6);
 
         ControlCommand::create([
+            'trace_id'       => request()->attributes->get('trace_id', (string) Str::uuid()),
+            'edge_node_id'   => $data['edge_node_id'] ?? 1,
             'command_id'     => $commandId,
             'command_type'   => 'manual_adjust',
+            'payload'        => json_encode($data),
             'target_opening' => $data['target_opening'],
             'status'         => 'pending',
             'sent_at'        => now(),
@@ -104,8 +114,11 @@ class WjcDispatchService
         $commandId = 'STOP-' . date('YmdHis') . '-' . Str::random(4);
 
         $command = ControlCommand::create([
+            'trace_id'       => request()->attributes->get('trace_id', (string) Str::uuid()),
+            'edge_node_id'   => $data['edge_node_id'] ?? 1,
             'command_id'     => $commandId,
             'command_type'   => 'emergency_stop',
+            'payload'        => json_encode($data),
             'target_opening' => 0,
             'is_emergency'   => 1,
             'status'         => 'sent',
