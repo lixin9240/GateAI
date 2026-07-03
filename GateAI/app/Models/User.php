@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
-    use HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'users';
 
@@ -33,7 +33,6 @@ class User extends Authenticatable
         'password',
         'login_token',
         'remember_token',
-        'login_token',
     ];
 
     protected $casts = [
@@ -46,17 +45,23 @@ class User extends Authenticatable
         'token_expire_time'     => 'datetime',
         'email_verified_at'     => 'datetime',
         'password'              => 'hashed',
-        'force_change_password' => 'integer',
-        'login_fail_count'      => 'integer',
-        'lock_expire_time'      => 'datetime',
-        'token_expire_time'     => 'datetime',
-        'is_enabled'            => 'integer',
     ];
 
     // Laravel 10.1 不支持 'hashed' cast，用 mutator 替代
     public function setPasswordAttribute($value): void
     {
         $this->attributes['password'] = bcrypt($value);
+    }
+
+    // ─── JWT ──────────────────────────────────────
+    public function getJWTIdentifier(): mixed
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims(): array
+    {
+        return [];
     }
 
     // ─── 关联 ──────────────────────────────────────
@@ -73,22 +78,6 @@ class User extends Authenticatable
     public function locks()
     {
         return $this->hasMany(UserLock::class, 'user_id');
-    }
-
-    /**
-     * 关联角色
-     */
-    public function role()
-    {
-        return $this->belongsTo(Role::class, 'role_id');
-    }
-
-    /**
-     * 关联登录日志
-     */
-    public function loginLogs()
-    {
-        return $this->hasMany(UserLoginLog::class, 'user_id');
     }
 
     /**
