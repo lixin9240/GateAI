@@ -1,5 +1,5 @@
 <?php
-
+// 事件服务提供器
 namespace App\Providers;
 
 use Illuminate\Auth\Events\Registered;
