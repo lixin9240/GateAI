@@ -1,5 +1,5 @@
 <?php
-
+// 认证服务提供器
 namespace App\Providers;
 
 // use Illuminate\Support\Facades\Gate;

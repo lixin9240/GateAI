@@ -20,7 +20,7 @@ class Reservoir extends Model
     ];
 
     protected $casts = [
-        'id' => 'integer',
+        'id'                  => 'integer',
         'dead_water_level'    => 'decimal:2',
         'normal_water_level'  => 'decimal:2',
         'flood_limit_level'   => 'decimal:2',
@@ -32,4 +32,14 @@ class Reservoir extends Model
         'location_lat'        => 'decimal:6',
         'location_lng'        => 'decimal:6',
     ];
+
+    public function edgeNodes()
+    {
+        return $this->hasMany(EdgeNode::class, 'reservoir_id');
+    }
+
+    public function equipment()
+    {
+        return $this->hasMany(Equipment::class, 'reservoir_id');
+    }
 }
