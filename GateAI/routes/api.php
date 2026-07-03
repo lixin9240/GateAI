@@ -26,7 +26,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
-    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气
+    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气（（实时+3日预报））
 });
 
 // 需要认证的接口
