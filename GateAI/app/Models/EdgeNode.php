@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class EdgeNode extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'edge_nodes';
 
     protected $fillable = [

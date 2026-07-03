@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Equipment extends Model
 {
+    use HasBeijingTime;
+
     use SoftDeletes;
 
     protected $table = 'equipment';

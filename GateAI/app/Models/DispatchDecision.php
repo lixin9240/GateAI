@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class DispatchDecision extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'dispatch_decisions';
 
     protected $fillable = [

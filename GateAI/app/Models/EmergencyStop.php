@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class EmergencyStop extends Model
 {
+    use HasBeijingTime;
+
     protected $table = 'emergency_stops';
 
     public $timestamps = false;
