@@ -79,6 +79,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('hourly', [WeatherController::class, 'hourly']);
         Route::get('daily', [WeatherController::class, 'daily']);
         Route::get('snapshot', [WeatherController::class, 'snapshot']);
+    });
+
     // 10. 历史查询模块
     Route::prefix('history')->group(function () {
         Route::get('data', [HistoryController::class, 'data']);
@@ -94,17 +96,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');
         Route::get('incidents', [IncidentController::class, 'incidents']);
         Route::post('import-incident', [IncidentController::class, 'importIncident']);
-        // 仿真场景
-        Route::get('scenarios', [ScenarioController::class, 'scenarios']);// 获取仿真场景
-
-        // 仿真任务
-        Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');// 启动仿真任务
-        Route::get('{id}/result', [SimulationController::class, 'result']);// 获取仿真任务结果
-        Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');// 生成仿真报告
-
-        // 故障复盘
-        Route::get('incidents', [IncidentController::class, 'incidents']);// 获取故障复盘
-        Route::post('import-incident', [IncidentController::class, 'importIncident']);// 导入故障复盘
     });
 
     // 11. 边缘端数据上报
