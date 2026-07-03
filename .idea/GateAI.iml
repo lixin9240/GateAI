@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="WEB_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/GateAI/app" isTestSource="false" packagePrefix="App\" />
+      <sourceFolder url="file://$MODULE_DIR$/GateAI/database/factories" isTestSource="false" packagePrefix="Database\Factories\" />
+      <sourceFolder url="file://$MODULE_DIR$/GateAI/database/seeders" isTestSource="false" packagePrefix="Database\Seeders\" />
+      <sourceFolder url="file://$MODULE_DIR$/GateAI/tests" isTestSource="true" packagePrefix="Tests\" />
+      <sourceFolder url="file://$MODULE_DIR$/GateAI/tests/Feature" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/GateAI/tests/Unit" isTestSource="true" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/brick/math" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/carbonphp/carbon-doctrine-types" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/composer" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/dflydev/dot-access-data" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/doctrine/inflector" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/doctrine/lexer" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/dragonmantank/cron-expression" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/egulias/email-validator" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/fakerphp/faker" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/filp/whoops" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/fruitcake/php-cors" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/graham-campbell/result-type" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/guzzlehttp/guzzle" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/guzzlehttp/promises" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/guzzlehttp/psr7" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/guzzlehttp/uri-template" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/hamcrest/hamcrest-php" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/laravel/framework" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/laravel/pint" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/laravel/sail" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/laravel/sanctum" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/laravel/serializable-closure" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/laravel/tinker" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/lcobucci/clock" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/lcobucci/jwt" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/league/commonmark" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/league/config" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/league/flysystem" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/league/flysystem-local" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/league/mime-type-detection" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/mockery/mockery" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/monolog/monolog" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/myclabs/deep-copy" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/nesbot/carbon" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/nette/schema" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/nette/utils" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/nikic/php-parser" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/nunomaduro/collision" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/nunomaduro/termwind" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phar-io/manifest" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phar-io/version" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phpoption/phpoption" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phpunit/php-code-coverage" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phpunit/php-file-iterator" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phpunit/php-invoker" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phpunit/php-text-template" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phpunit/php-timer" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/phpunit/phpunit" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psr/clock" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psr/container" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psr/event-dispatcher" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psr/http-client" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psr/http-factory" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psr/http-message" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psr/log" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psr/simple-cache" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/psy/psysh" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/ralouphie/getallheaders" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/ramsey/collection" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/ramsey/uuid" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/cli-parser" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/code-unit" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/code-unit-reverse-lookup" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/comparator" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/complexity" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/diff" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/environment" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/exporter" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/global-state" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/lines-of-code" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/object-enumerator" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/object-reflector" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/recursion-context" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/type" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/sebastian/version" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/spatie/backtrace" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/spatie/error-solutions" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/spatie/flare-client-php" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/spatie/ignition" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/spatie/laravel-ignition" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/stella-maris/clock" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/console" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/css-selector" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/deprecation-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/error-handler" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/event-dispatcher" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/event-dispatcher-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/finder" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/http-foundation" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/http-kernel" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/mailer" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/mime" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/polyfill-ctype" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/polyfill-intl-grapheme" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/polyfill-intl-idn" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/polyfill-intl-normalizer" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/polyfill-mbstring" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/polyfill-php80" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/polyfill-php83" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/polyfill-uuid" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/process" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/routing" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/service-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/string" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/translation" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/translation-contracts" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/uid" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/var-dumper" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/symfony/yaml" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/theseer/tokenizer" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/tijsverkoyen/css-to-inline-styles" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/tymon/jwt-auth" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/vlucas/phpdotenv" />
+      <excludeFolder url="file://$MODULE_DIR$/GateAI/vendor/voku/portable-ascii" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
