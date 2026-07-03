@@ -25,8 +25,9 @@ class EdgeService
         $bindings = [];
         foreach ($rows as $row) {
             $values[] = '(?,?,?,?,?,?,?,?,?,?,?,?,?)';
+            $ts = \Carbon\Carbon::parse($row['timestamp'])->format('Y-m-d H:i:s');
             $bindings = array_merge($bindings, [
-                $row['timestamp'], $reservoirId, $edgeNodeId,
+                $ts, $reservoirId, $edgeNodeId,
                 $row['upstream_level'], $row['downstream_level'], $row['water_head'],
                 $row['inflow_rate'], $row['outflow_rate'], $row['gate_opening'],
                 $row['power_output'], $row['cumulative_energy'] ?? 0,
