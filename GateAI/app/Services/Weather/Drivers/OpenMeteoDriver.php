@@ -1,10 +1,11 @@
 <?php
-// Open-Meteo 驱动
+
 namespace App\Services\Weather\Drivers;
 
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Support\LogHelper;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 class OpenMeteoDriver implements WeatherDriverInterface
@@ -25,9 +26,31 @@ class OpenMeteoDriver implements WeatherDriverInterface
 
     protected function getClient()
     {
-        return Http::timeout($this->timeout)
+        $client = Http::timeout($this->timeout)
             ->retry($this->retryTimes, $this->retrySleep)
             ->withOptions(['verify' => storage_path('cacert.pem')]);
+
+        $proxy = env('WEATHER_PROXY');
+        if ($proxy) {
+            $client->withOptions(['proxy' => $proxy]);
+        }
+
+        return $client;
+    }
+
+    protected function request(string $url, array $params, string $label): array
+    {
+        try {
+            return $this->getClient()->get($url, $params)->json();
+        } catch (ConnectionException $e) {
+            LogHelper::error("[OpenMeteo] {$label} — 网络超时", [
+                'url' => $url,
+            ]);
+            throw new BusinessException(
+                'Open-Meteo 天气服务不可达，请检查网络或配置 WEATHER_PROXY 代理',
+                ResponseCode::THIRD_PARTY_ERROR
+            );
+        }
     }
 
     public function getDriverName(): string
@@ -37,23 +60,13 @@ class OpenMeteoDriver implements WeatherDriverInterface
 
     public function getCurrentWeather(float $lat, float $lon): array
     {
-        $response = $this->getClient()->get("{$this->baseUrl}/forecast", [
+        $data = $this->request("{$this->baseUrl}/forecast", [
             'latitude'      => $lat,
             'longitude'     => $lon,
             'current'       => 'temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,precipitation',
             'timezone'      => 'Asia/Shanghai',
             'forecast_days' => 1,
-        ]);
-
-        if ($response->failed()) {
-            LogHelper::error('[OpenMeteo] 实时天气获取失败', [
-                'status' => $response->status(),
-                'body'   => $response->body(),
-            ]);
-            throw new BusinessException('Open-Meteo 实时天气请求失败', ResponseCode::THIRD_PARTY_ERROR);
-        }
-
-        $data = $response->json();
+        ], '实时天气');
 
         $observedAt = $data['current']['time'] ?? now()->toISOString();
         if (!str_contains($observedAt, '+08:00') && !str_contains($observedAt, 'Z')) {
@@ -77,22 +90,14 @@ class OpenMeteoDriver implements WeatherDriverInterface
     {
         $forecastDays = (int) ceil($hours / 24);
 
-        $response = $this->getClient()->get("{$this->baseUrl}/forecast", [
+        $data   = $this->request("{$this->baseUrl}/forecast", [
             'latitude'      => $lat,
             'longitude'     => $lon,
             'hourly'        => 'temperature_2m,precipitation,precipitation_probability,relative_humidity_2m,wind_speed_10m,weather_code,surface_pressure',
             'timezone'      => 'Asia/Shanghai',
             'forecast_days' => $forecastDays,
-        ]);
+        ], '逐时预报');
 
-        if ($response->failed()) {
-            LogHelper::error('[OpenMeteo] 逐时预报获取失败', [
-                'status' => $response->status(),
-            ]);
-            throw new BusinessException('Open-Meteo 逐时预报请求失败', ResponseCode::THIRD_PARTY_ERROR);
-        }
-
-        $data   = $response->json();
         $hourly = $data['hourly'] ?? [];
         $result = [];
         $count  = min($hours, count($hourly['time']));
@@ -121,23 +126,17 @@ class OpenMeteoDriver implements WeatherDriverInterface
 
     public function getDailyForecast(float $lat, float $lon, int $days = 7): array
     {
-        $response = $this->getClient()->get("{$this->baseUrl}/forecast", [
+        $data  = $this->request("{$this->baseUrl}/forecast", [
             'latitude'      => $lat,
             'longitude'     => $lon,
             'daily'         => 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max',
             'timezone'      => 'Asia/Shanghai',
             'forecast_days' => $days,
-        ]);
+        ], '逐日预报');
 
-        if ($response->failed()) {
-            LogHelper::error('[OpenMeteo] 逐日预报获取失败');
-            throw new BusinessException('Open-Meteo 逐日预报请求失败', ResponseCode::THIRD_PARTY_ERROR);
-        }
-
-        $data  = $response->json();
-        $daily = $data['daily'] ?? [];
+        $daily  = $data['daily'] ?? [];
         $result = [];
-        $count = min($days, count($daily['time']));
+        $count  = min($days, count($daily['time']));
 
         for ($i = 0; $i < $count; $i++) {
             $forecastDate = $daily['time'][$i];

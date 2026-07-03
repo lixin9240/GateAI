@@ -53,18 +53,4 @@ class WeatherController extends Controller
             'count' => count($data),
         ]);
     }
-
-    public function snapshot(WeatherCurrentRequest $request): JsonResponse
-    {
-        $lat = $request->input('latitude', config('weather.station.latitude'));
-        $lon = $request->input('longitude', config('weather.station.longitude'));
-
-        $current = $this->weatherService->getCurrentWeather((float) $lat, (float) $lon);
-        $daily   = $this->weatherService->getDailyForecast((float) $lat, (float) $lon, 3);
-
-        return Result::success('获取气象快照成功', [
-            'current' => $current,
-            'daily'   => $daily,
-        ]);
-    }
 }

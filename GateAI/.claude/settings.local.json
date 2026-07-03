@@ -45,7 +45,11 @@
       "Bash(php -l app/Models/PhysicalParameter.php)",
       "Bash(php -l app/Services/LX/PhysicalService.php)",
       "Bash(php -l app/Http/Requests/LX/LXPhysicalRequest.php)",
-      "Bash(php -l app/Http/Controllers/Api/LX/PhysicalController.php)"
+      "Bash(php -l app/Http/Controllers/Api/LX/PhysicalController.php)",
+      "Bash(curl -s \"http://localhost:8899/api/v1/weather/current\")",
+      "Bash(php -l app/Services/Weather/Drivers/HeFengDriver.php)",
+      "Bash(php -l config/weather.php)",
+      "Bash(php -l app/Services/Weather/Drivers/CaiyunDriver.php)"
     ]
   }
 }

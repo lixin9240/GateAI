@@ -28,7 +28,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
-    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气（（实时+3日预报））
 });
 
 // 需要认证的接口
@@ -73,14 +72,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/{id}', [WjcEdgeNodeController::class, 'show']);
         Route::post('/{id}/heartbeat', [WjcEdgeNodeController::class, 'heartbeat']);
         Route::delete('/{id}', [WjcEdgeNodeController::class, 'destroy']);
-    });
-
-    // 7. 气象模块（认证版）
-    Route::prefix('weather')->group(function () {
-        Route::get('current', [WeatherController::class, 'current']);
-        Route::get('hourly', [WeatherController::class, 'hourly']);
-        Route::get('daily', [WeatherController::class, 'daily']);
-        Route::get('snapshot', [WeatherController::class, 'snapshot']);
     });
 
     // 10. 历史查询模块
