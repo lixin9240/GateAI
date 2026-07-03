@@ -20,8 +20,8 @@ return [
     ],
 
     'station' => [
-        'latitude'  => env('STATION_LATITUDE', 30.0),// 水电站纬度
-        'longitude' => env('STATION_LONGITUDE', 105.0),// 水电站经度
-        'name'      => env('STATION_NAME', '默认水电站'),// 水电站名称
+        'latitude'  => env('STATION_LATITUDE', 28.64),// 向家坝水电站纬度
+        'longitude' => env('STATION_LONGITUDE', 104.40),// 向家坝水电站经度
+        'name'      => env('STATION_NAME', '四川省宜宾市向家坝水电站'),// 水电站名称
     ],
 ];

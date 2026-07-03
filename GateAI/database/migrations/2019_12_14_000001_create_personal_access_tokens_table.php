@@ -1,5 +1,5 @@
 <?php
-
+// 创建个人访问令牌表
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
