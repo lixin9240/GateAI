@@ -140,7 +140,7 @@ class AuthService
             throw new BusinessException('原密码错误', ResponseCode::PASSWORD_ERROR);
         }
 
-        $user->password = Hash::make($data['new_password']);
+        $user->password = $data['new_password'];
         $user->force_change_password = 0;
         $user->login_token = null;
         $user->token_expire_time = null;
@@ -153,7 +153,7 @@ class AuthService
     }
 
     /**
-     * 用户登出
+     * 用户登出 —— 清空 login_token 并将当前 token 加入黑名单
      */
     public function logout(int $userId): void
     {
@@ -162,6 +162,13 @@ class AuthService
         $user->login_token = null;
         $user->token_expire_time = null;
         $user->save();
+
+        // 将当前 token 加入 JWT 黑名单，使其立即失效
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+        } catch (\Exception $e) {
+            // token 可能已过期，忽略
+        }
 
         LogHelper::business('用户登出成功', [
             'user_id' => $userId,
