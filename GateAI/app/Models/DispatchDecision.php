@@ -46,4 +46,14 @@ class DispatchDecision extends Model
         'weights_used'       => 'json',
         'physics_validation' => 'json',
     ];
+
+    public function reservoir()
+    {
+        return $this->belongsTo(Reservoir::class);
+    }
+
+    public function edgeNode()
+    {
+        return $this->belongsTo(EdgeNode::class, 'edge_node_id');
+    }
 }
