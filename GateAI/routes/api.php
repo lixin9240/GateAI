@@ -16,8 +16,8 @@ use App\Http\Controllers\Api\Wjc\WjcAlarmController;
 use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
-use Illuminate\Http\Request;
-use App\Http\Controllers\FmyController;
+use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
+use App\Http\Controllers\Api\Fmy\MonitorController;
 use App\Http\Controllers\WjcController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,7 +28,6 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
-    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气（（实时+3日预报））
 });
 
 // 需要认证的接口
@@ -73,14 +72,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::get('/{id}', [WjcEdgeNodeController::class, 'show']);
         Route::post('/{id}/heartbeat', [WjcEdgeNodeController::class, 'heartbeat']);
         Route::delete('/{id}', [WjcEdgeNodeController::class, 'destroy']);
-    });
-
-    // 7. 气象模块（认证版）
-    Route::prefix('weather')->group(function () {
-        Route::get('current', [WeatherController::class, 'current']);
-        Route::get('hourly', [WeatherController::class, 'hourly']);
-        Route::get('daily', [WeatherController::class, 'daily']);
-        Route::get('snapshot', [WeatherController::class, 'snapshot']);
     });
 
     // 10. 历史查询模块
@@ -143,21 +134,21 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
 // ===== Fmy 模块路由（JWT 认证）=====
 // 公开
-Route::post('/auth/login', [FmyController::class, 'login']);
+Route::post('/auth/login', [FmyAuthController::class, 'login']);
 // JWT 认证
 Route::middleware(['auth:api', 'token.valid'])->group(function () {
     // 1. 认证模块
     //用户登出
-    Route::post('/auth/logout', [FmyController::class, 'logout']);
+    Route::post('/auth/logout', [FmyAuthController::class, 'logout']);
     //修改密码
-    Route::post('/auth/change-pwd', [FmyController::class, 'changePassword']);
+    Route::post('/auth/change-pwd', [FmyAuthController::class, 'changePassword']);
     //登录日志查询
-    Route::get('/login-logs', [FmyController::class, 'loginLogs']);
+    Route::get('/login-logs', [FmyAuthController::class, 'loginLogs']);
     // 2. 监控大屏模块
     //获取全部设备列表
-    Route::get('/equipment/all-list', [FmyController::class, 'allList']);
+    Route::get('/equipment/all-list', [MonitorController::class, 'allList']);
     //实时采集数据
-    Route::get('/monitoring/realtime', [FmyController::class, 'realtime']);
+    Route::get('/monitoring/realtime', [MonitorController::class, 'realtime']);
     //趋势图表数据
-    Route::get('/monitoring/trend', [FmyController::class, 'trend']);
+    Route::get('/monitoring/trend', [MonitorController::class, 'trend']);
 });

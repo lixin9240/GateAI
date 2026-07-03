@@ -25,17 +25,21 @@ class LogHelper
             'operation_type' => $operationType,
         ]));
 
-        BusinessLog::create([
-            'trace_id'       => $traceId,
-            'channel'        => 'business',
-            'level'          => $level,
-            'message'        => $message,
-            'context'        => $context,
-            'user_id'        => $userId,
-            'ip_address'     => $ip,
-            'operation_type' => $operationType,
-            'created_at'     => now(),
-        ]);
+        try {
+            BusinessLog::create([
+                'trace_id'       => $traceId,
+                'channel'        => 'business',
+                'level'          => $level,
+                'message'        => $message,
+                'context'        => $context,
+                'user_id'        => $userId,
+                'ip_address'     => $ip,
+                'operation_type' => $operationType,
+                'created_at'     => now(),
+            ]);
+        } catch (\Throwable) {
+            // 数据库不可用时不影响业务
+        }
     }
 
     /**
@@ -57,18 +61,21 @@ class LogHelper
 
         Log::channel('exception')->error($logMessage, $context);
 
-        ExceptionLog::create([
-            'trace_id'    => $traceId,
-            'message'     => $e->getMessage(),
-            'file'        => $e->getFile(),
-            'line'        => $e->getLine(),
-            'trace'       => $e->getTraceAsString(),
-            'sql'         => $extra['sql'] ?? null,
-            'bindings'    => $extra['bindings'] ?? null,
-            'user_id'     => $userId,
-            'request_url' => request()->fullUrl(),
-            'created_at'  => now(),
-        ]);
+        try {
+            ExceptionLog::create([
+                'trace_id'    => $traceId,
+                'message'     => $e->getMessage(),
+                'file'        => $e->getFile(),
+                'line'        => $e->getLine(),
+                'trace'       => $e->getTraceAsString(),
+                'sql'         => $extra['sql'] ?? null,
+                'bindings'    => $extra['bindings'] ?? null,
+                'user_id'     => $userId,
+                'request_url' => request()->fullUrl(),
+                'created_at'  => now(),
+            ]);
+        } catch (\Throwable) {
+        }
     }
 
     /**
@@ -83,18 +90,21 @@ class LogHelper
             'trace_id' => $traceId,
         ]));
 
-        ExceptionLog::create([
-            'trace_id'    => $traceId,
-            'message'     => $message,
-            'file'        => $context['file'] ?? '',
-            'line'        => $context['line'] ?? 0,
-            'trace'       => $context['trace'] ?? '',
-            'sql'         => $context['sql'] ?? null,
-            'bindings'    => $context['bindings'] ?? null,
-            'user_id'     => $userId,
-            'request_url' => request()->fullUrl(),
-            'created_at'  => now(),
-        ]);
+        try {
+            ExceptionLog::create([
+                'trace_id'    => $traceId,
+                'message'     => $message,
+                'file'        => $context['file'] ?? '',
+                'line'        => $context['line'] ?? 0,
+                'trace'       => $context['trace'] ?? '',
+                'sql'         => $context['sql'] ?? null,
+                'bindings'    => $context['bindings'] ?? null,
+                'user_id'     => $userId,
+                'request_url' => request()->fullUrl(),
+                'created_at'  => now(),
+            ]);
+        } catch (\Throwable) {
+        }
     }
 
     /**
@@ -104,6 +114,9 @@ class LogHelper
     {
         Log::channel('api')->info('API Request', $data);
 
-        ApiLog::create(array_merge($data, ['created_at' => now()]));
+        try {
+            ApiLog::create(array_merge($data, ['created_at' => now()]));
+        } catch (\Throwable) {
+        }
     }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "47b06bd156119cf087e649f567a4035d",
+    "content-hash": "de42625aaa9e06608568d0f4e57534c8",
     "packages": [
         {
             "name": "brick/math",
@@ -5274,9 +5274,14 @@
         {
             "name": "tymon/jwt-auth",
             "version": "2.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tymondesigns/jwt-auth.git",
+                "reference": "6c70930a92710d97e8e52b182fca2176097f33be"
+            },
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/tymon/jwt-auth/2.3.0/tymon-jwt-auth-2.3.0.zip",
+                "url": "https://api.github.com/repos/tymondesigns/jwt-auth/zipball/6c70930a92710d97e8e52b182fca2176097f33be",
                 "reference": "6c70930a92710d97e8e52b182fca2176097f33be",
                 "shasum": ""
             },
@@ -5317,6 +5322,7 @@
                     "Tymon\\JWTAuth\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],

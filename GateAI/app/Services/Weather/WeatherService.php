@@ -2,6 +2,8 @@
 // 天气服务
 namespace App\Services\Weather;
 
+use App\Services\Weather\Drivers\CaiyunDriver;
+use App\Services\Weather\Drivers\HeFengDriver;
 use App\Services\Weather\Drivers\OpenMeteoDriver;
 use App\Services\Weather\Drivers\WeatherDriverInterface;
 use App\Support\LogHelper;
@@ -13,7 +15,13 @@ class WeatherService
 
     public function __construct()
     {
-        $this->primaryDriver = new OpenMeteoDriver();
+        $driver = config('weather.default', 'hefeng');
+
+        $this->primaryDriver = match ($driver) {
+            'openmeteo' => new OpenMeteoDriver(),
+            'hefeng'    => new HeFengDriver(),
+            default     => new CaiyunDriver(),
+        };
     }
 
     public function getCurrentWeather(?float $lat = null, ?float $lon = null): array
