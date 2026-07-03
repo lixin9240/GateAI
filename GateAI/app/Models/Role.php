@@ -21,6 +21,9 @@ class Role extends Model
         'id' => 'integer',
     ];
 
+    /**
+     * 关联用户
+     */
     public function users()
     {
         return $this->hasMany(User::class, 'role_id');

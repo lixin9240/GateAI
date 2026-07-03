@@ -17,6 +17,20 @@ class Reservoir extends Model
         'design_flood_level', 'check_flood_level',
         'total_capacity', 'installed_capacity', 'ecological_flow',
         'location_lat', 'location_lng', 'status',
+        'name',
+        'code',
+        'type',
+        'dead_water_level',
+        'normal_water_level',
+        'flood_limit_level',
+        'design_flood_level',
+        'check_flood_level',
+        'total_capacity',
+        'installed_capacity',
+        'ecological_flow',
+        'location_lat',
+        'location_lng',
+        'status',
     ];
 
     protected $casts = [

@@ -44,6 +44,36 @@ class Equipment extends Model
         'last_online',    // 最后在线时间
         'created_by',     // 创建人
         'updated_by',     // 更新人
+        'name',
+        'code',
+        'type',
+        'reservoir_id',
+        'status',
+        'location',
+        'manufacturer',
+        'model',
+        'serial_number',
+        'purchase_date',
+        'warranty_expire',
+        'specs',
+        'current_metrics',
+        'health_score',
+        'tags',
+        'edge_node_id',
+        'plc_register',
+        'communication_protocol',
+        'heartbeat_interval',
+        'offline_threshold',
+        'firmware_version',
+        'maintenance_count',
+        'last_maintenance_at',
+        'next_maintenance_at',
+        'total_runtime',
+        'ip_address',
+        'port',
+        'last_online',
+        'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -53,23 +83,42 @@ class Equipment extends Model
         'health_score'      => 'float',
         'purchase_date'     => 'date',
         'warranty_expire'   => 'date',
+        'specs'              => 'array',
+        'current_metrics'    => 'array',
+        'tags'               => 'array',
+        'health_score'       => 'decimal:2',
+        'purchase_date'      => 'date',
+        'warranty_expire'    => 'date',
+        'last_online'        => 'datetime',
         'last_maintenance_at' => 'datetime',
         'next_maintenance_at' => 'datetime',
         'last_online'       => 'datetime',
     ];
 
+    /**
+     * 所属水库
+     */
     public function reservoir()
     {
+        return $this->belongsTo(Reservoir::class, 'reservoir_id');
         return $this->belongsTo(Reservoir::class);
     }
 
+    /**
+     * 所属边缘节点
+     */
     public function edgeNode()
     {
         return $this->belongsTo(EdgeNode::class, 'edge_node_id');
     }
 
+    /**
+     * 是否为网关设备
+     */
+    public function isEdgeGateway(): bool
     public function alarms()
     {
+        return $this->type === 'edge_gateway';
         return $this->hasMany(Alarm::class, 'equipment_id');
     }
 }
