@@ -8,33 +8,61 @@ use App\Models\DispatchDecision;
 use App\Models\GateAction;
 use App\Models\MonitoringData;
 use App\Support\LogHelper;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class EdgeService
 {
     public function reportMonitoringData(array $data): array
     {
-        $inserted = 0;
+        $reservoirId = $data['reservoir_id'];
+        $edgeNodeId  = $data['edge_node_id'];
+        $rows        = $data['data'];
+        $now          = now();
 
-        foreach ($data['data'] as $row) {
-            MonitoringData::create([
-                'timestamp'        => $row['timestamp'],
-                'reservoir_id'     => $data['reservoir_id'],
-                'edge_node_id'     => $data['edge_node_id'],
-                'upstream_level'   => $row['upstream_level'],
-                'downstream_level' => $row['downstream_level'],
-                'water_head'       => $row['water_head'],
-                'inflow_rate'      => $row['inflow_rate'],
-                'outflow_rate'     => $row['outflow_rate'],
-                'gate_opening'     => $row['gate_opening'],
-                'power_output'     => $row['power_output'],
-                'cumulative_energy' => $row['cumulative_energy'] ?? 0,
-                'data_source'      => 'sensor',
+        // 1. 批量写入 MySQL（单条 INSERT，N 行 VALUES）
+        $values = [];
+        $bindings = [];
+        foreach ($rows as $row) {
+            $values[] = '(?,?,?,?,?,?,?,?,?,?,?,?,?)';
+            $bindings = array_merge($bindings, [
+                $row['timestamp'], $reservoirId, $edgeNodeId,
+                $row['upstream_level'], $row['downstream_level'], $row['water_head'],
+                $row['inflow_rate'], $row['outflow_rate'], $row['gate_opening'],
+                $row['power_output'], $row['cumulative_energy'] ?? 0,
+                'sensor', $now,
             ]);
-            $inserted++;
         }
 
-        return ['inserted' => $inserted];
+        \DB::insert(
+            'INSERT INTO monitoring_data (timestamp, reservoir_id, edge_node_id, upstream_level, downstream_level, water_head, inflow_rate, outflow_rate, gate_opening, power_output, cumulative_energy, data_source, created_at) VALUES ' . implode(',', $values),
+            $bindings
+        );
+
+        // 2. 最新一帧写入 Redis（覆盖，监控大屏秒级读取）
+        $latest = end($rows);
+        $cacheKey = "monitoring:latest:{$reservoirId}";
+        Cache::put($cacheKey, [
+            'reservoir_id'   => $reservoirId,
+            'upstream_level'   => $latest['upstream_level'] ?? null,
+            'downstream_level' => $latest['downstream_level'] ?? null,
+            'water_head'       => $latest['water_head'] ?? null,
+            'inflow_rate'      => $latest['inflow_rate'] ?? null,
+            'outflow_rate'     => $latest['outflow_rate'] ?? null,
+            'gate_opening'     => $latest['gate_opening'] ?? null,
+            'power_output'     => $latest['power_output'] ?? null,
+            'timestamp'        => $latest['timestamp'] ?? null,
+        ], 300);
+
+        return ['inserted' => count($rows)];
+    }
+
+    /**
+     * 从 Redis 读取最新监测数据（监控大屏用，秒级延迟）
+     */
+    public static function getLatest(int $reservoirId): ?array
+    {
+        return Cache::get("monitoring:latest:{$reservoirId}");
     }
 
     public function reportDispatchDecision(array $data): array
