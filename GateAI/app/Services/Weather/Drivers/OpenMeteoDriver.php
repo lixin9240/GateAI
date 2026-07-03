@@ -4,8 +4,8 @@ namespace App\Services\Weather\Drivers;
 
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class OpenMeteoDriver implements WeatherDriverInterface
 {
@@ -46,7 +46,7 @@ class OpenMeteoDriver implements WeatherDriverInterface
         ]);
 
         if ($response->failed()) {
-            Log::channel('exception')->error('[OpenMeteo] 实时天气获取失败', [
+            LogHelper::error('[OpenMeteo] 实时天气获取失败', [
                 'status' => $response->status(),
                 'body'   => $response->body(),
             ]);
@@ -86,7 +86,7 @@ class OpenMeteoDriver implements WeatherDriverInterface
         ]);
 
         if ($response->failed()) {
-            Log::channel('exception')->error('[OpenMeteo] 逐时预报获取失败', [
+            LogHelper::error('[OpenMeteo] 逐时预报获取失败', [
                 'status' => $response->status(),
             ]);
             throw new BusinessException('Open-Meteo 逐时预报请求失败', ResponseCode::THIRD_PARTY_ERROR);
@@ -130,7 +130,7 @@ class OpenMeteoDriver implements WeatherDriverInterface
         ]);
 
         if ($response->failed()) {
-            Log::channel('exception')->error('[OpenMeteo] 逐日预报获取失败');
+            LogHelper::error('[OpenMeteo] 逐日预报获取失败');
             throw new BusinessException('Open-Meteo 逐日预报请求失败', ResponseCode::THIRD_PARTY_ERROR);
         }
 

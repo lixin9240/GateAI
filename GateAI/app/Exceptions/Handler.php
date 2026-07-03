@@ -3,12 +3,12 @@
 namespace App\Exceptions;
 
 use App\Enums\ResponseCode;
+use App\Support\LogHelper;
 use App\Support\Result;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
@@ -54,22 +54,15 @@ class Handler extends ExceptionHandler
         }
 
         if ($e instanceof QueryException) {
-            Log::channel('exception')->error('数据库异常', [
-                'trace_id' => $request->attributes->get('trace_id'),
+            LogHelper::exception($e, [
                 'sql'      => $e->getSql(),
                 'bindings' => $e->getBindings(),
-                'message'  => $e->getMessage(),
-            ]);
+            ], '数据库异常');
 
             return Result::error(ResponseCode::DATABASE_ERROR);
         }
 
-        Log::channel('exception')->error($e->getMessage(), [
-            'trace_id' => $request->attributes->get('trace_id'),
-            'file'     => $e->getFile(),
-            'line'     => $e->getLine(),
-            'trace'    => $e->getTraceAsString(),
-        ]);
+        LogHelper::exception($e);
 
         return Result::error(ResponseCode::SYSTEM_ERROR);
     }
