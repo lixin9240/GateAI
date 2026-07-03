@@ -24,4 +24,9 @@ class LstmPrediction extends Model
         'flow_seq_json'  => 'json',
         'base_time'      => 'datetime',
     ];
+
+    public function equipment()
+    {
+        return $this->belongsTo(Equipment::class, 'equipment_id');
+    }
 }

@@ -8,6 +8,7 @@ use App\Models\ControlCommand;
 use App\Models\DispatchDecision;
 use App\Models\EmergencyStop;
 use App\Models\GateAction;
+use App\Models\LstmPrediction;
 use Illuminate\Support\Str;
 
 class WjcDispatchService
@@ -17,7 +18,9 @@ class WjcDispatchService
      */
     public function getPredictions(int $reservoirId, int $term)
     {
-        return DispatchDecision::where('reservoir_id', $reservoirId)
+        return LstmPrediction::whereHas('equipment', function ($q) use ($reservoirId) {
+                $q->where('reservoir_id', $reservoirId);
+            })
             ->where('predict_term', $term)
             ->orderByDesc('base_time')
             ->first();

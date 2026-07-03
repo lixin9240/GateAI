@@ -32,7 +32,7 @@ Route::prefix('v1')->group(function () {
 });
 
 // 需要认证的接口
-Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
+Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);// 登出
     Route::get('/me', [AuthController::class, 'me']);// 获取用户信息
 
