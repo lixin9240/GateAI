@@ -1,5 +1,5 @@
 <?php
-
+// 用户模型
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,12 +37,13 @@ class User extends Authenticatable implements JWTSubject
 
     protected $casts = [
         'role_id'               => 'integer',
+        'email_verified_at'     => 'datetime',
+        'password'              => 'hashed',
         'force_change_password' => 'integer',
         'login_fail_count'      => 'integer',
-        'is_enabled'            => 'integer',
         'lock_expire_time'      => 'datetime',
         'token_expire_time'     => 'datetime',
-        'email_verified_at'     => 'datetime',
+        'is_enabled'            => 'integer',
     ];
 
     public function setPasswordAttribute($value): void
@@ -50,7 +51,8 @@ class User extends Authenticatable implements JWTSubject
         $this->attributes['password'] = bcrypt($value);
     }
 
-    public function getJWTIdentifier()
+    // ─── JWT ──────────────────────────────────────
+    public function getJWTIdentifier(): mixed
     {
         return $this->getKey();
     }
@@ -59,6 +61,8 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+
 
     public function role()
     {
@@ -75,6 +79,9 @@ class User extends Authenticatable implements JWTSubject
         return $this->hasMany(UserLock::class, 'user_id');
     }
 
+    /**
+     * 账号是否已锁定
+     */
     public function isLocked(): bool
     {
         return $this->lock_expire_time !== null && now()->lessThan($this->lock_expire_time);

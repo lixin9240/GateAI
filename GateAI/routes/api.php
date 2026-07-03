@@ -16,8 +16,8 @@ use App\Http\Controllers\Api\Wjc\WjcAlarmController;
 use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
-use Illuminate\Http\Request;
-use App\Http\Controllers\FmyController;
+use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
+use App\Http\Controllers\Api\Fmy\MonitorController;
 use App\Http\Controllers\WjcController;
 use Illuminate\Support\Facades\Route;
 
@@ -134,21 +134,21 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
 // ===== Fmy 模块路由（JWT 认证）=====
 // 公开
-Route::post('/auth/login', [FmyController::class, 'login']);
+Route::post('/auth/login', [FmyAuthController::class, 'login']);
 // JWT 认证
 Route::middleware(['auth:api', 'token.valid'])->group(function () {
     // 1. 认证模块
     //用户登出
-    Route::post('/auth/logout', [FmyController::class, 'logout']);
+    Route::post('/auth/logout', [FmyAuthController::class, 'logout']);
     //修改密码
-    Route::post('/auth/change-pwd', [FmyController::class, 'changePassword']);
+    Route::post('/auth/change-pwd', [FmyAuthController::class, 'changePassword']);
     //登录日志查询
-    Route::get('/login-logs', [FmyController::class, 'loginLogs']);
+    Route::get('/login-logs', [FmyAuthController::class, 'loginLogs']);
     // 2. 监控大屏模块
     //获取全部设备列表
-    Route::get('/equipment/all-list', [FmyController::class, 'allList']);
+    Route::get('/equipment/all-list', [MonitorController::class, 'allList']);
     //实时采集数据
-    Route::get('/monitoring/realtime', [FmyController::class, 'realtime']);
+    Route::get('/monitoring/realtime', [MonitorController::class, 'realtime']);
     //趋势图表数据
-    Route::get('/monitoring/trend', [FmyController::class, 'trend']);
+    Route::get('/monitoring/trend', [MonitorController::class, 'trend']);
 });
