@@ -12,12 +12,12 @@ class EmergencyStop extends Model
         'trigger_user_id',
         'decision_id',
         'command_id',
-        'stop_reason',
         'trigger_time',
         'edge_ack_time',
         'plc_shut_time',
         'recover_user_id',
         'recover_time',
+        'stop_reason',
     ];
 
     protected $casts = [
@@ -26,4 +26,14 @@ class EmergencyStop extends Model
         'plc_shut_time'  => 'datetime',
         'recover_time'   => 'datetime',
     ];
+
+    public function decision()
+    {
+        return $this->belongsTo(DispatchDecision::class, 'decision_id');
+    }
+
+    public function command()
+    {
+        return $this->belongsTo(ControlCommand::class, 'command_id');
+    }
 }
