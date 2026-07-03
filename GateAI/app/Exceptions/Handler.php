@@ -1,7 +1,6 @@
 <?php
-// 异常处理程序
-namespace App\Exceptions;
 
+namespace App\Exceptions;
 
 use Throwable;
 use App\Support\Result;
@@ -31,7 +30,6 @@ class Handler extends ExceptionHandler
 
     public function render($request, Throwable $e)
     {
-
         /**
          * 参数验证异常
          */
@@ -120,42 +118,5 @@ class Handler extends ExceptionHandler
         return Result::error(
             ResponseCode::SYSTEM_ERROR
         );
-
-        if ($e instanceof ValidationException) {
-            return Result::error(
-                ResponseCode::PARAM_ERROR,
-                collect($e->errors())->flatten()->first()
-            );
-        }
-
-        if ($e instanceof AuthenticationException) {
-            return Result::error(ResponseCode::UNAUTHORIZED);
-        }
-
-        if ($e instanceof ModelNotFoundException) {
-            return Result::error(ResponseCode::DATA_NOT_FOUND);
-        }
-
-        if ($e instanceof NotFoundHttpException) {
-            return Result::error(ResponseCode::DATA_NOT_FOUND, '接口不存在');
-        }
-
-        if ($e instanceof BusinessException) {
-            return Result::error($e->codeEnum, $e->getMessage());
-        }
-
-        if ($e instanceof QueryException) {
-            LogHelper::exception($e, [
-                'sql'      => $e->getSql(),
-                'bindings' => $e->getBindings(),
-            ], '数据库异常');
-
-            return Result::error(ResponseCode::DATABASE_ERROR);
-        }
-
-        LogHelper::exception($e);
-
-        return Result::error(ResponseCode::SYSTEM_ERROR);
-
     }
 }

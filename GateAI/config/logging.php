@@ -21,63 +21,49 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'single' => [
+            'driver'               => 'single',
+            'path'                 => storage_path('logs/laravel.log'),
+            'level'                => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
+        'daily' => [
+            'driver'               => 'daily',
+            'path'                 => storage_path('logs/laravel.log'),
+            'level'                => env('LOG_LEVEL', 'debug'),
+            'days'                 => 14,
+            'replace_placeholders' => true,
+        ],
+
         'business' => [
             'driver' => 'daily',
-            'path'   => storage_path('logs/business.log'),// 业务日志
+            'path'   => storage_path('logs/business.log'),
             'level'  => 'info',
             'days'   => 14,
         ],
 
         'exception' => [
             'driver' => 'daily',
-            'path'   => storage_path('logs/exception.log'),// 异常日志
+            'path'   => storage_path('logs/exception.log'),
             'level'  => 'error',
             'days'   => 30,
         ],
 
         'api' => [
             'driver' => 'daily',
-            'path'   => storage_path('logs/api.log'),// API日志
+            'path'   => storage_path('logs/api.log'),
             'level'  => 'info',
             'days'   => 7,
         ],
 
-        'single' => [
-            'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),// Laravel日志
-            'level' => env('LOG_LEVEL', 'debug'),
-            'replace_placeholders' => true,
-        ],
-
-        'daily' => [
-            'driver'                  => 'daily',
-            'path'                    => storage_path('logs/laravel.log'),
-            'level'                   => env('LOG_LEVEL', 'debug'),
-            'days'                    => 14,
-            'replace_placeholders'    => true,
-        ],
-
-        /**
-         * 业务日志
-         * 用途：记录核心业务流程
-         */
-        'business' => [
-            'driver' => 'daily',
-
-            'path' => storage_path('logs/laravel.log'),// Laravel日志
-            'level' => env('LOG_LEVEL', 'debug'),
-            'days' => 14,
-            'replace_placeholders' => true,
-
-        ],
-
         'slack' => [
-            'driver'                   => 'slack',
-            'url'                      => env('LOG_SLACK_WEBHOOK_URL'),
-            'username'                 => 'Laravel Log',
-            'emoji'                    => ':boom:',
-            'level'                    => env('LOG_LEVEL', 'critical'),
-            'replace_placeholders'     => true,
+            'driver'               => 'slack',
+            'url'                  => env('LOG_SLACK_WEBHOOK_URL'),
+            'username'             => 'Laravel Log',
+            'emoji'                => ':boom:',
+            'level'                => env('LOG_LEVEL', 'critical'),
+            'replace_placeholders' => true,
         ],
 
         'papertrail' => [
@@ -104,16 +90,16 @@ return [
         ],
 
         'syslog' => [
-            'driver'                  => 'syslog',
-            'level'                   => env('LOG_LEVEL', 'debug'),
-            'facility'                => LOG_USER,
-            'replace_placeholders'    => true,
+            'driver'               => 'syslog',
+            'level'                => env('LOG_LEVEL', 'debug'),
+            'facility'             => LOG_USER,
+            'replace_placeholders' => true,
         ],
 
         'errorlog' => [
-            'driver'                  => 'errorlog',
-            'level'                   => env('LOG_LEVEL', 'debug'),
-            'replace_placeholders'    => true,
+            'driver'               => 'errorlog',
+            'level'                => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
         ],
 
         'null' => [
