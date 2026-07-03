@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('simulation_scenarios', function (Blueprint $table) {
             $table->id()->comment('主键');
             $table->string('name', 100)->comment('场景名称');
-            $table->string('type', 50)->index()->comment('场景类型：production / energy / fault');
+            $table->string('type', 50)->index()->comment('场景类型：production / energy / fault');// 场景类型：生产/能量/故障
             $table->text('description')->nullable()->comment('场景描述');
-            $table->string('status', 20)->default('draft')->index()->comment('active / inactive / draft');
+            $table->string('status', 20)->default('draft')->index()->comment('active / inactive / draft');// 状态：草稿/已发布/已停用
             $table->unsignedBigInteger('model_id')->nullable()->index()->comment('关联模型ID');
             $table->foreign('model_id')->references('id')->on('settings_models')->onDelete('set null');
             $table->json('scenario_config')->nullable()->comment('场景参数配置');
