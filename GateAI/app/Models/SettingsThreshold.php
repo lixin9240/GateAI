@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 
 class SettingsThreshold extends Model
@@ -30,6 +31,11 @@ class SettingsThreshold extends Model
         'debounce_seconds' => 'integer',
         'enabled'          => 'integer',
     ];
+
+    protected function serializeDate(\DateTimeInterface $date): string
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
 
     public function reservoir()
     {

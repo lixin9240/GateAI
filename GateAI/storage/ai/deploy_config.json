@@ -1,66 +1,78 @@
 {
-  "project": "Hydropower Intelligent Gate Scheduling",
-  "version": "5.0-physics-informed",
-  "created": "2026-07-02T22:03:00",
-  "device": "Jetson Orin Nano / CPU",
-  "models": {
-    "dqn": {
-      "file": "models/dqn_model.pth",
-      "state_dim": 12,
-      "action_dim": 125,
-      "num_gates": 3,
-      "action_bins": 5,
-      "gate_names": [
-        "spillway",
-        "tunnel",
-        "intake"
-      ],
-      "gate_max_discharge": [
-        300,
-        200,
-        250
-      ]
+    "project": "Hydropower Intelligent Gate Scheduling",
+    "version": "5.1.0-activated",
+    "created": "2026-07-02T22:03:00",
+    "device": "Jetson Orin Nano / CPU",
+    "models": {
+        "dqn": {
+            "file": "models/dqn_model.pth",
+            "state_dim": 12,
+            "action_dim": 125,
+            "num_gates": 3,
+            "action_bins": 5,
+            "gate_names": [
+                "spillway",
+                "tunnel",
+                "intake"
+            ],
+            "gate_max_discharge": [
+                300,
+                200,
+                250
+            ]
+        },
+        "lstm": {
+            "file": "release/lstm_physics_v5.0.pt",
+            "seq_length": 24,
+            "pred_horizon": 6,
+            "input_features": 5,
+            "output_features": 2,
+            "hidden_size": 96,
+            "num_layers": 2,
+            "dropout": 0.4,
+            "version": "5.1.0"
+        },
+        "scaler": "models/scaler_X.pkl"
     },
-    "lstm": {
-      "file": "models/lstm_state_dict.pt",
-      "seq_length": 24,
-      "pred_horizon": 6,
-      "input_features": 5,
-      "output_features": 2,
-      "hidden_size": 96,
-      "num_layers": 2,
-      "dropout": 0.4
+    "reservoir": {
+        "reservoir_area": 15000000,
+        "max_upstream": 195,
+        "min_upstream": 165,
+        "upstream_danger": 190,
+        "upstream_emergency": 193,
+        "upstream_warning": 188,
+        "ideal_min": 178,
+        "ideal_max": 188,
+        "max_downstream": 130,
+        "min_downstream": 115,
+        "downstream_danger": 128,
+        "eco_flow_min": 20,
+        "rain_max_intensity": 50
     },
-    "scaler": "models/scaler_X.pkl"
-  },
-  "reservoir": {
-    "reservoir_area": 15000000.0,
-    "max_upstream": 195.0,
-    "min_upstream": 165.0,
-    "upstream_danger": 190.0,
-    "upstream_emergency": 193.0,
-    "upstream_warning": 188.0,
-    "ideal_min": 178.0,
-    "ideal_max": 188.0,
-    "max_downstream": 130.0,
-    "min_downstream": 115.0,
-    "downstream_danger": 128.0,
-    "eco_flow_min": 20.0,
-    "rain_max_intensity": 50.0
-  },
-  "safety": {
-    "threshold_danger": 190.0,
-    "threshold_warning": 188.0
-  },
-  "mysql": {
-    "host": "localhost",
-    "port": 3306,
-    "user": "hydropower",
-    "password": "GYZ032411",
-    "database": "hydropower_smart"
-  },
-  "inference": {
-    "interval_seconds": 3600,
-    "history_buffer_size": 24
-  }
+    "safety": {
+        "threshold_danger": 190,
+        "threshold_warning": 188
+    },
+    "mysql": {
+        "host": "localhost",
+        "port": 3306,
+        "user": "hydropower",
+        "password": "GYZ032411",
+        "database": "hydropower_smart"
+    },
+    "inference": {
+        "interval_seconds": 3600,
+        "history_buffer_size": 24
+    },
+    "activated_at": "2026-07-03 17:35:27",
+    "active_models": {
+        "lstm": {
+            "name": "Physics-Informed LSTM v5.0",
+            "version": "5.1.0"
+        },
+        "dqn": {
+            "name": "Physics-Informed DQN v5.0",
+            "version": "5.1.0"
+        }
+    }
 }

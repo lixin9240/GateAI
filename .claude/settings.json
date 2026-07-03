@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -l GateAI/app/Services/GYZ/SettingsModelService.php)",
+      "Bash(php GateAI/artisan tinker '--execute=foreach\\(DB::table\\('\\\\''settings_models'\\\\''\\)->select\\('\\\\''id'\\\\'','\\\\''name'\\\\'','\\\\''version'\\\\'','\\\\''status'\\\\'','\\\\''is_active'\\\\'','\\\\''file_path'\\\\''\\)->get\\(\\) as $m\\){echo \"ID{$m->id} {$m->version} {$m->status} active={$m->is_active} file={$m->file_path}\".PHP_EOL;}')",
+      "Bash(php GateAI/artisan tinker '--execute= *)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import torch, json; ckpt = torch.load\\('c:/projects/GateAI/GateAI/storage/ai/release/dqn_physics_v5.0.pth', map_location='cpu', weights_only=False\\); print\\(json.dumps\\({'ok': True}\\)\\)\")",
+      "Bash(python GateAI/storage/ai/infer_cli.py)",
+      "Bash(mysqldump -u root -pGYZ032411 --no-create-info --complete-insert gateai reservoirs edge_nodes settings_thresholds settings_weights settings_models settings_model_deployments)",
+      "Bash(mysql -h 47.108.169.152 -u GateAI -pzcFePCSnEmd5bb7c gateai -e ' *)",
+      "Bash(mysql -h 47.108.169.152 -u GateAI -pzcFePCSnEmd5bb7c gateai)",
+      "Bash(php -l GateAI/app/Http/Controllers/Api/GYZ/AiInferenceController.php)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'code={d[\\\\\"code\\\\\"]}'\\); m=d['data'].get\\('models_used',{}\\); [print\\(f'  {t}: {v[\\\\\"name\\\\\"]} v{v[\\\\\"version\\\\\"]}'\\) for t,v in m.items\\(\\)]\")",
+      "Bash(python c:/projects/GateAI/temp_fix.py)",
+      "Bash(php GateAI/artisan db:seed)",
+      "Bash(php GateAI/artisan tinker '--execute=echo '\\\\''Roles: '\\\\''.DB::table\\('\\\\''roles'\\\\''\\)->count\\(\\).PHP_EOL; echo '\\\\''Users: '\\\\''.DB::table\\('\\\\''users'\\\\''\\)->count\\(\\).PHP_EOL; echo '\\\\''Reservoirs: '\\\\''.DB::table\\('\\\\''reservoirs'\\\\''\\)->count\\(\\).PHP_EOL; echo '\\\\''EdgeNodes: '\\\\''.DB::table\\('\\\\''edge_nodes'\\\\''\\)->count\\(\\).PHP_EOL; foreach\\(DB::table\\('\\\\''reservoirs'\\\\''\\)->select\\('\\\\''id'\\\\'','\\\\''name'\\\\'','\\\\''code'\\\\''\\)->get\\(\\) as $r\\){echo '\\\\'' R'\\\\''.$r->id.'\\\\'' '\\\\''.$r->name.'\\\\'' \\('\\\\''.$r->code.'\\\\''\\)'\\\\''.PHP_EOL;} foreach\\(DB::table\\('\\\\''edge_nodes'\\\\''\\)->select\\('\\\\''id'\\\\'','\\\\''name'\\\\'','\\\\''code'\\\\'','\\\\''reservoir_id'\\\\''\\)->get\\(\\) as $e\\){echo '\\\\'' E'\\\\''.$e->id.'\\\\'' '\\\\''.$e->name.'\\\\'' \\('\\\\''.$e->code.'\\\\''\\) rid='\\\\''.$e->reservoir_id.PHP_EOL;}')",
+      "Bash(rm GateAI/storage/ai/*.md && echo \"Deleted 9 docs\" && echo \"=== storage/ai/ 剩余 ===\" && ls GateAI/storage/ai/)"
+    ],
+    "additionalDirectories": [
+      "C:\\projects\\GateAI\\GateAI\\storage\\ai"
+    ]
+  }
+}
