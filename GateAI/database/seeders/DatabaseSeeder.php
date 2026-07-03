@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             ReservoirSeeder::class,
             EdgeNodeSeeder::class,
             AlarmSeeder::class,
+            EquipmentSeeder::class,
         ]);
     }
 }
