@@ -9,29 +9,23 @@ class SettingsModelDeployment extends Model
     protected $table = 'settings_model_deployments';
 
     protected $fillable = [
-        'model_id',
-        'edge_node_id',
-        'status',
-        'strategy',
-        'scheduled_at',
-        'batch_size',
-        'error_msg',
-        'deployed_by',
-        'md5_verified',
-        'rollback_to',
-        'completed_at',
+        'model_id',      // 模型ID
+        'edge_node_id',  // 目标边缘节点ID
+        'status',        // 部署状态
+        'strategy',      // 部署策略
+        'scheduled_at',  // 计划部署时间
+        'batch_size',    // 批次大小
+        'error_msg',     // 错误信息
+        'deployed_by',   // 部署人
+        'md5_verified',  // MD5是否验证通过
+        'rollback_to',   // 回滚至模型ID
+        'completed_at',  // 完成时间
     ];
 
     protected $casts = [
-        'id'            => 'integer',
-        'model_id'      => 'integer',
-        'edge_node_id'  => 'integer',
-        'batch_size'    => 'integer',
-        'md5_verified'  => 'integer',
-        'deployed_by'   => 'integer',
-        'rollback_to'   => 'integer',
-        'scheduled_at'  => 'datetime',
-        'completed_at'  => 'datetime',
+        'md5_verified' => 'integer',
+        'scheduled_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     public function model()

@@ -9,12 +9,12 @@ class DispatchPlan extends Model
     protected $table = 'dispatch_plans';
 
     protected $fillable = [
-        'reservoir_id',
-        'plan_type',
-        'target_flow',
-        'start_time',
-        'end_time',
-        'status',
+        'reservoir_id', // 水库ID
+        'plan_type',    // 计划类型
+        'target_flow',  // 目标流量
+        'start_time',   // 开始时间
+        'end_time',     // 结束时间
+        'status',       // 状态
     ];
 
     protected $casts = [

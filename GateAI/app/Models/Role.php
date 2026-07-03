@@ -12,18 +12,11 @@ class Role extends Model
     protected $table = 'roles';
 
     protected $fillable = [
-        'name',
-        'code',
-        'remark',
+        'name',   // 角色名称
+        'code',   // 角色编码
+        'remark', // 备注
     ];
 
-    protected $casts = [
-        'id' => 'integer',
-    ];
-
-    /**
-     * 关联用户
-     */
     public function users()
     {
         return $this->hasMany(User::class, 'role_id');

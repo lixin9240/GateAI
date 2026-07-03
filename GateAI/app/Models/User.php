@@ -1,5 +1,5 @@
 <?php
-// 用户模型
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -7,37 +7,35 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
-    use HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'users';
 
     protected $fillable = [
-        'account',
-        'password',
-        'realname',
-        'role_id',
-        'phone',
-        'force_change_password',
-        'login_fail_count',
-        'lock_expire_time',
-        'login_token',
-        'token_expire_time',
-        'is_enabled',
+        'account',               // 登录账号
+        'password',              // 密码
+        'realname',              // 真实姓名
+        'role_id',               // 角色ID
+        'phone',                 // 手机号
+        'force_change_password', // 是否强制修改密码
+        'login_fail_count',      // 登录失败次数
+        'lock_expire_time',      // 锁定到期时间
+        'login_token',           // 登录令牌
+        'token_expire_time',     // 令牌过期时间
+        'is_enabled',            // 启用状态
     ];
 
     protected $hidden = [
         'password',
         'login_token',
         'remember_token',
-        'login_token',
     ];
 
     protected $casts = [
-        'id'                    => 'integer',
         'role_id'               => 'integer',
         'force_change_password' => 'integer',
         'login_fail_count'      => 'integer',
@@ -45,21 +43,23 @@ class User extends Authenticatable
         'lock_expire_time'      => 'datetime',
         'token_expire_time'     => 'datetime',
         'email_verified_at'     => 'datetime',
-        'password'              => 'hashed',
-        'force_change_password' => 'integer',
-        'login_fail_count'      => 'integer',
-        'lock_expire_time'      => 'datetime',
-        'token_expire_time'     => 'datetime',
-        'is_enabled'            => 'integer',
     ];
 
-    // Laravel 10.1 不支持 'hashed' cast，用 mutator 替代
     public function setPasswordAttribute($value): void
     {
         $this->attributes['password'] = bcrypt($value);
     }
 
-    // ─── 关联 ──────────────────────────────────────
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims(): array
+    {
+        return [];
+    }
+
     public function role()
     {
         return $this->belongsTo(Role::class, 'role_id');
@@ -75,25 +75,6 @@ class User extends Authenticatable
         return $this->hasMany(UserLock::class, 'user_id');
     }
 
-    /**
-     * 关联角色
-     */
-    public function role()
-    {
-        return $this->belongsTo(Role::class, 'role_id');
-    }
-
-    /**
-     * 关联登录日志
-     */
-    public function loginLogs()
-    {
-        return $this->hasMany(UserLoginLog::class, 'user_id');
-    }
-
-    /**
-     * 账号是否已锁定
-     */
     public function isLocked(): bool
     {
         return $this->lock_expire_time !== null && now()->lessThan($this->lock_expire_time);
