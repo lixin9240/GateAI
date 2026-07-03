@@ -46,7 +46,7 @@ class SettingsThresholdService
 
         $data['updated_by'] = $userId;
 
-        DB::transaction(function () use ($threshold, $data) {
+        DB::transaction(function () use ($threshold, $data, $userId) {
             $threshold->update($data);
 
             Log::channel('business')->info('阈值配置已更新', [

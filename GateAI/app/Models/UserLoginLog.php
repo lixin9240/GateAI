@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
+
+use App\Models\Concerns\BeijingTime;
+
 use Illuminate\Database\Eloquent\Model;
 
 class UserLoginLog extends Model
 {
     protected $table = 'user_login_logs';
+    use HasBeijingTime;
 
     public const UPDATED_AT = null;
 

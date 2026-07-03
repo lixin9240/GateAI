@@ -14,7 +14,16 @@
       "Bash(php GateAI/artisan db:monitor)",
       "Bash(php GateAI/artisan tinker --execute=\"echo json_encode\\(DB::select\\('SHOW TABLES'\\), JSON_UNESCAPED_UNICODE\\);\")",
       "Bash(php GateAI/artisan --version)",
-      "Bash(cp GateAI/storage/ai/*.md GateAI/ 2>&1 && echo \"完成\" && echo \"\" && echo \"=== GateAI/ 下的所有文档 ===\" && ls GateAI/*.md)"
+      "Bash(cp GateAI/storage/ai/*.md GateAI/ 2>&1 && echo \"完成\" && echo \"\" && echo \"=== GateAI/ 下的所有文档 ===\" && ls GateAI/*.md)",
+      "Bash(grep -rl \"Concerns\\\\\\\\\\\\\\\\BeijingTime\\\\|Concerns/BeijingTime\" GateAI/app/Models/)",
+      "Bash(python c:/projects/GateAI/fix_trait.py)",
+      "Bash(php -r \"require 'GateAI/vendor/autoload.php'; echo class_exists\\('App\\\\\\\\Models\\\\\\\\SettingsWeight'\\) ? 'OK' : 'FAIL';\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'code={d[\\\\\"code\\\\\"]}, id={d[\\\\\"data\\\\\"][\\\\\"id\\\\\"]}'\\)\")",
+      "Bash(php GateAI/artisan tinker '--execute= *)",
+      "Bash(python -c ' *)",
+      "Bash(php GateAI/artisan tinker '--execute=echo DB::table\\('\\\\''settings_models'\\\\''\\)->count\\(\\).'\\\\'' records:'\\\\''.PHP_EOL; foreach\\(DB::table\\('\\\\''settings_models'\\\\''\\)->select\\('\\\\''id'\\\\'','\\\\''name'\\\\'','\\\\''version'\\\\'','\\\\''status'\\\\''\\)->get\\(\\) as $m\\){echo \" ID{$m->id} | {$m->name} | {$m->version} | {$m->status}\".PHP_EOL;}')",
+      "Bash(php GateAI/artisan tinker --execute=\"echo json_encode\\(DB::table\\('settings_weights'\\)->select\\('id','version','preset_name','power_weight','safety_weight','ecology_weight','enabled'\\)->get\\(\\),JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT\\);\")",
+      "Bash(php GateAI/artisan db:seed)"
     ],
     "additionalDirectories": [
       "c:\\projects\\GateAI\\GateAI\\storage\\ai"

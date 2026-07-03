@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
+
+use App\Models\Concerns\BeijingTime;
+
 use Illuminate\Database\Eloquent\Model;
 
 class SettingsModelDeployment extends Model
 {
     protected $table = 'settings_model_deployments';
+    use HasBeijingTime;
 
     protected $fillable = [
         'model_id',      // 模型ID

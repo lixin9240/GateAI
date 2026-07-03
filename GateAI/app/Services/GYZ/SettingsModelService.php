@@ -65,6 +65,12 @@ class SettingsModelService
         $fullPath = Storage::disk('local')->path($path);
         $md5 = md5_file($fullPath);
 
+        // 检查 name+version 唯一性
+        if (SettingsModel::where('name', $data['name'])->where('version', $data['version'])->exists()) {
+            Storage::disk('local')->delete($path);
+            throw new BusinessException('该名称+版本号的模型已存在，请修改版本号后重新上传', ResponseCode::DATA_DUPLICATE);
+        }
+
         return DB::transaction(function () use ($data, $path, $md5, $userId) {
             $model = SettingsModel::create([
                 'name'            => $data['name'],
@@ -130,7 +136,28 @@ class SettingsModelService
                     ->value('id'),
             ]);
 
-            Log::channel('business')->info('AI模型已激活', [
+            // 真实校验：用 Python 加载模型文件，确保文件存在且可被 PyTorch 识别
+            $fullPath = storage_path($model->file_path);
+            if (! file_exists($fullPath)) {
+                throw new BusinessException('模型文件不存在：' . $model->file_path, ResponseCode::FILE_READ_WRITE_FAILED);
+            }
+
+            $verified = $this->verifyModelFile($fullPath, $model->type);
+            if (! $verified) {
+                throw new BusinessException('模型文件加载失败，PyTorch 无法识别该文件', ResponseCode::PROGRAM_ERROR);
+            }
+
+            // 拷贝模型文件到 models/ 目录（infer_cli.py 只从这里加载）
+            $targetDir = storage_path('ai/models');
+            $targetFile = $targetDir . '/' . basename($fullPath);
+            if ($fullPath !== $targetFile) {
+                copy($fullPath, $targetFile);
+            }
+
+            // 更新 deploy_config.json，让 infer_cli.py 知道用哪个模型
+            $this->switchDeployConfig($model, $fullPath);
+
+            Log::channel('business')->info('AI模型已激活并验证', [
                 'model_id' => $model->id,
                 'name'     => $model->name,
                 'version'  => $model->version,
@@ -139,6 +166,86 @@ class SettingsModelService
 
             return $model->fresh();
         });
+    }
+
+    /**
+     * 用 Python 验证模型文件能否被 PyTorch 加载
+     */
+    private function verifyModelFile(string $filePath, string $type): bool
+    {
+        $pythonBin = env('AI_PYTHON_BIN', 'python');
+        $workDir = storage_path('ai');
+
+        // 写临时验证脚本，避免 shell 转义问题
+        $tmpScript = $workDir . '/_verify_model.py';
+        $escapedPath = str_replace('\\', '/', $filePath);
+        file_put_contents($tmpScript, <<<PYTHON
+import json, torch
+try:
+    ckpt = torch.load('{$escapedPath}', map_location='cpu', weights_only=False)
+    print(json.dumps({'ok': True}))
+except Exception as e:
+    print(json.dumps({'ok': False, 'error': str(e)}))
+PYTHON);
+
+        $process = proc_open(
+            "{$pythonBin} {$tmpScript}",
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes,
+            $workDir
+        );
+
+        if (! is_resource($process)) {
+            @unlink($tmpScript);
+            return false;
+        }
+
+        fclose($pipes[0]);
+        $stdout = stream_get_contents($pipes[1]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        proc_close($process);
+        @unlink($tmpScript);
+
+        $result = json_decode($stdout, true);
+        return ($result['ok'] ?? false) === true;
+    }
+
+    /**
+     * 更新 deploy_config.json，切换推理引擎使用的模型文件
+     */
+    private function switchDeployConfig(SettingsModel $model, string $fullPath): void
+    {
+        $configPath = storage_path('ai/deploy_config.json');
+        if (! file_exists($configPath)) {
+            Log::warning('deploy_config.json 不存在，跳过模型切换');
+            return;
+        }
+
+        $config = json_decode(file_get_contents($configPath), true);
+        $fileBasename = basename($fullPath);
+
+        if ($model->type === 'lstm_prediction') {
+            $config['models']['lstm']['file'] = 'release/' . $fileBasename;
+            $config['models']['lstm']['version'] = $model->version;
+        } elseif ($model->type === 'dqn_decision') {
+            $config['models']['dqn']['file'] = 'release/' . $fileBasename;
+            $config['models']['dqn']['version'] = $model->version;
+        }
+
+        $config['version'] = $model->version . '-activated';
+        $config['activated_at'] = now()->toDateTimeString();
+        $config['active_models'] = [
+            'lstm' => SettingsModel::query()
+                ->where('type', 'lstm_prediction')->where('is_active', 1)
+                ->select('name', 'version')->first()?->toArray(),
+            'dqn'  => SettingsModel::query()
+                ->where('type', 'dqn_decision')->where('is_active', 1)
+                ->select('name', 'version')->first()?->toArray(),
+        ];
+
+        file_put_contents($configPath, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        Log::channel('business')->info('deploy_config.json 已更新', ['type' => $model->type, 'file' => $fileBasename]);
     }
 
     /**
@@ -269,6 +376,58 @@ class SettingsModelService
                 'user_id'       => $userId,
             ]);
         });
+
+        // 真实下发：将模型文件同步到边缘节点部署目录（模拟 scp/rsync 到 Jetson）
+        $sourcePath = storage_path($model->file_path);
+        if (file_exists($sourcePath)) {
+            foreach ($results as &$result) {
+                $nodeId = $result['edge_node_id'];
+                $targetDir = storage_path("ai/deployed/node_{$nodeId}");
+                if (! is_dir($targetDir)) {
+                    mkdir($targetDir, 0755, true);
+                }
+                $targetFile = $targetDir . '/' . basename($model->file_path);
+                $copied = copy($sourcePath, $targetFile);
+
+                if ($copied) {
+                    SettingsModelDeployment::where('id', $result['id'])->update([
+                        'status'       => 'completed',
+                        'md5_verified' => md5_file($targetFile) === $model->md5 ? 1 : 0,
+                        'completed_at' => now(),
+                    ]);
+                    $result['status']        = 'completed';
+                    $result['md5_verified']  = (int) (md5_file($targetFile) === $model->md5);
+                    Log::channel('business')->info('模型文件已同步至边缘节点', [
+                        'deployment_id' => $result['id'],
+                        'edge_node_id'  => $nodeId,
+                        'target'        => $targetFile,
+                        'md5_match'     => (int) (md5_file($targetFile) === $model->md5),
+                    ]);
+                } else {
+                    SettingsModelDeployment::where('id', $result['id'])->update([
+                        'status'    => 'failed',
+                        'error_msg' => '文件复制失败',
+                    ]);
+                    $result['status'] = 'failed';
+                    Log::channel('exception')->error('模型文件下发失败', [
+                        'deployment_id' => $result['id'],
+                        'source'        => $sourcePath,
+                        'target'        => $targetFile,
+                    ]);
+                }
+            }
+            unset($result);
+
+            // 更新模型下发完成状态
+            $completedCount = SettingsModelDeployment::where('model_id', $model->id)
+                ->where('status', 'completed')->count();
+            $model->update([
+                'deploy_status'  => $completedCount > 0 ? 'deployed' : 'failed',
+                'deployed_nodes' => $completedCount,
+                'deploy_nodes'   => json_encode($edgeNodeIds),
+                'deployed_at'    => $completedCount > 0 ? now() : null,
+            ]);
+        }
 
         return $results;
     }

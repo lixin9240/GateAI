@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
+
+use App\Models\Concerns\BeijingTime;
+
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 
 class SettingsWeight extends Model
 {
     protected $table = 'settings_weights';
+    use HasBeijingTime;
 
     protected $fillable = [
         'version',       // 配置版本号

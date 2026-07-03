@@ -64,7 +64,7 @@ class UserManagementService
         // 检查账号唯一性
         $exists = User::where('account', $data['account'])->exists();
         if ($exists) {
-            throw new BusinessException('账号已存在', ResponseCode::DATA_ALREADY_EXISTS);
+            throw new BusinessException('账号已存在', ResponseCode::DATA_DUPLICATE);
         }
 
         return DB::transaction(function () use ($data) {
