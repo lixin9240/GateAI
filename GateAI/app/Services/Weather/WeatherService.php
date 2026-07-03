@@ -4,8 +4,8 @@ namespace App\Services\Weather;
 
 use App\Services\Weather\Drivers\OpenMeteoDriver;
 use App\Services\Weather\Drivers\WeatherDriverInterface;
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 
 class WeatherService
 {
@@ -25,14 +25,14 @@ class WeatherService
         $cacheKey = "weather:current:{$lat}:{$lon}";
 
         return Cache::remember($cacheKey, $ttl, function () use ($lat, $lon) {
-            Log::channel('business')->info('[Weather] 获取实时天气', [
+            LogHelper::business('[Weather] 获取实时天气', [
                 'lat' => $lat,
                 'lon' => $lon,
             ]);
 
             $result = $this->primaryDriver->getCurrentWeather($lat, $lon);
 
-            Log::channel('business')->info('[Weather] 实时天气获取成功', [
+            LogHelper::business('[Weather] 实时天气获取成功', [
                 'source' => $result['source'],
             ]);
 
@@ -49,7 +49,7 @@ class WeatherService
         $cacheKey = "weather:hourly:{$lat}:{$lon}:{$hours}";
 
         return Cache::remember($cacheKey, $ttl, function () use ($lat, $lon, $hours) {
-            Log::channel('business')->info('[Weather] 获取逐时预报', [
+            LogHelper::business('[Weather] 获取逐时预报', [
                 'lat'   => $lat,
                 'lon'   => $lon,
                 'hours' => $hours,
@@ -57,7 +57,7 @@ class WeatherService
 
             $result = $this->primaryDriver->getHourlyForecast($lat, $lon, $hours);
 
-            Log::channel('business')->info('[Weather] 逐时预报获取成功', [
+            LogHelper::business('[Weather] 逐时预报获取成功', [
                 'count' => count($result),
             ]);
 
@@ -74,7 +74,7 @@ class WeatherService
         $cacheKey = "weather:daily:{$lat}:{$lon}:{$days}";
 
         return Cache::remember($cacheKey, $ttl, function () use ($lat, $lon, $days) {
-            Log::channel('business')->info('[Weather] 获取逐日预报', [
+            LogHelper::business('[Weather] 获取逐日预报', [
                 'lat'  => $lat,
                 'lon'  => $lon,
                 'days' => $days,
@@ -82,7 +82,7 @@ class WeatherService
 
             $result = $this->primaryDriver->getDailyForecast($lat, $lon, $days);
 
-            Log::channel('business')->info('[Weather] 逐日预报获取成功', [
+            LogHelper::business('[Weather] 逐日预报获取成功', [
                 'count' => count($result),
             ]);
 

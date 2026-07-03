@@ -21,11 +21,32 @@ return [
             'ignore_exceptions' => false,
         ],
 
+        'business' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/business.log'),// 业务日志
+            'level'  => 'info',
+            'days'   => 14,
+        ],
+
+        'exception' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/exception.log'),// 异常日志
+            'level'  => 'error',
+            'days'   => 30,
+        ],
+
+        'api' => [
+            'driver' => 'daily',
+            'path'   => storage_path('logs/api.log'),// API日志
+            'level'  => 'info',
+            'days'   => 7,
+        ],
+
         'single' => [
-            'driver'                  => 'single',
-            'path'                    => storage_path('logs/laravel.log'),
-            'level'                   => env('LOG_LEVEL', 'debug'),
-            'replace_placeholders'    => true,
+            'driver' => 'single',
+            'path' => storage_path('logs/laravel.log'),// Laravel日志
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
         ],
 
         'daily' => [
@@ -42,31 +63,12 @@ return [
          */
         'business' => [
             'driver' => 'daily',
-            'path'   => storage_path('logs/business.log'),
-            'level'  => 'info',
-            'days'   => 14,
-        ],
 
-        /**
-         * 异常日志
-         * 用途：记录系统异常、错误、崩溃
-         */
-        'exception' => [
-            'driver' => 'daily',
-            'path'   => storage_path('logs/exception.log'),
-            'level'  => 'error',
-            'days'   => 30,
-        ],
+            'path' => storage_path('logs/laravel.log'),// Laravel日志
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+            'replace_placeholders' => true,
 
-        /**
-         * API 请求日志
-         * 用途：记录所有 HTTP API 请求
-         */
-        'api' => [
-            'driver' => 'daily',
-            'path'   => storage_path('logs/api.log'),
-            'level'  => 'info',
-            'days'   => 7,
         ],
 
         'slack' => [
