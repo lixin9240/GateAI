@@ -1,0 +1,33 @@
+{
+  "file": "lstm_physics_v5.0.pt",
+  "name": "Physics-Informed LSTM v5.0",
+  "version": "5.0.0",
+  "type": "lstm_prediction",
+  "framework": "pytorch",
+  "description": "2层BiLSTM(96) + MultiheadAttention(4头) + 水量平衡物理约束。在线数据生成, 2000轮训练, SWA 80快照平均。水位MAE=0.067m, 流量MAE=48.3m3/s, 物理损失=0.00016",
+  "accuracy": 99.993,
+  "training_date": "2026-07-02",
+  "size_mb": 1.8,
+  "md5": "c199c2740f48ac192d83c76465ad4a5c",
+  "params": {
+    "input_features": 5,
+    "output_features": 2,
+    "seq_length": 24,
+    "pred_horizon": 6,
+    "hidden_size": 96,
+    "num_layers": 2,
+    "dropout": 0.4,
+    "param_count": 470124
+  },
+  "training": {
+    "epochs": 2000,
+    "best_val_loss": 0.007573,
+    "final_test_loss": 0.004942,
+    "level_mae_m": 0.067,
+    "flow_mae_m3s": 48.3,
+    "physics_loss": 0.00016,
+    "swa_snapshots": 80,
+    "total_sequences": "~3,000,000",
+    "augmentation": "online_generation + gaussian_noise(0.015)"
+  }
+}
