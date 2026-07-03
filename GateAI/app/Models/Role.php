@@ -2,12 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
+
+use App\Models\Concerns\BeijingTime;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Role extends Model
 {
-    use SoftDeletes;
+    use HasBeijingTime, SoftDeletes;
 
     protected $table = 'roles';
 

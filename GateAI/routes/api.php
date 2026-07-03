@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\GYZ\AiInferenceController;
 use App\Http\Controllers\Api\GYZ\SettingsModelController;
 use App\Http\Controllers\Api\GYZ\SettingsThresholdController;
 use App\Http\Controllers\Api\GYZ\SettingsWeightController;
@@ -111,6 +112,9 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
 
     // 9. 系统设置模块
     Route::prefix('settings')->group(function () {
+        // AI 推理（模型能力验证 + 前端对接）
+        Route::post('ai/infer', [AiInferenceController::class, 'infer']);
+
         Route::get('thresholds', [SettingsThresholdController::class, 'index']);
         Route::put('thresholds/{id}', [SettingsThresholdController::class, 'update']);
         Route::get('weights', [SettingsWeightController::class, 'show']);

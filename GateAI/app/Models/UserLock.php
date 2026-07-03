@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
+
+use App\Models\Concerns\BeijingTime;
+
 use Illuminate\Database\Eloquent\Model;
 
 class UserLock extends Model
 {
     protected $table = 'user_locks';
+    use HasBeijingTime;
 
     protected $fillable = [
         'user_id',     // 用户ID

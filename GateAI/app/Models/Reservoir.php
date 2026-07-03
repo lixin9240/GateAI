@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Reservoir extends Model
 {
-
     use HasBeijingTime;
 
     protected $table = 'reservoirs';
