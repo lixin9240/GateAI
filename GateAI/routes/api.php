@@ -12,7 +12,6 @@ use App\Http\Controllers\Api\LX\PhysicalController;
 use App\Http\Controllers\Api\LX\ScenarioController;
 use App\Http\Controllers\Api\LX\SimulationController;
 use App\Http\Controllers\Api\WeatherController;
-
 use App\Http\Controllers\Api\Wjc\WjcAlarmController;
 use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
