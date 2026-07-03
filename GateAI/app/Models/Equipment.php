@@ -14,23 +14,23 @@ class Equipment extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'name',         // 设备名称
-        'code',         // 设备编码
-        'type',         // 设备类型
-        'reservoir_id', // 所属水库
-        'status',       // 设备状态
-        'location',     // 设备位置
-        'manufacturer', // 设备制造商
-        'model',        // 设备型号
-        'serial_number',    // 设备序列号
-        'purchase_date',    // 购买日期
-        'warranty_expire',  // 保修到期日期
-        'specs',            // 设备规格
-        'current_metrics',  // 当前指标
-        'health_score',     // 健康分数
-        'tags',             // 标签
-        'edge_node_id',     // 边缘节点 ID
-        'plc_register',     // PLC 注册
+        'name',                   // 设备名称
+        'code',                   // 设备编码
+        'type',                   // 设备类型
+        'reservoir_id',           // 所属水库
+        'status',                 // 设备状态
+        'location',               // 设备位置
+        'manufacturer',           // 设备制造商
+        'model',                  // 设备型号
+        'serial_number',          // 设备序列号
+        'purchase_date',          // 购买日期
+        'warranty_expire',        // 保修到期日期
+        'specs',                  // 设备规格
+        'current_metrics',        // 当前指标
+        'health_score',           // 健康分数
+        'tags',                   // 标签
+        'edge_node_id',           // 边缘节点 ID
+        'plc_register',           // PLC 注册
         'communication_protocol', // 通信协议
         'heartbeat_interval',     // 心跳间隔
         'offline_threshold',      // 离线阈值
@@ -38,61 +38,24 @@ class Equipment extends Model
         'maintenance_count',      // 维护次数
         'last_maintenance_at',    // 最后维护时间
         'next_maintenance_at',    // 下次维护时间
-        'total_runtime',  // 总运行时间
-        'ip_address',     // IP 地址
-        'port',           // 端口
-        'last_online',    // 最后在线时间
-        'created_by',     // 创建人
-        'updated_by',     // 更新人
-        'name',
-        'code',
-        'type',
-        'reservoir_id',
-        'status',
-        'location',
-        'manufacturer',
-        'model',
-        'serial_number',
-        'purchase_date',
-        'warranty_expire',
-        'specs',
-        'current_metrics',
-        'health_score',
-        'tags',
-        'edge_node_id',
-        'plc_register',
-        'communication_protocol',
-        'heartbeat_interval',
-        'offline_threshold',
-        'firmware_version',
-        'maintenance_count',
-        'last_maintenance_at',
-        'next_maintenance_at',
-        'total_runtime',
-        'ip_address',
-        'port',
-        'last_online',
-        'created_by',
-        'updated_by',
+        'total_runtime',          // 总运行时间
+        'ip_address',             // IP 地址
+        'port',                   // 端口
+        'last_online',            // 最后在线时间
+        'created_by',             // 创建人
+        'updated_by',             // 更新人
     ];
 
     protected $casts = [
-        'specs'             => 'json',
-        'current_metrics'   => 'json',
-        'tags'              => 'json',
-        'health_score'      => 'float',
-        'purchase_date'     => 'date',
-        'warranty_expire'   => 'date',
-        'specs'              => 'array',
-        'current_metrics'    => 'array',
-        'tags'               => 'array',
-        'health_score'       => 'decimal:2',
-        'purchase_date'      => 'date',
-        'warranty_expire'    => 'date',
-        'last_online'        => 'datetime',
+        'specs'               => 'json',
+        'current_metrics'     => 'json',
+        'tags'                => 'json',
+        'health_score'        => 'float',
+        'purchase_date'       => 'date',
+        'warranty_expire'     => 'date',
+        'last_online'         => 'datetime',
         'last_maintenance_at' => 'datetime',
         'next_maintenance_at' => 'datetime',
-        'last_online'       => 'datetime',
     ];
 
     /**
@@ -101,7 +64,6 @@ class Equipment extends Model
     public function reservoir()
     {
         return $this->belongsTo(Reservoir::class, 'reservoir_id');
-        return $this->belongsTo(Reservoir::class);
     }
 
     /**
@@ -116,9 +78,15 @@ class Equipment extends Model
      * 是否为网关设备
      */
     public function isEdgeGateway(): bool
-    public function alarms()
     {
         return $this->type === 'edge_gateway';
+    }
+
+    /**
+     * 关联告警
+     */
+    public function alarms()
+    {
         return $this->hasMany(Alarm::class, 'equipment_id');
     }
 }
