@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class LstmPrediction extends Model
 {
+    use HasBeijingTime;
     protected $table = 'lstm_predictions';
 
     public $timestamps = false;
