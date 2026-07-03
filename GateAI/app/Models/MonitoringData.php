@@ -1,5 +1,5 @@
 <?php
-// 监控数据模型
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -8,24 +8,55 @@ class MonitoringData extends Model
 {
     protected $table = 'monitoring_data';
 
+    public const UPDATED_AT = null;
+
     protected $fillable = [
-        'timestamp', // 时间戳
-        'reservoir_id', // 水库ID
-        'upstream_level', // 上游水位
-        'downstream_level', // 下游水位
-        'water_head', // 水头
-        'inflow_rate', // 入流率
-        'outflow_rate', // 出流率
-        'gate_opening', // 门开度
-        'power_output', // 功率输出
-        'cumulative_energy', // 累计能量
-        'edge_node_id', // 边节点ID
-        'data_source', // 数据来源
-        'is_anomaly', // 是否异常
+        'timestamp',         // 数据时间戳
+        'reservoir_id',      // 所属水库
+        'upstream_level',    // 上游水位（m）
+        'downstream_level',  // 下游水位（m）
+        'water_head',        // 水头（m）
+        'inflow_rate',       // 入库流量（m³/s）
+        'outflow_rate',      // 出库流量（m³/s）
+        'gate_opening',      // 闸门开度（%）
+        'power_output',      // 发电功率（kW）
+        'cumulative_energy', // 累计发电量（kWh）
+        'edge_node_id',      // 来源边缘节点
+        'data_source',       // 数据来源
+        'is_anomaly',        // 是否异常值
     ];
 
     protected $casts = [
-        'timestamp'     => 'datetime',
-        'is_anomaly'    => 'boolean',
+        'timestamp'         => 'datetime',
+        'upstream_level'    => 'decimal:3',
+        'downstream_level'  => 'decimal:3',
+        'water_head'        => 'decimal:3',
+        'inflow_rate'       => 'decimal:3',
+        'outflow_rate'      => 'decimal:3',
+        'gate_opening'      => 'decimal:2',
+        'power_output'      => 'decimal:3',
+        'cumulative_energy' => 'decimal:3',
+        'is_anomaly'        => 'boolean',
     ];
+
+    public function reservoir()
+    {
+        return $this->belongsTo(Reservoir::class, 'reservoir_id');
+    }
+
+    public function edgeNode()
+    {
+        return $this->belongsTo(EdgeNode::class, 'edge_node_id');
+    }
+
+    public static function columnByDataType(string $dataType): string
+    {
+        return match ($dataType) {
+            'water_level'  => 'water_head',
+            'flow'         => 'inflow_rate',
+            'power'        => 'power_output',
+            'gate_opening' => 'gate_opening',
+            default        => 'water_head',
+        };
+    }
 }

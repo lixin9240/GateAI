@@ -12,13 +12,9 @@ class Role extends Model
     protected $table = 'roles';
 
     protected $fillable = [
-        'name',
-        'code',
-        'remark',
-    ];
-
-    protected $casts = [
-        'id' => 'integer',
+        'name',   // 角色名称
+        'code',   // 角色编码
+        'remark', // 备注
     ];
 
     public function users()

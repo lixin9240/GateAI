@@ -39,7 +39,7 @@ class Handler extends ExceptionHandler
                 collect($e->errors())
                     ->flatten()
                     ->first()
-            );
+            )->setStatusCode(400);
         }
 
         /**
@@ -48,7 +48,7 @@ class Handler extends ExceptionHandler
         if ($e instanceof AuthenticationException) {
             return Result::error(
                 ResponseCode::UNAUTHORIZED
-            );
+            )->setStatusCode(401);
         }
 
         /**
@@ -57,7 +57,7 @@ class Handler extends ExceptionHandler
         if ($e instanceof ModelNotFoundException) {
             return Result::error(
                 ResponseCode::DATA_NOT_FOUND
-            );
+            )->setStatusCode(404);
         }
 
         /**
@@ -67,7 +67,7 @@ class Handler extends ExceptionHandler
             return Result::error(
                 ResponseCode::DATA_NOT_FOUND,
                 '接口不存在'
-            );
+            )->setStatusCode(404);
         }
 
         /**
@@ -77,7 +77,7 @@ class Handler extends ExceptionHandler
             return Result::error(
                 $e->codeEnum,
                 $e->getMessage()
-            );
+            )->setStatusCode($this->getBusinessExceptionStatusCode($e));
         }
 
         /**
@@ -96,7 +96,7 @@ class Handler extends ExceptionHandler
 
             return Result::error(
                 ResponseCode::DATABASE_ERROR
-            );
+            )->setStatusCode(500);
         }
 
         /**
@@ -117,6 +117,24 @@ class Handler extends ExceptionHandler
          */
         return Result::error(
             ResponseCode::SYSTEM_ERROR
-        );
+        )->setStatusCode(500);
+    }
+
+    /**
+     * 根据业务异常码确定 HTTP 状态码
+     */
+    private function getBusinessExceptionStatusCode(BusinessException $e): int
+    {
+        $code = $e->codeEnum->value;
+
+        return match (true) {
+            $code >= 20001 && $code < 30000 => 401,
+            $code >= 30001 && $code < 40000 => 400,
+            $code >= 40001 && $code < 50000 => 400,
+            $code >= 50001 && $code < 60000 => 502,
+            $code >= 60001 && $code < 70000 => 500,
+            $code >= 90001 && $code < 100000 => 500,
+            default => 400,
+        };
     }
 }

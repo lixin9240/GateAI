@@ -16,7 +16,9 @@ use App\Http\Controllers\Api\Wjc\WjcAlarmController;
 use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
+use App\Http\Controllers\Api\Fmy\MonitorController;
+use App\Http\Controllers\WjcController;
 use Illuminate\Support\Facades\Route;
 
 // 公开接口
@@ -26,7 +28,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
-    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气
+    Route::get('/weather/snapshot', [WeatherController::class, 'snapshot']);// 快照天气（（实时+3日预报））
 });
 
 // 需要认证的接口
@@ -136,4 +138,26 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);
         Route::delete('users/{id}', [UserManagementController::class, 'destroy']);
     });
+});
+
+
+// ===== Fmy 模块路由（JWT 认证）=====
+// 公开
+Route::post('/auth/login', [FmyAuthController::class, 'login']);
+// JWT 认证
+Route::middleware(['auth:api', 'token.valid'])->group(function () {
+    // 1. 认证模块
+    //用户登出
+    Route::post('/auth/logout', [FmyAuthController::class, 'logout']);
+    //修改密码
+    Route::post('/auth/change-pwd', [FmyAuthController::class, 'changePassword']);
+    //登录日志查询
+    Route::get('/login-logs', [FmyAuthController::class, 'loginLogs']);
+    // 2. 监控大屏模块
+    //获取全部设备列表
+    Route::get('/equipment/all-list', [MonitorController::class, 'allList']);
+    //实时采集数据
+    Route::get('/monitoring/realtime', [MonitorController::class, 'realtime']);
+    //趋势图表数据
+    Route::get('/monitoring/trend', [MonitorController::class, 'trend']);
 });

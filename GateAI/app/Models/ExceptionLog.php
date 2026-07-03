@@ -11,16 +11,16 @@ class ExceptionLog extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'trace_id',
-        'message',
-        'file',
-        'line',
-        'trace',
-        'sql',
-        'bindings',
-        'user_id',
-        'request_url',
-        'created_at',
+        'trace_id',    // 链路追踪ID
+        'message',     // 异常信息
+        'file',        // 发生文件
+        'line',        // 发生行号
+        'trace',       // 堆栈跟踪
+        'sql',         // 执行的SQL
+        'bindings',    // SQL绑定参数
+        'user_id',     // 触发用户
+        'request_url', // 触发请求URL
+        'created_at',  // 记录时间
     ];
 
     protected $casts = [

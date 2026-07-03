@@ -3,30 +3,25 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class UserLock extends Model
 {
     protected $table = 'user_locks';
 
     protected $fillable = [
-        'user_id',
-        'reason',
-        'duration',
-        'locked_at',
-        'unlock_at',
-        'unlock_type',
-        'unlocked_by',
-        'unlocked_at',
-        'locked_by',
+        'user_id',     // 用户ID
+        'reason',      // 锁定原因
+        'duration',    // 自动解锁时长（分钟）
+        'locked_at',   // 锁定时间
+        'unlock_at',   // 自动解锁时间
+        'unlock_type', // 解锁方式
+        'unlocked_by', // 解锁人
+        'unlocked_at', // 解锁时间
+        'locked_by',   // 锁定时操作人
     ];
 
     protected $casts = [
-        'id'        => 'integer',
-        'user_id'   => 'integer',
         'duration'  => 'integer',
-        'locked_by' => 'integer',
-        'unlocked_by' => 'integer',
         'locked_at' => 'datetime',
         'unlock_at' => 'datetime',
         'unlocked_at' => 'datetime',
