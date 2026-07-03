@@ -1,5 +1,5 @@
 <?php
-
+// 路由服务提供器
 namespace App\Providers;
 
 use Illuminate\Cache\RateLimiting\Limit;

@@ -48,6 +48,6 @@ class SimulationTask extends Model
 
     public function scenario()
     {
-        return $this->belongsTo(SimulationScenario::class, 'scenario_id');
+        return $this->belongsTo(\App\Models\SimulationScenario::class, 'scenario_id');
     }
 }

@@ -1,5 +1,5 @@
 <?php
-
+// 仿真场景服务
 namespace App\Services\LX;
 
 use App\Models\SimulationScenario;

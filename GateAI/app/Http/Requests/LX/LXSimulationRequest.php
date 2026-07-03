@@ -1,5 +1,5 @@
 <?php
-
+// 仿真场景请求
 namespace App\Http\Requests\LX;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -12,30 +12,30 @@ class LXSimulationRequest extends FormRequest
 
         if ($route === 'simulation.start') {
             return [
-                'scenario_id'              => 'required|exists:simulation_scenarios,id',
-                'model_id'                 => 'required|exists:settings_models,id',
-                'reservoir_id'             => 'required|exists:reservoirs,id',
-                'duration'                 => 'integer|min:60',
-                'speed'                    => 'numeric|min:0.1|max:10.0',
-                'params'                   => 'array|nullable',
-                'params.initial_water_level' => 'numeric|nullable',
-                'params.inflow_rate'         => 'numeric|nullable',
-                'params.gate_opening'        => 'numeric|min:0|max:100|nullable',
+                'scenario_id'              => 'required|exists:simulation_scenarios,id',// 仿真场景ID
+                'model_id'                 => 'required|exists:settings_models,id',// 模型ID
+                'reservoir_id'             => 'required|exists:reservoirs,id',// 水库ID
+                'duration'                 => 'integer|min:60',// 仿真时间
+                'speed'                    => 'numeric|min:0.1|max:10.0',// 加速倍率
+                'params'                   => 'array|nullable',// 参数
+                'params.initial_water_level' => 'numeric|nullable',// 初始水位
+                'params.inflow_rate'         => 'numeric|nullable',// 入流率
+                'params.gate_opening'        => 'numeric|min:0|max:100|nullable',// 门开度
             ];
         }
-
+        // 仿真报告规则
         if ($route === 'simulation.report') {
             return [
-                'report_type'     => 'required|in:full,summary,anomaly',
-                'format'          => 'in:pdf,html',
-                'include_charts'  => 'boolean',
+                'report_type'     => 'required|in:full,summary,anomaly',// 报告类型
+                'format'          => 'in:pdf,html',// 格式
+                'include_charts'  => 'boolean',// 是否包含图表
             ];
         }
 
         // result query
         return [
-            'metric_type' => 'string|nullable',
-            'aggregation' => 'in:raw,avg,max,min|nullable',
+            'metric_type' => 'string|nullable',// 指标类型
+            'aggregation' => 'in:raw,avg,max,min|nullable',// 聚合类型
         ];
     }
 

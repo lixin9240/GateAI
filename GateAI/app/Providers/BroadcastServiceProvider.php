@@ -1,5 +1,5 @@
 <?php
-
+// 广播服务提供器
 namespace App\Providers;
 
 use Illuminate\Support\Facades\Broadcast;

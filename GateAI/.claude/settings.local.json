@@ -28,7 +28,24 @@
       "Bash(php -l app/Http/Controllers/Api/LX/SimulationController.php)",
       "Bash(php -l app/Http/Controllers/Api/LX/IncidentController.php)",
       "Bash(php -l app/Services/LX/ScenarioService.php)",
-      "Bash(php -l app/Services/LX/SimulationService.php)"
+      "Bash(php -l app/Services/LX/SimulationService.php)",
+      "Bash(php -l app/Models/MonitoringData.php)",
+      "Bash(php -l app/Models/HistoryExportTask.php)",
+      "Bash(php -l app/Models/Alarm.php)",
+      "Bash(php -l app/Services/LX/HistoryService.php)",
+      "Bash(php -l app/Services/LX/EdgeService.php)",
+      "Bash(php -l app/Events/LX/MonitoringRealtimeEvent.php)",
+      "Bash(php -l app/Events/LX/AlarmNewEvent.php)",
+      "Bash(php -l app/Events/LX/DecisionNewEvent.php)",
+      "Bash(php -l app/Events/LX/EquipmentStatusChangeEvent.php)",
+      "Bash(php -l app/Events/LX/ConfigUpdateEvent.php)",
+      "Bash(composer show *)",
+      "Bash(curl -s http://localhost:8080/apps/191674)",
+      "Bash(curl -I http://localhost:8080/)",
+      "Bash(php -l app/Models/PhysicalParameter.php)",
+      "Bash(php -l app/Services/LX/PhysicalService.php)",
+      "Bash(php -l app/Http/Requests/LX/LXPhysicalRequest.php)",
+      "Bash(php -l app/Http/Controllers/Api/LX/PhysicalController.php)"
     ]
   }
 }
