@@ -56,7 +56,10 @@
       "Bash(php -l database/migrations/2026_07_03_000002_partition_api_logs_by_quarter.php)",
       "Bash(php -l app/Console/Commands/MaintainPartitions.php)",
       "Bash(php -l app/Console/Kernel.php)",
-      "Bash(php -l app/Console/Commands/SimulateMonitorData.php)"
+      "Bash(php -l app/Console/Commands/SimulateMonitorData.php)",
+      "Bash(php -l app/Http/Requests/LX/LXScenarioRequest.php)",
+      "Bash(php -l app/Providers/AppServiceProvider.php)",
+      "Bash(php -l config/filesystems.php)"
     ]
   }
 }

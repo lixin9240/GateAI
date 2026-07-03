@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class PhysicalParameter extends Model
 {
+    use BeijingTime;
+
     protected $table = 'physical_parameters';
 
     protected $fillable = [

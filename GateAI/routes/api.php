@@ -83,12 +83,15 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
 
     // 8. 数字孪生模块
     Route::prefix('simulation')->group(function () {
-        Route::get('scenarios', [ScenarioController::class, 'scenarios']);
-        Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');
-        Route::get('{id}/result', [SimulationController::class, 'result']);
-        Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');
-        Route::get('incidents', [IncidentController::class, 'incidents']);
-        Route::post('import-incident', [IncidentController::class, 'importIncident']);
+        Route::get('scenarios', [ScenarioController::class, 'scenarios']);// 获取场景列表
+        Route::post('scenarios', [ScenarioController::class, 'store']);// 创建场景
+        Route::put('scenarios/{id}', [ScenarioController::class, 'update']);// 更新场景
+        Route::delete('scenarios/{id}', [ScenarioController::class, 'destroy']);// 删除场景
+        Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');// 启动模拟
+        Route::get('{id}/result', [SimulationController::class, 'result']);// 获取模拟结果
+        Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');// 提交模拟报告
+        Route::get('incidents', [IncidentController::class, 'incidents']);// 获取事件列表
+        Route::post('import-incident', [IncidentController::class, 'importIncident']);// 导入事件
     });
 
     // 11. 边缘端数据上报
