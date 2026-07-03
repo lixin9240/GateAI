@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\LX\ScenarioController;
 use App\Http\Controllers\Api\LX\SimulationController;
 use App\Http\Controllers\Api\WeatherController;
 use App\Http\Controllers\Api\WjcController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // 公开接口
