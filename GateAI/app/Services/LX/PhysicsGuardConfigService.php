@@ -6,6 +6,7 @@ use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\EdgeNode;
 use App\Models\PhysicsGuardConfig;
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\DB;
 
 class PhysicsGuardConfigService
@@ -83,6 +84,15 @@ class PhysicsGuardConfigService
             return PhysicsGuardConfig::create($newData);
         });
 
+        LogHelper::business('物理防护配置已更新', [
+            'reservoir_id'   => $reservoirId,
+            'old_version'    => $current->config_version,
+            'new_version'    => $newVersion,
+            'new_config_id'  => $newConfig->id,
+            'user_id'        => $userId,
+            'changes'        => $data,
+        ], 'info', 'PHYSICS_GUARD_UPDATE');
+
         return $newConfig;
     }
 
@@ -92,7 +102,7 @@ class PhysicsGuardConfigService
     public function getHistory(int $reservoirId): array
     {
         return PhysicsGuardConfig::where('reservoir_id', $reservoirId)
-            ->with('updater:id,name')
+            ->with('updater:id,realname')
             ->orderByDesc('created_at')
             ->get()
             ->toArray();
@@ -118,7 +128,7 @@ class PhysicsGuardConfigService
         $parts[2] = 0;
         $newVersion = implode('.', $parts);
 
-        return DB::transaction(function () use ($target, $currentActive, $newVersion) {
+        return DB::transaction(function () use ($target, $currentActive, $currentVersion, $newVersion) {
             if ($currentActive) {
                 $currentActive->update(['is_active' => 0]);
             }
@@ -132,13 +142,23 @@ class PhysicsGuardConfigService
                 'fusion_l2_confidence', 'fusion_l2_risk', 'gate_max_discharge',
             ]);
 
-            return PhysicsGuardConfig::create(array_merge($attrs, [
+            $rolled = PhysicsGuardConfig::create(array_merge($attrs, [
                 'config_version' => $newVersion,
                 'is_active'      => 1,
                 'description'    => "回滚至 v{$target->config_version}",
                 'created_at'     => now(),
                 'updated_at'     => now(),
             ]));
+
+            LogHelper::business('物理防护配置已回滚', [
+                'reservoir_id'     => $target->reservoir_id,
+                'target_version'   => $target->config_version,
+                'new_version'      => $newVersion,
+                'new_config_id'    => $rolled->id,
+                'previous_version' => $currentVersion,
+            ], 'warning', 'PHYSICS_GUARD_ROLLBACK');
+
+            return $rolled;
         });
     }
 
@@ -159,7 +179,13 @@ class PhysicsGuardConfigService
             ->where('is_active', 1)
             ->first();
 
-        return DB::transaction(function () use ($source, $fromReservoirId, $toReservoirId, $targetOld) {
+        // 计算目标水库的新版本号（取最大版本号 + 小版本递增）
+        $maxVersion = PhysicsGuardConfig::where('reservoir_id', $toReservoirId)->max('config_version');
+        $parts = $maxVersion ? explode('.', $maxVersion) : [0, 0, 0];
+        $parts[2] = (int) ($parts[2] ?? 0) + 1;
+        $newVersion = implode('.', $parts);
+
+        return DB::transaction(function () use ($source, $fromReservoirId, $toReservoirId, $targetOld, $newVersion) {
             if ($targetOld) {
                 $targetOld->update(['is_active' => 0]);
             }
@@ -173,14 +199,23 @@ class PhysicsGuardConfigService
                 'fusion_l2_confidence', 'fusion_l2_risk', 'gate_max_discharge',
             ]);
 
-            return PhysicsGuardConfig::create(array_merge($attrs, [
+            $cloned = PhysicsGuardConfig::create(array_merge($attrs, [
                 'reservoir_id'   => $toReservoirId,
-                'config_version' => '1.0.0',
+                'config_version' => $newVersion,
                 'is_active'      => 1,
                 'description'    => "从水库 #{$fromReservoirId}（v{$source->config_version}）克隆",
                 'created_at'     => now(),
                 'updated_at'     => now(),
             ]));
+
+            LogHelper::business('物理防护配置已克隆', [
+                'from_reservoir_id' => $fromReservoirId,
+                'to_reservoir_id'   => $toReservoirId,
+                'source_version'    => $source->config_version,
+                'new_config_id'     => $cloned->id,
+            ], 'info', 'PHYSICS_GUARD_CLONE');
+
+            return $cloned;
         });
     }
 
