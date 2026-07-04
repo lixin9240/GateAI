@@ -104,7 +104,7 @@ class WjcDispatchService
      */
     public function getGateActions(array $params)
     {
-        $query = GateAction::query();
+        $query = GateAction::query()->with('interlockRule');
 
         if (!empty($params['equipment_id'])) {
             $query->where('equipment_id', $params['equipment_id']);
