@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             EquipmentSeeder::class,
             MonitoringDataSeeder::class,
             PhysicsGuardConfigSeeder::class,
+            ModelMetricSeeder::class,
         ]);
     }
 }

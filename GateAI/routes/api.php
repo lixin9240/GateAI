@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
 use App\Http\Controllers\Api\Wjc\GateInterlockController;
 use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
 use App\Http\Controllers\Api\Fmy\EquipmentController;
+use App\Http\Controllers\Api\Fmy\ModelMetricController;
 use App\Http\Controllers\Api\Fmy\MonitorController;
 use App\Http\Controllers\WjcController;
 use Illuminate\Support\Facades\Route;
@@ -162,6 +163,11 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     });
 });
 
+// 边缘端上报模型评判指标（不放在 v1 分组下，保持 /api/edge/model-metrics）
+Route::prefix('edge')->middleware(['auth:api', 'edge.token'])->group(function () {
+    Route::post('model-metrics', [ModelMetricController::class, 'receive']);
+});
+
 
 // ===== Fmy 模块路由（JWT 认证）=====
 // 公开
@@ -184,7 +190,7 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
     //趋势图表数据
     Route::get('/monitoring/trend', [MonitorController::class, 'trend']);
 
-    // 3. 设备管理模块（对应总接口文档第 7 章）
+    // 3. 设备管理模块
     //列表
     Route::get('/equipment/list',              [EquipmentController::class, 'index']);
     //导出
@@ -195,4 +201,11 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
     Route::post('/equipment/{id}/restart',[EquipmentController::class, 'restart']);
     //状态变更
     Route::put('/equipment/{id}/status',  [EquipmentController::class, 'updateStatus']);
+
+    // 4. 模型三维评判体系
+    Route::prefix('settings/ai')->group(function () {
+        Route::get('metrics',         [ModelMetricController::class, 'latest']);   // 最新指标
+        Route::get('metrics/history', [ModelMetricController::class, 'history']); // 历史趋势
+        Route::get('health',          [ModelMetricController::class, 'health']);  // 全局健康
+    });
 });
