@@ -34,6 +34,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
 });
 
+// 边缘端上报接口（EdgeToken 认证，不需要用户登录）
+Route::prefix('v1/edge')->middleware(['edge.token'])->group(function () {
+    Route::post('gate-interlock-logs', [GateInterlockController::class, 'receiveLog']);
+});
+
 // 需要认证的接口
 Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);// 登出
@@ -107,9 +112,6 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
 
         // 12.1 边缘端拉取物理参数
         Route::get('physics-config/{reservoir_id}', [PhysicalController::class, 'edgeConfig']);
-
-        // 边缘端上报互锁触发事件
-        Route::post('gate-interlock-logs', [GateInterlockController::class, 'receiveLog']);
     });
 
     // 12. 物理配置后台管理

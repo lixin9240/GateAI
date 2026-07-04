@@ -19,6 +19,7 @@ class EdgeNode extends Model
         'location',              // 安装位置
         'ip',                    // IP地址
         'last_heartbeat',        // 最后心跳时间
+        'api_secret',            // API签名密钥
         'edge_version',          // 边缘端版本
         'model_version',         // AI模型版本
         'threshold_version',     // 阈值版本

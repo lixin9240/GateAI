@@ -6,6 +6,7 @@ use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\EdgeNode;
 use App\Support\LogHelper;
+use Illuminate\Support\Str;
 
 class WjcEdgeNodeService
 {
@@ -40,6 +41,7 @@ class WjcEdgeNodeService
      */
     public function createNode(array $data): EdgeNode
     {
+        $data['api_secret'] = hash('sha256', Str::random(32));
         $node = EdgeNode::create($data);
 
         LogHelper::business('边缘节点已注册', [
