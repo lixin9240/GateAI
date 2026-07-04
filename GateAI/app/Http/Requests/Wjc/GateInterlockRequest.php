@@ -23,8 +23,8 @@ class GateInterlockRequest extends FormRequest
                 'description'       => 'nullable|string|max:255',
                 'enabled'           => 'nullable|boolean',
                 'priority'          => 'nullable|integer|min:0',
-                'trigger_conditions' => 'nullable|json',
-                'constraint_action'  => 'nullable|json',
+                'trigger_conditions' => 'nullable|array',
+                'constraint_action'  => 'nullable|array',
             ];
         }
 
@@ -51,7 +51,7 @@ class GateInterlockRequest extends FormRequest
                 'gate1_opening_after'  => 'required|numeric|min:0|max:1',
                 'gate2_opening_after'  => 'required|numeric|min:0|max:1',
                 'gate3_opening_after'  => 'required|numeric|min:0|max:1',
-                'action_detail'        => 'nullable|json',
+                'action_detail'        => 'nullable|array',
             ];
         }
 
