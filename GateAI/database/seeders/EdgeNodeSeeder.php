@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\EdgeNode;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class EdgeNodeSeeder extends Seeder
 {
@@ -141,6 +142,7 @@ class EdgeNodeSeeder extends Seeder
 
         foreach ($nodes as $data) {
             if (!in_array($data['code'], $existing)) {
+                $data['api_secret'] = hash('sha256', Str::random(32));
                 EdgeNode::create($data);
             }
         }
