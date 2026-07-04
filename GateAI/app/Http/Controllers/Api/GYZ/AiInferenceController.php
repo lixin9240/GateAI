@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\GYZ;
 use App\Http\Controllers\Controller;
 use App\Models\SettingsModel;
 use App\Services\HydropowerService;
+use App\Support\LogHelper;
 use App\Support\Result;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -53,6 +54,14 @@ class AiInferenceController extends Controller
             ->toArray();
 
         $result['models_used'] = $activeModels;
+
+        LogHelper::business('AI推理调用', [
+            'sensor'        => array_intersect_key($sensor, array_flip(['upstream_level', 'downstream_level', 'inflow'])),
+            'decision_mode' => $result['decision_mode'] ?? 'unknown',
+            'confidence'    => $result['confidence'] ?? null,
+            'risk_level'    => $result['risk_level'] ?? null,
+            'user_id'       => auth()->id(),
+        ], 'info', 'AI_INFERENCE');
 
         return Result::success('推理完成', $result);
     }

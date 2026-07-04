@@ -28,7 +28,7 @@ return new class extends Migration
             $table->unsignedBigInteger('edge_node_id')->index()->comment('来源边缘节点');
             $table->foreign('edge_node_id')->references('id')->on('edge_nodes')->onDelete('cascade');
             $table->index(['edge_node_id', 'timestamp'], 'idx_monitoring_edge_ts');
-            $table->string('data_source', 20)->default('sensor')->comment('sensor / simulation / manual');
+            $table->string('data_source', 20)->default('sensor')->comment('sensor / simulation / manual');// 数据来源，有传感器、模拟、手动输入
             $table->tinyInteger('is_anomaly')->default(0)->comment('是否异常值');
             $table->timestamp('created_at')->nullable()->comment('创建时间');
             $table->timestamp('updated_at')->nullable()->comment('更新时间');

@@ -288,6 +288,14 @@ class EquipmentService
 
         $filename = 'equipment_' . now()->format('Ymd');
 
+        LogHelper::business('导出设备台账', [
+            'format'      => $format,
+            'count'       => $items->count(),
+            'reservoir_id' => $params['reservoir_id'] ?? null,
+            'type'         => $params['type'] ?? null,
+            'user_id'     => auth()->id(),
+        ], 'info', 'EQUIPMENT_EXPORT');
+
         return $format === 'csv'
             ? app(ExportService::class)->csv($headers, $rows->toArray(), $filename)
             : app(ExportService::class)->xlsx($headers, $rows->toArray(), $filename);

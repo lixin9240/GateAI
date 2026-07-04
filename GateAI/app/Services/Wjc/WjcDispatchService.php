@@ -9,6 +9,7 @@ use App\Models\DispatchDecision;
 use App\Models\EmergencyStop;
 use App\Models\GateAction;
 use App\Models\LstmPrediction;
+use App\Support\LogHelper;
 use Illuminate\Support\Str;
 
 class WjcDispatchService
@@ -80,6 +81,13 @@ class WjcDispatchService
             'expire_at'      => now()->addMinutes(5),
         ]);
 
+        LogHelper::business('[调度] 人工下发调度指令', [
+            'command_id'     => $commandId,
+            'target_opening' => $data['target_opening'],
+            'edge_node_id'   => $data['edge_node_id'] ?? 1,
+            'user_id'        => auth()->id(),
+        ], 'warning', 'DISPATCH_EXECUTE');
+
         return $commandId;
     }
 
@@ -135,6 +143,12 @@ class WjcDispatchService
             'command_id'      => $command->id,
         ]);
 
+        LogHelper::business('[调度] 全局急停', [
+            'command_id'  => $commandId,
+            'stop_reason' => $data['stop_reason'],
+            'user_id'     => auth()->id(),
+        ], 'warning', 'EMERGENCY_STOP');
+
         return [
             'stop_log_id' => $stop->id,
             'command_id'  => $commandId,
@@ -151,6 +165,12 @@ class WjcDispatchService
             throw new BusinessException('该急停记录已恢复', ResponseCode::BUSINESS_ERROR);
         }
         $stop->update(['recover_time' => now()]);
+
+        LogHelper::business('[调度] 恢复自动模式', [
+            'stop_id'  => $stop->id,
+            'user_id'  => auth()->id(),
+        ], 'info', 'EMERGENCY_RECOVER');
+
         return $stop;
     }
 

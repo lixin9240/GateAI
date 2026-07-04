@@ -4,6 +4,7 @@ namespace App\Services\LX;
 
 use App\Models\HistoryExportTask;
 use App\Models\MonitoringData;
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -93,11 +94,25 @@ class HistoryService
                 'completed_at' => now(),
                 'expire_at'    => now()->addDay(),
             ]);
+
+            LogHelper::business('历史数据导出完成', [
+                'task_no'  => $taskNo,
+                'format'   => $format,
+                'size'     => $size,
+                'user_id'  => auth()->id(),
+            ], 'info', 'HISTORY_EXPORT');
         } catch (\Throwable $e) {
             $task->update([
                 'status'    => 'failed',
                 'error_msg' => $e->getMessage(),
             ]);
+
+            LogHelper::business('历史数据导出失败', [
+                'task_no'   => $taskNo,
+                'format'    => $format,
+                'error_msg' => $e->getMessage(),
+                'user_id'   => auth()->id(),
+            ], 'error', 'HISTORY_EXPORT_FAILED');
         }
 
         return [

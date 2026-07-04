@@ -5,6 +5,7 @@ namespace App\Services\LX;
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\SimulationScenario;
+use App\Support\LogHelper;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ScenarioService
@@ -34,7 +35,7 @@ class ScenarioService
 
     public function create(array $data): SimulationScenario
     {
-        return SimulationScenario::create([
+        $scenario = SimulationScenario::create([
             'name'            => $data['name'],
             'type'            => $data['type'],
             'description'     => $data['description'] ?? null,
@@ -45,6 +46,14 @@ class ScenarioService
             'speed'           => $data['speed'] ?? 1.0,
             'created_by'      => auth()->id(),
         ]);
+
+        LogHelper::business('仿真场景已创建', [
+            'scenario_id' => $scenario->id,
+            'name'        => $scenario->name,
+            'type'        => $scenario->type,
+        ], 'info', 'SCENARIO_CREATE');
+
+        return $scenario;
     }
 
     public function update(int $id, array $data): SimulationScenario
@@ -65,6 +74,12 @@ class ScenarioService
         $scenario->updated_by = auth()->id();
         $scenario->save();
 
+        LogHelper::business('仿真场景已更新', [
+            'scenario_id' => $id,
+            'name'        => $scenario->name,
+            'changes'     => $data,
+        ], 'info', 'SCENARIO_UPDATE');
+
         return $scenario->fresh();
     }
 
@@ -77,5 +92,10 @@ class ScenarioService
         }
 
         $scenario->delete();
+
+        LogHelper::business('仿真场景已删除', [
+            'scenario_id' => $id,
+            'name'        => $scenario->name,
+        ], 'warning', 'SCENARIO_DELETE');
     }
 }

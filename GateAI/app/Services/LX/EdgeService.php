@@ -167,6 +167,17 @@ class EdgeService
             'status'          => 'unhandled',
         ]);
 
+        LogHelper::business('边缘端上报告警', [
+            'alarm_id'        => $alarm->id,
+            'alarm_no'        => $alarm->alarm_no,
+            'type'            => $data['type'],
+            'level'           => $data['level'],
+            'message'         => $data['message'],
+            'metric_value'    => $data['metric_value'],
+            'threshold_value' => $data['threshold_value'],
+            'reservoir_id'    => $data['reservoir_id'],
+        ], 'warning', 'EDGE_ALARM');
+
         return ['alarm_id' => $alarm->id, 'alarm_no' => $alarm->alarm_no];
     }
 }

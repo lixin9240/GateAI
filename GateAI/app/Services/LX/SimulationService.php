@@ -8,6 +8,7 @@ use App\Models\SimulationResult;
 use App\Models\SimulationResultTimeSeries;
 use App\Models\SimulationScenario;
 use App\Models\SimulationTask;
+use App\Support\LogHelper;
 use Illuminate\Support\Str;
 
 class SimulationService
@@ -46,6 +47,12 @@ class SimulationService
         ]);
 
         $scenario->increment('usage_count');
+
+        LogHelper::business('[仿真] 启动仿真任务', [
+            'task_no'     => $task->task_no,
+            'scenario_id' => $data['scenario_id'],
+            'user_id'     => auth()->id(),
+        ], 'info', 'SIMULATION_START');
 
         return [
             'simulation_id'      => $task->task_no,
@@ -99,6 +106,12 @@ class SimulationService
             ]
         );
 
+        LogHelper::business('[仿真] 提交仿真报告', [
+            'task_no'  => $taskId,
+            'report_id' => $reportId,
+            'user_id'  => auth()->id(),
+        ], 'info', 'SIMULATION_REPORT');
+
         return [
             'report_id' => $reportId,
             'status'    => 'completed',
@@ -127,6 +140,11 @@ class SimulationService
             'total_discharge'      => round($baseOut * $duration + mt_rand(1000, 5000), 3),
             'anomaly_count'        => mt_rand(0, 3),
         ];
+
+        LogHelper::business('[仿真] 仿真任务完成', [
+            'task_no'     => $task->task_no,
+            'scenario_id' => $task->scenario_id,
+        ], 'info', 'SIMULATION_COMPLETE');
 
         $task->update([
             'status'             => 'completed',

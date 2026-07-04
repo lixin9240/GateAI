@@ -4,6 +4,7 @@ namespace App\Services\LX;
 
 use App\Models\SimulationIncident;
 use App\Models\SimulationScenario;
+use App\Support\LogHelper;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 
@@ -63,6 +64,13 @@ class IncidentService
 
             $incident->update(['replayed_scenario_id' => $scenario->id]);
         }
+
+        LogHelper::business('故障事件已导入', [
+            'incident_id'   => $incident->id,
+            'incident_name' => $incident->incident_name,
+            'severity'       => $data['severity'],
+            'user_id'        => auth()->id(),
+        ], 'info', 'INCIDENT_IMPORT');
 
         return [
             'incident_id' => $incident->id,

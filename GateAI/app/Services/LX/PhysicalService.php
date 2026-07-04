@@ -3,6 +3,7 @@
 namespace App\Services\LX;
 
 use App\Models\PhysicalParameter;
+use App\Support\LogHelper;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 
@@ -62,6 +63,13 @@ class PhysicalService
 
         Cache::forget("physics_config:{$data['reservoir_id']}");
 
+        LogHelper::business('物理校验参数已更新', [
+            'param_id'     => $param->id,
+            'reservoir_id' => $data['reservoir_id'],
+            'water_level'  => $data['water_level'],
+            'action'       => $param->wasRecentlyCreated ? 'created' : 'updated',
+        ], 'info', 'PHYSICS_UPSERT');
+
         return ['id' => $param->id, 'updated' => $param->wasRecentlyCreated ? 'created' : 'updated'];
     }
 
@@ -72,5 +80,10 @@ class PhysicalService
         $param->delete();
 
         Cache::forget("physics_config:{$reservoirId}");
+
+        LogHelper::business('物理校验参数已删除', [
+            'param_id'     => $id,
+            'reservoir_id' => $reservoirId,
+        ], 'warning', 'PHYSICS_DELETE');
     }
 }

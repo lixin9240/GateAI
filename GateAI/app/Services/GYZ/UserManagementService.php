@@ -7,8 +7,8 @@ use App\Exceptions\BusinessException;
 use App\Models\User;
 use App\Models\UserLock;
 use App\Models\UserLoginLog;
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class UserManagementService
@@ -76,11 +76,11 @@ class UserManagementService
                 'phone'    => $data['phone'] ?? null,
             ]);
 
-            Log::channel('business')->info('用户已创建', [
+            LogHelper::business('用户已创建', [
                 'user_id'      => $user->id,
                 'account'      => $user->account,
                 'created_by'   => auth('api')->id(),
-            ]);
+            ], 'info', 'USER_CREATE');
 
             return $user;
         });
@@ -100,11 +100,11 @@ class UserManagementService
         DB::transaction(function () use ($user, $data) {
             $user->update($data);
 
-            Log::channel('business')->info('用户信息已更新', [
+            LogHelper::business('用户信息已更新', [
                 'user_id'    => $user->id,
                 'changes'    => $data,
                 'updated_by' => auth('api')->id(),
-            ]);
+            ], 'info', 'USER_UPDATE');
         });
 
         return $user->fresh();
@@ -136,11 +136,11 @@ class UserManagementService
                 ]);
             }
 
-            Log::channel('business')->warning('用户密码已重置', [
+            LogHelper::business('用户密码已重置', [
                 'user_id'    => $user->id,
                 'account'    => $user->account,
                 'reset_by'   => auth('api')->id(),
-            ]);
+            ], 'warning', 'PASSWORD_RESET');
         });
 
         return $password;
@@ -179,13 +179,13 @@ class UserManagementService
                 'locked_by'  => $lockedBy,
             ]);
 
-            Log::channel('business')->warning('账号已被锁定', [
+            LogHelper::business('账号已被锁定', [
                 'user_id'   => $user->id,
                 'account'   => $user->account,
                 'reason'    => $reason,
                 'duration'  => $duration,
                 'locked_by' => $lockedBy,
-            ]);
+            ], 'warning', 'USER_LOCK');
 
             return [
                 'lock_id'    => $lock->id,
@@ -223,12 +223,12 @@ class UserManagementService
                 ]);
             }
 
-            Log::channel('business')->info('账号已解锁', [
+            LogHelper::business('账号已解锁', [
                 'user_id'     => $user->id,
                 'account'     => $user->account,
                 'reason'      => $reason,
                 'unlocked_by' => $unlockedBy,
-            ]);
+            ], 'info', 'USER_UNLOCK');
         });
     }
 
@@ -250,11 +250,11 @@ class UserManagementService
         DB::transaction(function () use ($user) {
             $user->delete();
 
-            Log::channel('business')->warning('用户已删除', [
+            LogHelper::business('用户已删除', [
                 'user_id'    => $user->id,
                 'account'    => $user->account,
                 'deleted_by' => auth('api')->id(),
-            ]);
+            ], 'warning', 'USER_DELETE');
         });
     }
 }
