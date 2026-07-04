@@ -8,6 +8,7 @@ use App\Models\Equipment;
 use App\Models\EquipmentStatusLog;
 use App\Models\MonitoringData;
 use App\Support\LogHelper;
+use Illuminate\Support\Facades\Log;
 
 class EquipmentService
 {
@@ -16,6 +17,19 @@ class EquipmentService
      */
     public function list(array $params): array
     {
+        Log::channel('business')->info('设备管理-查询设备列表', [
+            'params' => [
+                'reservoir_id' => $params['reservoir_id'] ?? null,
+                'type'         => $params['type'] ?? null,
+                'status'       => $params['status'] ?? null,
+                'keyword'      => isset($params['keyword']) ? substr($params['keyword'], 0, 50) : null,
+                'page'         => $params['page'] ?? 1,
+                'page_size'    => $params['page_size'] ?? 20,
+            ],
+            'user_id'  => auth()->id(),
+            'trace_id' => request()->attributes->get('trace_id'),
+        ]);
+
         $query = Equipment::query()->with('reservoir:id,name');
 
         if (!empty($params['reservoir_id'])) {
@@ -63,6 +77,12 @@ class EquipmentService
      */
     public function detail(int $id): array
     {
+        Log::channel('business')->info('设备管理-查看设备详情', [
+            'equipment_id' => $id,
+            'user_id'      => auth()->id(),
+            'trace_id'     => request()->attributes->get('trace_id'),
+        ]);
+
         $eq = Equipment::with(['reservoir:id,name', 'edgeNode:id,name,ip,cpu_usage,memory_usage'])
             ->findOrFail($id);
 
@@ -249,6 +269,13 @@ class EquipmentService
      */
     public function export(string $format, array $params): \Illuminate\Http\Response
     {
+        LogHelper::business('设备管理-导出设备台账', [
+            'format'       => $format,
+            'reservoir_id' => $params['reservoir_id'] ?? null,
+            'type'         => $params['type'] ?? null,
+            'status'       => $params['status'] ?? null,
+        ], 'info', 'EXPORT');
+
         $query = Equipment::with('reservoir:id,name');
 
         if (!empty($params['reservoir_id'])) {
