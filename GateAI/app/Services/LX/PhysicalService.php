@@ -1,8 +1,9 @@
 <?php
-
+// 物理防护配置服务
 namespace App\Services\LX;
 
 use App\Models\PhysicalParameter;
+use App\Models\PhysicsGuardConfig;
 use App\Support\LogHelper;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
@@ -24,6 +25,20 @@ class PhysicalService
                 'max_discharge' => $p->max_discharge,
             ])->toArray();
 
+            // 物理防护配置（替代 Python 硬编码阈值）
+            $guardConfig = PhysicsGuardConfig::where('reservoir_id', $reservoirId)
+                ->where('is_active', 1)
+                ->first();
+
+            $physicsGuard = null;
+            if ($guardConfig) {
+                $guardArray = $guardConfig->toArray();
+                $physicsGuard = [
+                    'version_hash' => md5(json_encode($guardArray)),
+                    'config'       => $guardArray,
+                ];
+            }
+
             return [
                 'level_area_map' => $levelAreaMap,
                 'validation'     => [
@@ -31,6 +46,7 @@ class PhysicalService
                     'max_deviation_m'    => 0.1,
                     'confidence_penalty' => 0.2,
                 ],
+                'physics_guard'  => $physicsGuard,
                 'version'   => $params->max('updated_at')?->timestamp ?? time(),
                 'fetched_at' => now()->toISOString(),
             ];

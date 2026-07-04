@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GYZ\AiInferenceController;
 use App\Http\Controllers\Api\GYZ\SettingsModelController;
 use App\Http\Controllers\Api\GYZ\SettingsThresholdController;
+use App\Http\Controllers\Api\LX\PhysicsGuardConfigController;
 use App\Http\Controllers\Api\GYZ\SettingsWeightController;
 use App\Http\Controllers\Api\GYZ\UserManagementController;
 use App\Http\Controllers\Api\LX\EdgeController;
@@ -116,6 +117,13 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
         Route::get('physical-parameters', [PhysicalController::class, 'index']);
         Route::post('physical-parameters', [PhysicalController::class, 'upsert']);
         Route::delete('physical-parameters/{id}', [PhysicalController::class, 'delete']);
+
+        // 物理防护配置
+        Route::get('physics-guard', [PhysicsGuardConfigController::class, 'show']);
+        Route::put('physics-guard/{id}', [PhysicsGuardConfigController::class, 'update']);
+        Route::get('physics-guard/history', [PhysicsGuardConfigController::class, 'history']);
+        Route::post('physics-guard/{id}/rollback', [PhysicsGuardConfigController::class, 'rollback']);
+        Route::post('physics-guard/clone', [PhysicsGuardConfigController::class, 'cloneConfig']);
     });
 
     // 9. 系统设置模块

@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
             AlarmSeeder::class,
             EquipmentSeeder::class,
             MonitoringDataSeeder::class,
-            GateInterlockRuleSeeder::class,
+            PhysicsGuardConfigSeeder::class,
         ]);
     }
 }
