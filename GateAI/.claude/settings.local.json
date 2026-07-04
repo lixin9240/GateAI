@@ -60,7 +60,8 @@
       "Bash(php -l app/Http/Requests/LX/LXScenarioRequest.php)",
       "Bash(php -l app/Providers/AppServiceProvider.php)",
       "Bash(php -l config/filesystems.php)",
-      "Bash(php *)"
+      "Bash(php *)",
+      "Bash(composer dump-autoload *)"
     ]
   }
 }

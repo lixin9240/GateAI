@@ -8,6 +8,14 @@ class LXPhysicsGuardRequest extends FormRequest
 {
     public function rules(): array
     {
+        // 克隆 — 必须在 POST 判断之前，因为 clone 也是 POST 请求
+        if ($this->route()?->getActionMethod() === 'cloneConfig') {
+            return [
+                'from_reservoir_id' => 'required|integer|exists:reservoirs,id',
+                'to_reservoir_id'   => 'required|integer|exists:reservoirs,id|different:from_reservoir_id',
+            ];
+        }
+
         // 更新物理防护配置
         if ($this->isMethod('put') || $this->isMethod('post')) {
             return [
@@ -33,14 +41,6 @@ class LXPhysicsGuardRequest extends FormRequest
                 'fusion_l2_risk'            => 'numeric|min:0|max:1|nullable',//风险值
                 'gate_max_discharge'        => 'array|nullable',
                 'description'               => 'string|max:255|nullable',
-            ];
-        }
-
-        // 克隆
-        if ($this->route()?->getActionMethod() === 'cloneConfig') {
-            return [
-                'from_reservoir_id' => 'required|integer|exists:reservoirs,id',
-                'to_reservoir_id'   => 'required|integer|exists:reservoirs,id|different:from_reservoir_id',
             ];
         }
 
