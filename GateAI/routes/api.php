@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Wjc\WjcAlarmController;
 use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
+use App\Http\Controllers\Api\Wjc\GateInterlockController;
 use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
 use App\Http\Controllers\Api\Fmy\EquipmentController;
 use App\Http\Controllers\Api\Fmy\MonitorController;
@@ -105,6 +106,9 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
 
         // 12.1 边缘端拉取物理参数
         Route::get('physics-config/{reservoir_id}', [PhysicalController::class, 'edgeConfig']);
+
+        // 边缘端上报互锁触发事件
+        Route::post('gate-interlock-logs', [GateInterlockController::class, 'receiveLog']);
     });
 
     // 12. 物理配置后台管理
@@ -136,6 +140,15 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
         Route::post('users/{id}/lock', [UserManagementController::class, 'lock']);
         Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);
         Route::delete('users/{id}', [UserManagementController::class, 'destroy']);
+
+        // 闸门互锁规则管理
+        Route::prefix('gate-interlock')->group(function () {
+            Route::get('rules', [GateInterlockController::class, 'rules']);
+            Route::put('rules/{id}', [GateInterlockController::class, 'updateRule']);
+            Route::post('rules/{id}/toggle', [GateInterlockController::class, 'toggleRule']);
+            Route::get('logs', [GateInterlockController::class, 'logs']);
+            Route::get('stats', [GateInterlockController::class, 'stats']);
+        });
     });
 });
 
