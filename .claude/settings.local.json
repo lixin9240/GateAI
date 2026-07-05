@@ -23,7 +23,10 @@
       "Bash(python -c ' *)",
       "Bash(php GateAI/artisan tinker '--execute=echo DB::table\\('\\\\''settings_models'\\\\''\\)->count\\(\\).'\\\\'' records:'\\\\''.PHP_EOL; foreach\\(DB::table\\('\\\\''settings_models'\\\\''\\)->select\\('\\\\''id'\\\\'','\\\\''name'\\\\'','\\\\''version'\\\\'','\\\\''status'\\\\''\\)->get\\(\\) as $m\\){echo \" ID{$m->id} | {$m->name} | {$m->version} | {$m->status}\".PHP_EOL;}')",
       "Bash(php GateAI/artisan tinker --execute=\"echo json_encode\\(DB::table\\('settings_weights'\\)->select\\('id','version','preset_name','power_weight','safety_weight','ecology_weight','enabled'\\)->get\\(\\),JSON_UNESCAPED_UNICODE|JSON_PRETTY_PRINT\\);\")",
-      "Bash(php GateAI/artisan db:seed)"
+      "Bash(php GateAI/artisan db:seed)",
+      "Bash(php GateAI/artisan serve --port=8000)",
+      "Bash(curl -s -X POST \"http://localhost:8000/api/v1/monitor/hydro-detect\" -H \"Content-Type: application/json\" -d '{\"upstream_level\":170,\"downstream_level\":60,\"inflow\":15000}')",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(f'code={d[\\\\\"code\\\\\"]}'\\)\")"
     ],
     "additionalDirectories": [
       "c:\\projects\\GateAI\\GateAI\\storage\\ai"
