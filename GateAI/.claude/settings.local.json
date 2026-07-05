@@ -61,7 +61,8 @@
       "Bash(php -l app/Providers/AppServiceProvider.php)",
       "Bash(php -l config/filesystems.php)",
       "Bash(php *)",
-      "Bash(composer dump-autoload *)"
+      "Bash(composer dump-autoload *)",
+      "Bash(awk '/^## 附：接口总表/,/^> \\\\*\\\\*共计/' \"D:/git-base/labor/GateAI/GateAI/总接口文档.md\")"
     ]
   }
 }
