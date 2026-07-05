@@ -33,6 +33,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
+
+    // 水情检测（AI 推理）
+    Route::post('/monitor/hydro-detect', [AiInferenceController::class, 'infer']);
 });
 
 // 边缘端上报接口（EdgeToken 认证，不需要用户登录）
@@ -131,9 +134,6 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
 
     // 9. 系统设置模块
     Route::prefix('settings')->group(function () {
-        // AI 推理（模型能力验证 + 前端对接）
-        Route::post('ai/infer', [AiInferenceController::class, 'infer']);
-
         Route::get('thresholds', [SettingsThresholdController::class, 'index']);
         Route::put('thresholds/{id}', [SettingsThresholdController::class, 'update']);
         Route::get('weights', [SettingsWeightController::class, 'show']);
