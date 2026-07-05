@@ -4,6 +4,7 @@ namespace App\Services\LX;
 
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
+use App\Jobs\SimulateTask as SimulateJob;
 use App\Models\SimulationResult;
 use App\Models\SimulationResultTimeSeries;
 use App\Models\SimulationScenario;
@@ -32,8 +33,10 @@ class SimulationService
         $duration = $data['duration'] ?? $scenario->duration;
         $speed    = $data['speed'] ?? $scenario->speed;
 
+        $taskNo = 'SIM-' . date('YmdHis') . '-' . strtoupper(Str::random(4));
+
         $task = SimulationTask::create([
-            'task_no'            => 'SIM-' . date('YmdHis') . '-' . strtoupper(Str::random(4)),
+            'task_no'            => $taskNo,
             'scenario_id'        => $data['scenario_id'],
             'model_id'           => $data['model_id'],
             'duration'           => $duration,
@@ -42,23 +45,25 @@ class SimulationService
             'status'             => 'running',
             'start_time'         => now(),
             'estimated_end_time' => now()->addSeconds((int) ($duration / $speed)),
-            'ws_endpoint'        => 'wss://' . request()->getHost() . '/api/simulation/stream-data?simulationId=' . 'SIM-' . date('YmdHis'),
+            'ws_endpoint'        => 'ws://' . request()->getHost() . ':' . env('REVERB_PORT', 8080),
             'created_by'         => auth()->id(),
         ]);
 
         $scenario->increment('usage_count');
 
+        SimulateJob::dispatch($task->id, $taskNo, $duration, $speed, $data['params'] ?? []);
+
         LogHelper::business('[仿真] 启动仿真任务', [
-            'task_no'     => $task->task_no,
+            'task_no'     => $taskNo,
             'scenario_id' => $data['scenario_id'],
             'user_id'     => auth()->id(),
         ], 'info', 'SIMULATION_START');
 
         return [
-            'simulation_id'      => $task->task_no,
+            'simulation_id'      => $taskNo,
             'status'             => $task->status,
-            'start_time'         => $task->start_time,
-            'estimated_end_time' => $task->estimated_end_time,
+            'start_time'         => $task->start_time->toDateTimeString(),
+            'estimated_end_time' => $task->estimated_end_time->toDateTimeString(),
             'ws_endpoint'        => $task->ws_endpoint,
         ];
     }
@@ -67,9 +72,15 @@ class SimulationService
     {
         $task = SimulationTask::where('task_no', $taskId)->firstOrFail();
 
-        // 若任务还在运行中，模拟仿真完成并填充数据
+        // 任务还在运行中：返回已有数据 + 当前进度
         if ($task->status === 'running') {
-            $this->completeTask($task);
+            return [
+                'summary'   => null,
+                'total'     => 0,
+                'points'    => [],
+                'progress'  => $task->progress ?? 0,
+                'status'    => 'running',
+            ];
         }
 
         $result = SimulationResult::where('simulation_id', $task->id)->first();

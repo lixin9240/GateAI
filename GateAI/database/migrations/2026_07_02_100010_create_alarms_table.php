@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('equipment_id')->nullable()->index()->comment('关联设备');
             $table->foreign('equipment_id')->references('id')->on('equipment')->onDelete('set null');
             $table->index(['equipment_id', 'status'], 'idx_alarms_equipment_status');
-            $table->string('type', 50)->index()->comment('告警类型：water_level / flow / gate / power / equipment / physics_violation / comm_loss');
+            $table->string('type', 50)->index()->comment('告警类型：water_level / flow / gate / power / equipment / physics_violation / comm_loss');// 告警类型,比如水位告警,流量告警,闸门告警,功率告警,设备告警,物理违规告警,通信丢失告警
             $table->string('level', 20)->index()->comment('紧急程度：urgent / important / normal');
             $table->index(['level', 'status', 'created_at'], 'idx_alarms_level_status_created');
             $table->string('message', 500)->comment('告警描述');
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->decimal('threshold_value', 15, 4)->comment('触发阈值');
             $table->unsignedInteger('duration')->default(0)->comment('持续时长（秒）');
             $table->timestamp('exceed_start')->nullable()->comment('开始超限时间');
-            $table->string('status', 20)->default('unhandled')->index()->comment('unhandled / acknowledged / disposed');
+            $table->string('status', 20)->default('unhandled')->index()->comment('unhandled / acknowledged / disposed');// 告警状态,比如未处理,已确认,已处置
             $table->timestamp('acknowledged_at')->nullable()->comment('确认时间');
             $table->unsignedBigInteger('acknowledged_by')->nullable()->comment('确认人');
             $table->foreign('acknowledged_by')->references('id')->on('users')->onDelete('set null');

@@ -41,4 +41,9 @@ class Alarm extends Model
         'resolved_at'     => 'datetime',
         'exceed_start'    => 'datetime',
     ];
+
+    public function equipment()
+    {
+        return $this->belongsTo(Equipment::class, 'equipment_id');
+    }
 }
