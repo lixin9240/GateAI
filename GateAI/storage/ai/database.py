@@ -323,6 +323,70 @@ class HydropowerDB:
             avg_confidence=float(row[4] or 0),
         )
 
+    # ── 模型评判系统 ──
+
+    def insert_model_metrics_detail(self, edge_node_id: int, reservoir_id: int,
+                                     metric_time: str, water_level_mae_24h: float,
+                                     flow_mae_24h: float, physics_correction_rate: float,
+                                     trend_accuracy: float, prediction_score: float,
+                                     safety_override_rate: float, decision_level_dist: str,
+                                     shadow_risk_pass_rate: float, smooth_filter_rate: float,
+                                     decision_score: float, avg_physics_violation: float,
+                                     gate_limit_touch_rate: float, rate_limit_exceed_rate: float,
+                                     compliance_score: float, overall_score: float,
+                                     health_grade: str):
+        """写入云端 model_metrics 表"""
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """INSERT INTO model_metrics
+                       (edge_node_id, reservoir_id, metric_time,
+                        water_level_mae_24h, flow_mae_24h, physics_correction_rate,
+                        trend_accuracy, prediction_score,
+                        safety_override_rate, decision_level_dist,
+                        shadow_risk_pass_rate, smooth_filter_rate, decision_score,
+                        avg_physics_violation, gate_limit_touch_rate,
+                        rate_limit_exceed_rate, compliance_score,
+                        overall_score, health_grade, created_at)
+                       VALUES (%s,%s,%s, %s,%s,%s, %s,%s, %s,%s, %s,%s,%s, %s,%s, %s,%s, %s,%s, NOW())""",
+                    (edge_node_id, reservoir_id, metric_time,
+                     water_level_mae_24h, flow_mae_24h, physics_correction_rate,
+                     trend_accuracy, prediction_score,
+                     safety_override_rate, decision_level_dist,
+                     shadow_risk_pass_rate, smooth_filter_rate, decision_score,
+                     avg_physics_violation, gate_limit_touch_rate,
+                     rate_limit_exceed_rate, compliance_score,
+                     overall_score, health_grade),
+                )
+        return True
+
+    def query_model_metrics(self, reservoir_id: int, days: int = 7) -> List[Dict]:
+        """查询历史模型指标"""
+        cutoff = (datetime.now() - timedelta(days=days)).strftime("%Y-%m-%d %H:%M:%S")
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """SELECT * FROM model_metrics
+                       WHERE reservoir_id = %s AND metric_time >= %s
+                       ORDER BY metric_time ASC""",
+                    (reservoir_id, cutoff),
+                )
+                return self._rows_to_dicts(cur)
+
+    def insert_drift_log(self, reservoir_id: int, drift_score: float,
+                         drift_level: str, affected_features: str, detected_at: str):
+        """写入数据漂移日志"""
+        with self._get_conn() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """INSERT INTO model_drift_logs
+                       (reservoir_id, drift_score, drift_level, affected_features,
+                        detected_at, created_at)
+                       VALUES (%s,%s,%s,%s, %s, NOW())""",
+                    (reservoir_id, drift_score, drift_level, affected_features, detected_at),
+                )
+        return True
+
     def cleanup_old_data(self, retention_days=365):
         cutoff = (datetime.now() - timedelta(days=retention_days)).strftime("%Y-%m-%d %H:%M:%S")
         with self._get_conn() as conn:

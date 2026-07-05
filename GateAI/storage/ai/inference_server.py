@@ -176,6 +176,24 @@ class GateController:
 
         print(f"Ready: LSTM(24h->6h) + DQN({mc['dqn']['action_dim']} actions) | v{self.model_version}")
 
+        # ── 模型评判系统 ──
+        self.evaluator = None
+        self.drift_detector = None
+        self._init_evaluator(edge_node_id=None, reservoir_id=None, db=None)
+
+    def _init_evaluator(self, edge_node_id=None, reservoir_id=None, db=None):
+        """初始化模型评判器和漂移检测器 (延迟加载，由 edge_main 注入参数)"""
+        try:
+            from model_evaluator import ModelEvaluator
+            from drift_detector import DriftDetector
+            eid = edge_node_id or 0
+            rid = reservoir_id or 0
+            self.evaluator = ModelEvaluator(edge_node_id=eid, reservoir_id=rid, db=db)
+            self.drift_detector = DriftDetector(reservoir_id=rid, config_path=self._config_path, db=db)
+            print(f"[Eval] ModelEvaluator + DriftDetector initialized (node={eid}, reservoir={rid})")
+        except ImportError as e:
+            print(f"[Eval] Module not available: {e}")
+
     # ==================== 模型热加载 ====================
 
     def reload_models(self, lstm_path: str = None, dqn_path: str = None) -> bool:
@@ -339,13 +357,40 @@ class GateController:
         gates = [o / (self.action_bins - 1) for o in ops[::-1]]
         peak = float(max(levels)) if len(levels) > 0 else up
         sf = "danger" if peak > self.sc["threshold_danger"] else "warning" if peak > self.sc["threshold_warning"] else "safe"
-        return ControlCommand(
+        cmd = ControlCommand(
             gate_openings=[round(v, 3) for v in gates],
             predicted_inflows=[round(v, 1) for v in inflows.tolist()],
             predicted_levels=[round(v, 2) for v in levels.tolist()],
             confidence=round(min(1.0, max(0.3, q.max().item() / 100)), 3),
             safety_flag=sf,
         )
+
+        # ── 记录推理数据到模型评判器 ──
+        if self.evaluator:
+            self.evaluator.record_inference(cmd, sensor)
+
+        # ── 录入特征到漂移检测器 ──
+        if self.drift_detector:
+            self.drift_detector.feed({
+                'upstream_level':   sensor.upstream_level,
+                'downstream_level': sensor.downstream_level,
+                'inflow':           sensor.inflow,
+                'rainfall':         sensor.rainfall,
+                'temperature':      sensor.temperature,
+            })
+
+        return cmd
+
+    def feedback_actual(self, actual_level: float, actual_flow: float):
+        """下一周期回填真实值，计算预测误差"""
+        if self.evaluator:
+            self.evaluator.record_actual(actual_level, actual_flow)
+
+    def get_model_health(self) -> dict:
+        """返回当前模型健康评分"""
+        if self.evaluator:
+            return self.evaluator.to_dict()
+        return {'status': 'evaluator_not_initialized'}
 
 
 # ==================== PLC Interface ====================

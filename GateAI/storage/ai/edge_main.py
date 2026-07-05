@@ -281,7 +281,43 @@ def main():
             if args.once:
                 break
 
-            # 7. 等待下一周期
+            # 6. 模型评判: 回填真实值 (用本轮实际数据对比上轮预测)
+            try:
+                if hasattr(controller, 'evaluator') and controller.evaluator:
+                    controller.feedback_actual(actual_level=sensor.upstream_level, actual_flow=sensor.inflow)
+            except Exception:
+                pass
+
+            # 7. 每小时: 持久化模型指标
+            if cycle % max(1, int(3600 / args.interval)) == 0:
+                try:
+                    if hasattr(controller, 'evaluator') and controller.evaluator:
+                        scores = controller.evaluator.compute_overall()
+                        controller.evaluator.persist()
+                        alert, msg = controller.evaluator.should_alert()
+                        if alert and cloud_api and cloud_api.enabled:
+                            cloud_api.report_alarm(1, 1, 1, 'model_health_degraded',
+                                'urgent' if scores['health_grade'] in ('C', 'D') else 'important',
+                                f"[模型健康] 评分:{scores['overall_score']:.3f} 等级:{scores['health_grade']} {msg}",
+                                scores['overall_score'], 0.55)
+                        log.info(f"[Eval] Score={scores['overall_score']:.3f} Grade={scores['health_grade']}")
+                except Exception:
+                    pass
+
+            # 8. 每 24h: 数据漂移检测
+            if cycle % max(1, int(86400 / args.interval)) == 0:
+                try:
+                    if hasattr(controller, 'drift_detector') and controller.drift_detector:
+                        drift = controller.drift_detector.detect(deduplicate=True)
+                        if drift['drift_level'] in ('warning', 'critical'):
+                            log.warning(f"[Drift] {drift['drift_level']}: score={drift['drift_score']} affected={drift['affected_features']}")
+                            if cloud_api and cloud_api.enabled and drift['drift_level'] == 'critical':
+                                cloud_api.report_alarm(1, 1, 1, 'data_drift',
+                                    'important', f"[数据漂移] {drift['recommendation']}", drift['drift_score'], 0.3)
+                except Exception:
+                    pass
+
+            # 9. 等待下一周期
             log.info(f"Sleeping {args.interval}s...")
             time.sleep(args.interval)
 
