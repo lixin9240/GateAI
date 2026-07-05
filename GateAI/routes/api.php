@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GYZ\AiInferenceController;
 use App\Http\Controllers\Api\GYZ\SettingsModelController;
 use App\Http\Controllers\Api\GYZ\SettingsThresholdController;
+use App\Http\Controllers\Api\LX\PhysicsGuardConfigController;
 use App\Http\Controllers\Api\GYZ\SettingsWeightController;
 use App\Http\Controllers\Api\GYZ\UserManagementController;
 use App\Http\Controllers\Api\LX\EdgeController;
@@ -17,7 +18,10 @@ use App\Http\Controllers\Api\Wjc\WjcAlarmController;
 use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
+use App\Http\Controllers\Api\Wjc\GateInterlockController;
 use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
+use App\Http\Controllers\Api\Fmy\EquipmentController;
+use App\Http\Controllers\Api\Fmy\ModelMetricController;
 use App\Http\Controllers\Api\Fmy\MonitorController;
 use App\Http\Controllers\WjcController;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +33,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
+});
+
+// 边缘端上报接口（EdgeToken 认证，不需要用户登录）
+Route::prefix('v1/edge')->middleware(['edge.token'])->group(function () {
+    Route::post('gate-interlock-logs', [GateInterlockController::class, 'receiveLog']);
 });
 
 // 需要认证的接口
@@ -84,12 +93,15 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
 
     // 8. 数字孪生模块
     Route::prefix('simulation')->group(function () {
-        Route::get('scenarios', [ScenarioController::class, 'scenarios']);
-        Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');
-        Route::get('{id}/result', [SimulationController::class, 'result']);
-        Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');
-        Route::get('incidents', [IncidentController::class, 'incidents']);
-        Route::post('import-incident', [IncidentController::class, 'importIncident']);
+        Route::get('scenarios', [ScenarioController::class, 'scenarios']);// 获取场景列表
+        Route::post('scenarios', [ScenarioController::class, 'store']);// 创建场景
+        Route::put('scenarios/{id}', [ScenarioController::class, 'update']);// 更新场景
+        Route::delete('scenarios/{id}', [ScenarioController::class, 'destroy']);// 删除场景
+        Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');// 启动模拟
+        Route::get('{id}/result', [SimulationController::class, 'result']);// 获取模拟结果
+        Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');// 提交模拟报告
+        Route::get('incidents', [IncidentController::class, 'incidents']);// 获取事件列表
+        Route::post('import-incident', [IncidentController::class, 'importIncident']);// 导入事件
     });
 
     // 11. 边缘端数据上报
@@ -108,6 +120,13 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
         Route::get('physical-parameters', [PhysicalController::class, 'index']);
         Route::post('physical-parameters', [PhysicalController::class, 'upsert']);
         Route::delete('physical-parameters/{id}', [PhysicalController::class, 'delete']);
+
+        // 物理防护配置
+        Route::get('physics-guard', [PhysicsGuardConfigController::class, 'show']);
+        Route::put('physics-guard/{id}', [PhysicsGuardConfigController::class, 'update']);
+        Route::get('physics-guard/history', [PhysicsGuardConfigController::class, 'history']);
+        Route::post('physics-guard/{id}/rollback', [PhysicsGuardConfigController::class, 'rollback']);
+        Route::post('physics-guard/clone', [PhysicsGuardConfigController::class, 'cloneConfig']);
     });
 
     // 9. 系统设置模块
@@ -132,7 +151,21 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
         Route::post('users/{id}/lock', [UserManagementController::class, 'lock']);
         Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);
         Route::delete('users/{id}', [UserManagementController::class, 'destroy']);
+
+        // 闸门互锁规则管理
+        Route::prefix('gate-interlock')->group(function () {
+            Route::get('rules', [GateInterlockController::class, 'rules']);
+            Route::put('rules/{id}', [GateInterlockController::class, 'updateRule']);
+            Route::post('rules/{id}/toggle', [GateInterlockController::class, 'toggleRule']);
+            Route::get('logs', [GateInterlockController::class, 'logs']);
+            Route::get('stats', [GateInterlockController::class, 'stats']);
+        });
     });
+});
+
+// 边缘端上报模型评判指标（不放在 v1 分组下，保持 /api/edge/model-metrics）
+Route::prefix('edge')->middleware(['auth:api', 'edge.token'])->group(function () {
+    Route::post('model-metrics', [ModelMetricController::class, 'receive']);
 });
 
 
@@ -148,6 +181,7 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
     Route::post('/auth/change-pwd', [FmyAuthController::class, 'changePassword']);
     //登录日志查询
     Route::get('/login-logs', [FmyAuthController::class, 'loginLogs']);
+
     // 2. 监控大屏模块
     //获取全部设备列表
     Route::get('/equipment/all-list', [MonitorController::class, 'allList']);
@@ -155,4 +189,23 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
     Route::get('/monitoring/realtime', [MonitorController::class, 'realtime']);
     //趋势图表数据
     Route::get('/monitoring/trend', [MonitorController::class, 'trend']);
+
+    // 3. 设备管理模块
+    //列表
+    Route::get('/equipment/list',              [EquipmentController::class, 'index']);
+    //导出
+    Route::get('/equipment/export',       [EquipmentController::class, 'export']);
+    //详情
+    Route::get('/equipment/{id}',         [EquipmentController::class, 'show']);
+    //远程重启
+    Route::post('/equipment/{id}/restart',[EquipmentController::class, 'restart']);
+    //状态变更
+    Route::put('/equipment/{id}/status',  [EquipmentController::class, 'updateStatus']);
+
+    // 4. 模型三维评判体系
+    Route::prefix('settings/ai')->group(function () {
+        Route::get('metrics',         [ModelMetricController::class, 'latest']);   // 最新指标
+        Route::get('metrics/history', [ModelMetricController::class, 'history']); // 历史趋势
+        Route::get('health',          [ModelMetricController::class, 'health']);  // 全局健康
+    });
 });

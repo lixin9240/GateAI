@@ -2,10 +2,12 @@
 // 模拟场景模型
 namespace App\Models;
 
+use App\Models\Concerns\BeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class SimulationScenario extends Model
 {
+    use BeijingTime;
     protected $table = 'simulation_scenarios';
 
     protected $fillable = [

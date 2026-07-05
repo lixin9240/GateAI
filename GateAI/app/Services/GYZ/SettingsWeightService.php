@@ -5,8 +5,8 @@ namespace App\Services\Gyz;
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\SettingsWeight;
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class SettingsWeightService
 {
@@ -59,11 +59,11 @@ class SettingsWeightService
         DB::transaction(function () use ($weight, $data, $userId) {
             $weight->update($data);
 
-            Log::channel('business')->info('权重配置已更新', [
+            LogHelper::business('权重配置已更新', [
                 'weight_id' => $weight->id,
                 'user_id'   => $userId,
                 'changes'   => $data,
-            ]);
+            ], 'info', 'WEIGHT_UPDATE');
         });
 
         return $weight->fresh();

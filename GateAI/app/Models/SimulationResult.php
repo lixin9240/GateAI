@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class SimulationResult extends Model
 {
+    use BeijingTime;
+
     protected $table = 'simulation_results';
 
     protected $fillable = [

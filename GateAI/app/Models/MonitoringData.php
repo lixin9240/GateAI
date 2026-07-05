@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class MonitoringData extends Model
 {
+    use BeijingTime;
+
     protected $table = 'monitoring_data';
 
     public const UPDATED_AT = null;

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('interval', 20)->default('1m')->comment('采样间隔');
             $table->string('file_name', 100)->nullable()->comment('自定义文件名');
             $table->string('email', 100)->nullable()->comment('通知邮箱');
-            $table->string('status', 20)->default('queued')->index()->comment('queued / processing / completed / failed / expired');
+            $table->string('status', 20)->default('queued')->index()->comment('queued / processing / completed / failed / expired');// 导出状态：已排队/处理中/已完成/已失败/已过期
             $table->index(['status', 'created_at'], 'idx_export_status_created');
             $table->decimal('progress', 5, 2)->default(0)->comment('进度 0.00~100.00');
             $table->unsignedBigInteger('file_size')->nullable()->comment('实际文件大小（字节）');

@@ -13,6 +13,11 @@ class EquipmentSeeder extends Seeder
      */
     public function run(): void
     {
+        // 可重复运行：先清空再插入
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        \App\Models\Equipment::truncate();
+        \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
         $now = now();
 
         /* 上游水库 ID=1, 下游水库 ID=2 —— 与 ReservoirSeeder 顺序一致 */
@@ -308,15 +313,24 @@ class EquipmentSeeder extends Seeder
         ];
 
         $equipment = [];
+
+        // 按水库分组取第一个在线边缘节点，用于关联设备
+        $edgeNodeMap = \App\Models\EdgeNode::where('status', 'online')
+            ->select('id', 'reservoir_id')
+            ->get()
+            ->groupBy('reservoir_id')
+            ->map(fn ($nodes) => $nodes->first()->id);
+
         foreach ($items as $item) {
             $specs = $item['specs'] ?? [];
             $tags  = $item['tags']  ?? [];
+            $rid   = $item['reservoir_id'] ?? null;
 
             $equipment[] = [
                 'name'                  => $item['name'],
                 'code'                  => $item['code'],
                 'type'                  => $item['type'],
-                'reservoir_id'          => $item['reservoir_id'] ?? null,
+                'reservoir_id'          => $rid,
                 'status'                => $item['status'] ?? 'active',
                 'location'              => $item['location'] ?? null,
                 'manufacturer'          => $item['manufacturer'] ?? null,
@@ -328,7 +342,7 @@ class EquipmentSeeder extends Seeder
                 'current_metrics'       => null,
                 'health_score'          => null,
                 'tags'                  => json_encode($tags, JSON_UNESCAPED_UNICODE),
-                'edge_node_id'          => null,
+                'edge_node_id'          => $rid ? ($edgeNodeMap[$rid] ?? null) : null,
                 'plc_register'          => null,
                 'communication_protocol'=> $item['communication_protocol'] ?? null,
                 'heartbeat_interval'    => $item['heartbeat_interval'] ?? null,

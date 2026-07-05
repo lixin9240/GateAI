@@ -1,5 +1,5 @@
 <?php
-// 仿真场景控制器
+
 namespace App\Http\Controllers\Api\LX;
 
 use App\Http\Controllers\Controller;
@@ -22,5 +22,26 @@ class ScenarioController extends Controller
             'total' => $data->total(),
             'list'  => $data->items(),
         ]);
+    }
+
+    public function store(LXScenarioRequest $request): JsonResponse
+    {
+        $scenario = $this->service->create($request->validated());
+
+        return Result::success('创建仿真场景成功', $scenario);
+    }
+
+    public function update(int $id, LXScenarioRequest $request): JsonResponse
+    {
+        $scenario = $this->service->update($id, $request->validated());
+
+        return Result::success('更新仿真场景成功', $scenario);
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $this->service->delete($id);
+
+        return Result::success('删除仿真场景成功');
     }
 }

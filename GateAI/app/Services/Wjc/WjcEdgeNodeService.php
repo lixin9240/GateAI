@@ -5,6 +5,8 @@ namespace App\Services\Wjc;
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\EdgeNode;
+use App\Support\LogHelper;
+use Illuminate\Support\Str;
 
 class WjcEdgeNodeService
 {
@@ -39,7 +41,16 @@ class WjcEdgeNodeService
      */
     public function createNode(array $data): EdgeNode
     {
-        return EdgeNode::create($data);
+        $data['api_secret'] = hash('sha256', Str::random(32));
+        $node = EdgeNode::create($data);
+
+        LogHelper::business('边缘节点已注册', [
+            'node_id'      => $node->id,
+            'code'         => $node->code,
+            'reservoir_id' => $node->reservoir_id,
+        ], 'info', 'EDGE_NODE_CREATE');
+
+        return $node;
     }
 
     /**
@@ -56,6 +67,16 @@ class WjcEdgeNodeService
         }
 
         $node->update($data);
+
+        // 仅在状态变更时记录业务日志
+        if (! empty($data['status']) && $data['status'] !== $node->getOriginal('status')) {
+            LogHelper::business('边缘节点状态变更', [
+                'node_id'   => $node->id,
+                'code'      => $node->code,
+                'status'    => $data['status'],
+            ], 'info', 'EDGE_NODE_STATUS');
+        }
+
         return $node;
     }
 
@@ -70,6 +91,13 @@ class WjcEdgeNodeService
             throw new BusinessException('该节点下挂载了设备，无法删除', ResponseCode::BUSINESS_ERROR);
         }
 
-        return $node->delete();
+        $result = $node->delete();
+
+        LogHelper::business('边缘节点已删除', [
+            'node_id' => $node->id,
+            'code'    => $node->code,
+        ], 'warning', 'EDGE_NODE_DELETE');
+
+        return $result;
     }
 }

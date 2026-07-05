@@ -6,6 +6,7 @@ use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\SettingsModel;
 use App\Models\SettingsModelDeployment;
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -86,12 +87,12 @@ class SettingsModelService
                 'created_by'      => $userId,
             ]);
 
-            Log::channel('business')->info('AI模型已上传', [
+            LogHelper::business('AI模型已上传', [
                 'model_id' => $model->id,
                 'name'     => $model->name,
                 'version'  => $model->version,
                 'user_id'  => $userId,
-            ]);
+            ], 'info', 'MODEL_UPLOAD');
 
             return $model;
         });
@@ -157,12 +158,12 @@ class SettingsModelService
             // 更新 deploy_config.json，让 infer_cli.py 知道用哪个模型
             $this->switchDeployConfig($model, $fullPath);
 
-            Log::channel('business')->info('AI模型已激活并验证', [
+            LogHelper::business('AI模型已激活并验证', [
                 'model_id' => $model->id,
                 'name'     => $model->name,
                 'version'  => $model->version,
                 'user_id'  => $userId,
-            ]);
+            ], 'info', 'MODEL_ACTIVATE');
 
             return $model->fresh();
         });
@@ -245,7 +246,7 @@ PYTHON);
         ];
 
         file_put_contents($configPath, json_encode($config, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-        Log::channel('business')->info('deploy_config.json 已更新', ['type' => $model->type, 'file' => $fileBasename]);
+        LogHelper::business('deploy_config.json 已更新', ['type' => $model->type, 'file' => $fileBasename], 'info', 'DEPLOY_CONFIG_UPDATE');
     }
 
     /**
@@ -288,14 +289,14 @@ PYTHON);
                 'is_active' => 1,
             ]);
 
-            Log::channel('business')->warning('AI模型已回滚', [
+            LogHelper::business('AI模型已回滚', [
                 'from_model_id' => $model->id,
                 'from_version'  => $model->version,
                 'to_model_id'   => $previous->id,
                 'to_version'    => $previous->version,
                 'reason'        => $reason,
                 'user_id'       => $userId,
-            ]);
+            ], 'warning', 'MODEL_ROLLBACK');
 
             return $previous->fresh();
         });
@@ -324,11 +325,11 @@ PYTHON);
 
             $model->delete();
 
-            Log::channel('business')->info('AI模型已删除', [
+            LogHelper::business('AI模型已删除', [
                 'model_id' => $model->id,
                 'name'     => $model->name,
                 'version'  => $model->version,
-            ]);
+            ], 'info', 'MODEL_DELETE');
         });
     }
 
@@ -368,13 +369,13 @@ PYTHON);
                 'deployed_nodes' => SettingsModelDeployment::where('model_id', $model->id)->count(),
             ]);
 
-            Log::channel('business')->info('AI模型开始下发', [
+            LogHelper::business('AI模型开始下发', [
                 'model_id'      => $model->id,
                 'name'          => $model->name,
                 'edge_node_ids' => $edgeNodeIds,
                 'strategy'      => $strategy,
                 'user_id'       => $userId,
-            ]);
+            ], 'info', 'MODEL_DEPLOY');
         });
 
         // 真实下发：将模型文件同步到边缘节点部署目录（模拟 scp/rsync 到 Jetson）
@@ -397,12 +398,12 @@ PYTHON);
                     ]);
                     $result['status']        = 'completed';
                     $result['md5_verified']  = (int) (md5_file($targetFile) === $model->md5);
-                    Log::channel('business')->info('模型文件已同步至边缘节点', [
+                    LogHelper::business('模型文件已同步至边缘节点', [
                         'deployment_id' => $result['id'],
                         'edge_node_id'  => $nodeId,
                         'target'        => $targetFile,
                         'md5_match'     => (int) (md5_file($targetFile) === $model->md5),
-                    ]);
+                    ], 'info', 'MODEL_SYNC');
                 } else {
                     SettingsModelDeployment::where('id', $result['id'])->update([
                         'status'    => 'failed',

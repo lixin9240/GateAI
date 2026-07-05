@@ -4,6 +4,7 @@ namespace App\Services\Fmy;
 
 use App\Models\Equipment;
 use App\Models\MonitoringData;
+use Illuminate\Support\Facades\Log;
 
 class MonitoringService
 {
@@ -12,6 +13,12 @@ class MonitoringService
      */
     public function getEquipmentAllList(?int $reservoirId): array
     {
+        Log::channel('business')->info('监控大屏-获取全部设备列表', [
+            'reservoir_id' => $reservoirId,
+            'user_id'      => auth()->id(),
+            'trace_id'     => request()->attributes->get('trace_id'),
+        ]);
+
         $query = Equipment::query()
             ->with('edgeNode:id,cpu_usage,memory_usage')
             ->select(['id', 'name', 'type', 'status', 'edge_node_id', 'last_online']);
@@ -38,6 +45,13 @@ class MonitoringService
      */
     public function getRealtimeData(int $reservoirId, ?int $equipmentId): array
     {
+        Log::channel('business')->info('监控大屏-实时采集数据', [
+            'reservoir_id' => $reservoirId,
+            'equipment_id' => $equipmentId,
+            'user_id'      => auth()->id(),
+            'trace_id'     => request()->attributes->get('trace_id'),
+        ]);
+
         $query = MonitoringData::where('reservoir_id', $reservoirId);
 
         if ($equipmentId) {
@@ -68,6 +82,14 @@ class MonitoringService
      */
     public function getTrendData(int $reservoirId, string $range, string $dataType): array
     {
+        Log::channel('business')->info('监控大屏-趋势图表数据', [
+            'reservoir_id' => $reservoirId,
+            'range'        => $range,
+            'data_type'    => $dataType,
+            'user_id'      => auth()->id(),
+            'trace_id'     => request()->attributes->get('trace_id'),
+        ]);
+
         $startTime = match ($range) {
             '1h'  => now()->subHour(),
             '6h'  => now()->subHours(6),

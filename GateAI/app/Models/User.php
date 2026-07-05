@@ -2,8 +2,6 @@
 // 用户模型
 namespace App\Models;
 
-use App\Models\Concerns\HasBeijingTime;
-
 use App\Models\Concerns\BeijingTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,7 +12,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use HasBeijingTime, HasApiTokens, HasFactory, Notifiable, SoftDeletes;
+    use BeijingTime, HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'users';
 
@@ -41,7 +39,7 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'role_id'               => 'integer',
         'email_verified_at'     => 'datetime',
-        // 'hashed' cast 在 Laravel 10.1 不支持，改用 setPasswordAttribute() mutator
+        'password'              => 'hashed',
         'force_change_password' => 'integer',
         'login_fail_count'      => 'integer',
         'lock_expire_time'      => 'datetime',
@@ -54,6 +52,7 @@ class User extends Authenticatable implements JWTSubject
         $this->attributes['password'] = bcrypt($value);
     }
 
+    // ─── JWT ──────────────────────────────────────
     public function getJWTIdentifier(): mixed
     {
         return $this->getKey();
@@ -63,6 +62,8 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+
 
     public function role()
     {

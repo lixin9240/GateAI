@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id()->comment('主键');
             $table->string('incident_name', 100)->comment('故障名称');
             $table->text('description')->nullable()->comment('故障描述');
-            $table->string('severity', 20)->index()->comment('low / medium / high / critical');
+            $table->string('severity', 20)->index()->comment('low / medium / high / critical');// 故障严重性：低/中/高/严重
             $table->unsignedBigInteger('equipment_id')->index()->comment('关联设备ID');
             $table->foreign('equipment_id')->references('id')->on('equipment')->onDelete('restrict');
             $table->index(['equipment_id', 'occurred_at'], 'idx_incidents_equipment_occurred');
@@ -35,7 +35,7 @@ return new class extends Migration
             $table->unsignedBigInteger('replayed_scenario_id')->nullable()->comment('复盘仿真场景ID');
             $table->foreign('replayed_scenario_id')->references('id')->on('simulation_scenarios')->onDelete('set null');
             $table->string('import_id', 50)->nullable()->unique()->comment('导入任务ID');
-            $table->string('status', 20)->default('imported')->index()->comment('imported / processing / failed / success');
+            $table->string('status', 20)->default('imported')->index()->comment('imported / processing / failed / success');// 导入状态：已导入/处理中/已失败/成功
             $table->unsignedBigInteger('created_by')->nullable()->comment('导入人');
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->timestamp('created_at')->nullable()->comment('创建时间');

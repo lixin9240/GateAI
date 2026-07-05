@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\Log;
 
 class HydropowerService
@@ -110,7 +111,14 @@ class HydropowerService
 
         $cmd = "{$pythonBin} {$scriptPath} --reset";
         $output = shell_exec("cd {$workDir} && {$cmd} 2>&1");
+        $success = str_contains($output ?? '', '"success": true');
 
-        return str_contains($output ?? '', '"success": true');
+        LogHelper::business('AI推理历史缓冲区已重置', [
+            'success' => $success,
+            'output'  => $output,
+            'user_id' => auth()->id(),
+        ], 'warning', 'AI_RESET_HISTORY');
+
+        return $success;
     }
 }

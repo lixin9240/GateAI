@@ -6,6 +6,7 @@ use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\Alarm;
 use App\Models\AlarmExceedLog;
+use App\Support\LogHelper;
 
 class WjcAlarmService
 {
@@ -52,6 +53,13 @@ class WjcAlarmService
             'acknowledged_at' => now(),
         ]);
 
+        LogHelper::business('告警已确认', [
+            'alarm_id'    => $alarm->id,
+            'alarm_level' => $alarm->level,
+            'alarm_type'  => $alarm->type,
+            'user_id'     => $userId,
+        ], 'info', 'ALARM_ACKNOWLEDGE');
+
         return $alarm;
     }
 
@@ -71,6 +79,13 @@ class WjcAlarmService
             'dispose_note' => $note,
             'disposed_at'  => now(),
         ]);
+
+        LogHelper::business('告警已处置', [
+            'alarm_id'    => $alarm->id,
+            'alarm_level' => $alarm->level,
+            'alarm_type'  => $alarm->type,
+            'note'        => $note,
+        ], 'info', 'ALARM_DISPOSE');
 
         return $alarm;
     }

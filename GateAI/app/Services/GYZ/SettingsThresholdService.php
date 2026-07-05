@@ -5,8 +5,8 @@ namespace App\Services\Gyz;
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\SettingsThreshold;
+use App\Support\LogHelper;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class SettingsThresholdService
 {
@@ -49,11 +49,11 @@ class SettingsThresholdService
         DB::transaction(function () use ($threshold, $data, $userId) {
             $threshold->update($data);
 
-            Log::channel('business')->info('阈值配置已更新', [
+            LogHelper::business('阈值配置已更新', [
                 'threshold_id' => $threshold->id,
                 'user_id'      => $userId,
                 'changes'      => $data,
-            ]);
+            ], 'info', 'THRESHOLD_UPDATE');
         });
 
         return $threshold->fresh();

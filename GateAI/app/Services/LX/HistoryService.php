@@ -4,6 +4,8 @@ namespace App\Services\LX;
 
 use App\Models\HistoryExportTask;
 use App\Models\MonitoringData;
+use App\Support\LogHelper;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class HistoryService
@@ -47,28 +49,99 @@ class HistoryService
 
     public function export(array $data): array
     {
+        $taskNo = 'EXP-' . date('YmdHis') . '-' . strtoupper(Str::random(4));
+        $format = $data['format'] ?? 'csv';
+
         $task = HistoryExportTask::create([
-            'task_no'        => 'EXP-' . date('YmdHis') . '-' . strtoupper(Str::random(4)),
+            'task_no'        => $taskNo,
             'equipment_ids'  => $data['equipment_ids'],
             'start_time'     => $data['start_time'],
             'end_time'       => $data['end_time'],
             'metrics'        => $data['metrics'],
-            'format'         => $data['format'] ?? 'csv',
+            'format'         => $format,
             'interval'       => $data['interval'] ?? '1m',
             'file_name'      => $data['file_name'] ?? null,
             'email'          => $data['email'] ?? null,
-            'status'         => 'queued',
-            'estimated_size' => '—',
+            'status'         => 'processing',
             'estimated_time' => 60,
             'created_by'     => auth()->id(),
         ]);
 
+        try {
+            // 查询数据
+            $rows = MonitoringData::whereIn('reservoir_id', $data['equipment_ids'] ?? [])
+                ->orWhereIn('edge_node_id', $data['equipment_ids'] ?? [])
+                ->whereBetween('timestamp', [$data['start_time'], $data['end_time']])
+                ->orderBy('timestamp')
+                ->limit(100000)
+                ->get();
+
+            // 生成 CSV
+            $csv = $this->generateCsv($rows, $data['metrics']);
+            $size = strlen($csv);
+
+            // 上传 OSS
+            $fileName = $data['file_name'] ?? $taskNo;
+            $ossPath  = 'exports/' . date('Ym') . '/' . $fileName . '.' . $format;
+            Storage::disk('oss')->put($ossPath, $csv);
+            $downloadUrl = Storage::disk('oss')->url($ossPath);
+
+            $task->update([
+                'status'      => 'completed',
+                'progress'    => 100,
+                'file_size'   => $size,
+                'download_url' => $downloadUrl,
+                'completed_at' => now(),
+                'expire_at'    => now()->addDay(),
+            ]);
+
+            LogHelper::business('历史数据导出完成', [
+                'task_no'  => $taskNo,
+                'format'   => $format,
+                'size'     => $size,
+                'user_id'  => auth()->id(),
+            ], 'info', 'HISTORY_EXPORT');
+        } catch (\Throwable $e) {
+            $task->update([
+                'status'    => 'failed',
+                'error_msg' => $e->getMessage(),
+            ]);
+
+            LogHelper::business('历史数据导出失败', [
+                'task_no'   => $taskNo,
+                'format'    => $format,
+                'error_msg' => $e->getMessage(),
+                'user_id'   => auth()->id(),
+            ], 'error', 'HISTORY_EXPORT_FAILED');
+        }
+
         return [
             'task_id'        => $task->task_no,
             'status'         => $task->status,
-            'estimated_size' => $task->estimated_size,
+            'estimated_size' => $task->estimated_size ?? '—',
             'estimated_time' => $task->estimated_time,
         ];
+    }
+
+    private function generateCsv($rows, array $metrics): string
+    {
+        $headers = array_merge(['timestamp'], $metrics);
+        $csv = fopen('php://temp', 'r+');
+        fputcsv($csv, $headers);
+
+        foreach ($rows as $row) {
+            $line = [$row->timestamp];
+            foreach ($metrics as $metric) {
+                $line[] = $row->{$metric} ?? '';
+            }
+            fputcsv($csv, $line);
+        }
+
+        rewind($csv);
+        $content = stream_get_contents($csv);
+        fclose($csv);
+
+        return $content;
     }
 
     public function exportStatus(string $taskId): array

@@ -2,10 +2,13 @@
 // 历史导出任务模型
 namespace App\Models;
 
+use App\Models\Concerns\BeijingTime;
 use Illuminate\Database\Eloquent\Model;
 
 class HistoryExportTask extends Model
 {
+    use BeijingTime;
+
     protected $table = 'history_export_tasks';
 
     protected $fillable = [

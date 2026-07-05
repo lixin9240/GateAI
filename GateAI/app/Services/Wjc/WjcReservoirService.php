@@ -5,6 +5,7 @@ namespace App\Services\Wjc;
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Models\Reservoir;
+use App\Support\LogHelper;
 
 class WjcReservoirService
 {
@@ -42,7 +43,15 @@ class WjcReservoirService
      */
     public function createReservoir(array $data): Reservoir
     {
-        return Reservoir::create($data);
+        $reservoir = Reservoir::create($data);
+
+        LogHelper::business('水库已创建', [
+            'reservoir_id' => $reservoir->id,
+            'name'         => $reservoir->name,
+            'code'         => $reservoir->code,
+        ], 'info', 'RESERVOIR_CREATE');
+
+        return $reservoir;
     }
 
     /**
@@ -52,6 +61,13 @@ class WjcReservoirService
     {
         $reservoir = Reservoir::findOrFail($id);
         $reservoir->update($data);
+
+        LogHelper::business('水库信息已更新', [
+            'reservoir_id' => $id,
+            'name'         => $reservoir->name,
+            'changes'      => $data,
+        ], 'info', 'RESERVOIR_UPDATE');
+
         return $reservoir;
     }
 
@@ -67,6 +83,13 @@ class WjcReservoirService
             throw new BusinessException('该水库下存在关联的设备或节点，无法删除', ResponseCode::BUSINESS_ERROR);
         }
 
-        return $reservoir->delete();
+        $result = $reservoir->delete();
+
+        LogHelper::business('水库已删除', [
+            'reservoir_id' => $reservoir->id,
+            'name'         => $reservoir->name,
+        ], 'warning', 'RESERVOIR_DELETE');
+
+        return $result;
     }
 }

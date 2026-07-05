@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\EdgeNode;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class EdgeNodeSeeder extends Seeder
 {
@@ -103,10 +104,47 @@ class EdgeNodeSeeder extends Seeder
                 'memory_usage'    => 48.9,
                 'plc_status'      => 'online',
             ],
+            // 上游模拟水库 - 1个节点
+            [
+                'name'            => '模拟平台-上游控制节点',
+                'code'            => 'SIM_EDGE_UP',
+                'reservoir_id'    => 4,
+                'status'          => 'online',
+                'location'        => '模拟平台控制柜',
+                'ip'              => '192.168.1.201',
+                'last_heartbeat'  => now(),
+                'edge_version'    => '1.0.0',
+                'model_version'   => 'LSTM_v1.0',
+                'autonomy_mode'   => 1,
+                'cpu_usage'       => 45.2,
+                'memory_usage'    => 62.1,
+                'plc_status'      => 'online',
+            ],
+            // 下游模拟水库 - 1个节点
+            [
+                'name'            => '模拟平台-下游监测节点',
+                'code'            => 'SIM_EDGE_DOWN',
+                'reservoir_id'    => 5,
+                'status'          => 'online',
+                'location'        => '模拟平台下游侧',
+                'ip'              => '192.168.1.202',
+                'last_heartbeat'  => now(),
+                'edge_version'    => '1.0.0',
+                'model_version'   => 'LSTM_v1.0',
+                'autonomy_mode'   => 0,
+                'cpu_usage'       => 28.7,
+                'memory_usage'    => 40.3,
+                'plc_status'      => 'online',
+            ],
         ];
 
+        $existing = EdgeNode::pluck('code')->all();
+
         foreach ($nodes as $data) {
-            EdgeNode::create($data);
+            if (!in_array($data['code'], $existing)) {
+                $data['api_secret'] = hash('sha256', Str::random(32));
+                EdgeNode::create($data);
+            }
         }
     }
 }

@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreign('simulation_id')->references('id')->on('simulation_tasks')->onDelete('cascade');
             $table->unsignedBigInteger('scenario_id')->index()->comment('场景ID');
             $table->foreign('scenario_id')->references('id')->on('simulation_scenarios')->onDelete('restrict');
-            $table->string('status', 20)->index()->comment('最终状态：completed / terminated / error');
+            $table->string('status', 20)->index()->comment('最终状态：completed / terminated / error');// 最终状态：完成/终止/错误
             $table->string('report_id', 50)->nullable()->comment('关联报告ID');
-            $table->string('report_status', 20)->nullable()->comment('报告状态：pending / completed / failed');
+            $table->string('report_status', 20)->nullable()->comment('报告状态：pending / completed / failed');// 报告状态：待处理/已完成/已失败
             $table->timestamp('start_time')->nullable()->comment('开始时间');
             $table->timestamp('end_time')->nullable()->comment('结束时间');
             $table->json('summary')->nullable()->comment('汇总统计');
