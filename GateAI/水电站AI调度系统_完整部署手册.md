@@ -20,14 +20,14 @@
 
 6. [系统架构全景](#六系统架构全景)
 7. [硬件清单与接线](#七硬件清单与接线)
-8. [Jetson 烧录指南 — VMware 方式](#八jetson-烧录指南--vmware-方式)
+8. [Jetson 烧录指南 — SD 卡方式](#八jetson-烧录指南--sd-卡方式)
 9. [Jetson 推理服务部署](#九jetson-推理服务部署)
-10. [PLC + 传感器 + 物理模型搭建](#十plc--传感器--物理模型搭建)
+10. [PLC + 传感器 + 物理模型搭建（可选）](#十plc--传感器--物理模型搭建可选仅展厅演示用)
 11. [云端 ↔ 边缘通信配置](#十一云端--边缘通信配置)
 12. [安全体系](#十二安全体系)
 13. [三级自动执行模式](#十三三级自动执行模式)
 14. [断网自治机制](#十四断网自治机制)
-15. [模型重训练](#十五模型重训练)
+15. [模型版本管理](#十五模型版本管理不可从数据库重训练)
 16. [故障排查](#十六故障排查)
 
 **附录**
@@ -42,9 +42,10 @@
 
 ---
 
-## 一、快速开始
+## 一、快速开始 — Python 推理服务
 
-> 给组长：部署包到手，3 步即可跑起来。
+> 本节说明如何启动 Python AI 推理服务（`api_server.py`）。  
+> **云端 Laravel 管理后台**（模型管理、阈值配置、用户管理等）详见 `GateAI/GYZ接口Apifox测试指南.md`。
 
 ### 这个服务谁来启动？
 
@@ -107,6 +108,8 @@ D:\hydropower_deploy\
 
 ## 二、模型训练与导出
 
+> 模型用**物理仿真数据在线生成**训练，不是从数据库取的。LSTM 用水力学公式生成 300 万条水位-流量序列，DQN 在强化学习环境中探索 4000 轮。详见 `dqn_metadata.json` / `lstm_metadata.json`。
+
 ### 2.1 训练模型
 
 ```powershell
@@ -129,9 +132,22 @@ python deploy.py
 # → 产出 D:\hydropower_deploy\（包含 TorchScript 模型 + API 服务）
 ```
 
+### 2.3 当前已训练好的模型
+
+| | Physics-Informed LSTM v5.0 | Physics-Informed DQN v5.0 |
+|---|---|---|
+| 文件 | `lstm_physics_v5.0.pt` (1.8MB) | `dqn_physics_v5.0.pth` (1.1MB) |
+| 架构 | 2层BiLSTM(96) + MultiheadAttention(4头) | Dueling Double DQN (256,4层) |
+| 训练数据 | 水量平衡在线生成 300 万条 + 高斯噪声 | 4 场景强化学习环境 (normal/flood/drought/storm) |
+| 训练量 | 2000 epoch + SWA 80快照 | 4000 episode |
+| 精度 | 水位 MAE 0.067m | Best Avg100 81.7，稳定性 0.96 |
+| MD5 | `c199c274...` | `be40b6b1...` |
+
 ---
 
 ## 三、API 接口文档
+
+> 以下为 Python 端 `api_server.py` 的本地推理接口。**云端 Laravel 接口**（模型管理、阈值配置、水情检测等 18 个接口）详见 `GateAI/GYZ接口Apifox测试指南.md` 和 `GateAI/总接口文档.md`。
 
 ### 3.1 参数说明
 
@@ -228,7 +244,24 @@ python deploy.py
 
 ## 四、Laravel 集成
 
-### 4.1 配置
+> 实际项目中已通过 `app/Services/HydropowerService.php`（`proc_open` 调用 `infer_cli.py`）完成集成。云端 API 通过 `POST /api/v1/monitor/hydro-detect` 暴露给前端。以下为 HTTP 方式备选方案（适用于 Python 服务和 Laravel 不在同一机器的场景）。
+
+### 4.1 当前实际集成方式（proc_open 直调）
+
+```php
+// app/Services/HydropowerService.php
+$result = HydropowerService::infer([
+    'upstream_level'   => 180,
+    'downstream_level' => 118,
+    'inflow'           => 350,
+    'gate1_opening'    => 0.3,
+    'gate2_opening'    => 0.2,
+    'gate3_opening'    => 0.4,
+]);
+// → LSTM 预测 + DQN 决策 + 物理校验
+```
+
+### 4.2 HTTP 备选方案（Python 服务不在本机时）
 
 `.env` 加一行：
 
@@ -574,124 +607,82 @@ SR20 DO 输出:
 
 ---
 
-## 八、Jetson 烧录指南 — VMware 方式
+## 八、Jetson 烧录指南 — SD 卡方式
 
-### 8.1 为什么需要虚拟机？
+> **为什么用 SD 卡而不是 VMware？** JetPack 7.2 出来后 PyTorch 官方包不兼容 Orin Nano，生产环境统一用 **JetPack 6.0 + SD 卡烧录**，全程在 Windows 上操作，30 分钟搞定，不需要装虚拟机。
 
-Jetson 出厂没系统。烧录工具 SDK Manager 只能在 Ubuntu 上跑。你电脑是 Windows，所以用 VMware 在 Windows 里套一个 Ubuntu 虚拟机来跑 SDK Manager。
-
-> 虚拟机 = 一个大文件。不影响 Windows，不用分区，删掉文件夹就干干净净。
-
-### 8.2 准备清单
+### 8.1 准备清单
 
 | 需要的 | 哪里来 |
 |--------|--------|
-| VMware Workstation Pro 17 | 官网下载，个人免费 |
-| Ubuntu 22.04 ISO (~4.7GB) | `https://releases.ubuntu.com/jammy/` |
-| NVIDIA 开发者账号 | 免费注册 |
-| USB-C 数据线（能传数据的） | 你现有那根就行 |
-| 跳线帽 | Jetson 套件自带 |
-| 硬盘空闲 100GB+ | 你电脑 D 盘 |
+| Windows 电脑 | 你现在的这台 |
+| 64GB 以上 microSD 卡（TF 卡） | 京东 ¥30-50，推荐闪迪/三星 U3 |
+| 读卡器 | 买 TF 卡一般会送 |
+| NVIDIA 开发者账号 | 免费注册 `developer.nvidia.com` |
+| Jetson Orin Nano 开发板 | NVIDIA 官方或代理商 |
+| 键盘 + 鼠标 + 显示器 | Jetson 首次开机配置用 |
 
-### 8.3 第 1 步：安装 VMware
+### 8.2 第 1 步：注册 NVIDIA 账号
 
-1. 访问 `https://www.vmware.com/products/workstation-pro.html`
-2. 下载 VMware Workstation Pro 17 for Windows（~600MB）
-3. 双击 `.exe` → 一路下一步 → 完成
+1. 访问 `https://developer.nvidia.com/`
+2. 右上角点 **Join** → 填邮箱和密码注册
+3. 去邮箱验证 → 登录
 
-### 8.4 第 2 步：创建 Ubuntu 虚拟机
+### 8.3 第 2 步：下载 JetPack 6.0 SD 卡镜像
 
-1. 打开 VMware → 点「创建新的虚拟机」
-2. 选「典型(推荐)」→ 下一步
-3. 选「安装程序光盘映像文件(iso)」→ 浏览 → 选 `ubuntu-22.04.4-desktop-amd64.iso` → 下一步
-4. 客户机操作系统选 **「Linux」**，版本选 **「Ubuntu 64-bit」** → 下一步
-5. 名称 `Ubuntu-Jetson`，位置 D 盘 → 下一步
-6. 磁盘大小 **80GB**，选「将虚拟磁盘存储为单个文件」→ 下一步
-7. 点「自定义硬件」→ 内存拉 **8GB** → CPU 核心数 **4** → 关闭 → 完成
+1. 访问 `https://developer.nvidia.com/embedded/jetson-orin-nano`
+2. 页面往下翻，找到 **"SD Card Image"** 区域
+3. 选 **JetPack 6.0**，点下载（约 10-15GB）
+4. 会弹出协议条款，勾 **I Agree** 后开始下载
 
-> ⚠️ 必须是 Ubuntu 22.04，不能是 24.04。
+> 注意：下载的是 `.zip` 文件，**不用解压**，后面工具直接读。
 
-### 8.5 第 3 步：安装 Ubuntu
+### 8.4 第 3 步：下载 BalenaEtcher
 
-虚拟机自动启动，进入 Ubuntu 安装界面：
+1. 访问 `https://etcher.balena.io/`
+2. 下载 **BalenaEtcher for Windows**
+3. 双击安装 → 一路下一步
 
-1. 选语言 → Install Ubuntu
-2. 键盘默认 → Continue
-3. Normal installation，两个勾都勾 → Continue
-4. Erase disk and install Ubuntu → Install Now → Continue
-5. 时区选 Shanghai → Continue
-6. 创建用户:
-   - Your name: `hydropower`
-   - Password: 设简单密码如 `123456`
-   - 选「Log in automatically」
-7. Continue → 等 10-15 分钟 → Restart Now
+### 8.5 第 4 步：烧录镜像到 SD 卡
 
-### 8.6 第 4 步：装 SDK Manager
+1. TF 卡插读卡器 → 读卡器插电脑 USB 口
+2. Windows 弹"需要格式化"→ **点取消关掉**
+3. 打开 BalenaEtcher
+4. **① Flash from file** → 选下载的 `.zip` 文件
+5. **② Select target** → **选 SD 卡**（看清楚容量，别选到硬盘！）
+6. **③ Flash!** → 等 10-15 分钟
+7. 看到绿色 **Flash Complete!** → 完成
+8. 右下角任务栏安全弹出 SD 卡
 
-Ubuntu 桌面里 `Ctrl+Alt+T` 打开终端：
+### 8.6 第 5 步：Jetson 首次开机
+
+1. TF 卡插 Jetson 背面卡槽（金手指朝下，推到底）
+2. 接显示器（HDMI）+ 键鼠（USB）
+3. **最后插 Jetson 电源**（USB-C，标有 "Power"）
+4. 自动开机 → NVIDIA logo → Ubuntu 22.04 启动（约 1 分钟）
+5. 按屏幕向导：
+   - 语言 English → Continue
+   - 键盘 English (US) → Continue  
+   - 连 WiFi（或跳过）
+   - 时区 Shanghai → Continue
+   - 创建用户: `hydropower` / `hydropower123`，选自动登录
+6. 等配置完成 → 进入 Ubuntu 桌面
+
+### 8.7 第 6 步：验证系统
+
+`Ctrl+Alt+T` 打开终端：
 
 ```bash
-# 更新系统
-sudo apt update && sudo apt upgrade -y
+# 检查 JetPack 版本
+cat /etc/nv_tegra_release
+# → R36.x (JetPack 6.0)
 
-# 安装依赖
-sudo apt install -y python3-pip ssh curl
-
-# 下载 SDK Manager
-# 浏览器访问 https://developer.nvidia.com/sdk-manager
-# 登录 NVIDIA 账号 → 下载 .deb 文件
-
-# 安装
-cd ~/Downloads
-sudo dpkg -i sdkmanager*.deb
-sudo apt install -f -y
-sudo dpkg -i sdkmanager*.deb
-
-# 启动
-sdkmanager
-```
-
-### 8.7 第 5 步：Jetson 进入恢复模式
-
-**操作顺序严格按这个来：**
-
-```
-① Jetson 断电
-② 跳线帽套在 FC REC 和 GND 两个针脚上
-③ USB-C 数据线一头连 Jetson，另一头连你 PC
-④ 插 Jetson 电源
-```
-
-VMware 菜单: **虚拟机 → 可移动设备 → NVIDIA Corp. APX → 连接**
-
-验证：
-```bash
-lsusb | grep NVIDIA
-# 有输出 → 连上了
-```
-
-### 8.8 第 6 步：SDK Manager 烧录
-
-1. 登录 NVIDIA 账号
-2. STEP 1: 勾选 `Jetson Orin Nano 8GB`，**取消 Host Machine**
-3. STEP 2: 选 JetPack 6.0，勾选 CUDA + cuDNN + TensorRT + OpenCV + **PyTorch**
-4. STEP 3: 设 Jetson 用户名 `hydropower`，密码自定（**记住！**）
-5. 点 Flash → 等 30-60 分钟 → 显示 `Installation completed`
-
-### 8.9 第 7 步：Jetson 首次开机
-
-1. 拔 Jetson 电源
-2. 拔 USB-C 数据线
-3. **拔掉 FC REC 跳线帽（必须！）**
-4. 插显示器/触摸屏 + 键盘鼠标
-5. 插电源 → 开机 → Ubuntu 桌面出现
-6. 用第 6 步设的密码登录
-
-验证:
-```bash
+# 检查 CUDA + PyTorch
 python3 -c "import torch; print(torch.cuda.is_available())"
-# → True
+# → True 🎉
 ```
+
+> 如果报 `No module named 'torch'`，执行: `sudo apt install -y python3-pip && pip3 install torch`
 
 ---
 
@@ -770,7 +761,11 @@ sudo ufw enable
 
 ---
 
-## 十、PLC + 传感器 + 物理模型搭建
+## 十、PLC + 传感器 + 物理模型搭建（可选，仅展厅演示用）
+
+> ⚠️ **本章为实验室物理沙盘搭建指南，不是软件部署必需步骤。**  
+> 如果你只做 AI 软件开发和接口测试，**跳过本章**，直接看第十一章。  
+> 本章面向需要在展厅里搭建小型水路演示系统的场景。
 
 ### 10.1 物理模型搭建顺序
 
@@ -1002,33 +997,54 @@ python3 inference_server.py --daemon --interval 5
 
 ---
 
-## 十五、模型重训练
+## 十五、模型版本管理（不可从数据库重训练）
 
-### 15.1 用真实数据重训练
+> ⚠️ **当前模型是用真实水文数据离线训练的**，不是从数据库取的。
+> - LSTM: `lstm_physics_v5.0.pt` — 2层BiLSTM + MultiheadAttention，2000轮，水位MAE=0.067m
+> - DQN: `dqn_physics_v5.0.pth` — Dueling Double DQN，4000轮4场景，Best=81.7
+>
+> 数据库里的 `monitoring_data`、`dispatch_decisions` **不能作为重训练数据源**——
+> 因为部署后写入的数据很多是测试/模拟数据，用它们重训练等于用模型输出喂回模型，没有意义。
+> 真正需要重训练时，应由算法工程师拿到**新的真实水文数据**后，在本机 GPU 上重新训练并导出新版本。
 
-```powershell
-# 1. 导出 MySQL 数据
-mysql -u root -p -e "
-  SELECT * FROM hydropower_smart.sensor_readings
-  WHERE created_at >= DATE_SUB(NOW(), INTERVAL 3 MONTH)
-  ORDER BY created_at
-" > real_data.csv
+### 15.1 当前模型信息
 
-# 2. 替换模拟数据，重训练
-python train_dqn_final.py      # ~11 min
-python train_lstm_final.py     # ~3 min
+| | LSTM | DQN |
+|---|---|---|
+| 文件 | `lstm_physics_v5.0.pt` | `dqn_physics_v5.0.pth` |
+| 版本 | 5.0.0 | 5.0.0 |
+| 训练方式 | 物理模型在线生成 300 万条序列 + 高斯噪声增强 | 强化学习环境（normal/flood/drought/storm 4 场景） |
+| 训练轮数 | 2000 epoch（SWA 80 快照平均） | 4000 episode（Dueling Double DQN） |
+| 参数 | 470,124 | 284,798 |
+| 精度 | 水位 MAE 0.067m，流量 MAE 48.3 m³/s | Best Avg100 81.7，稳定性 0.96 |
+| MD5 | `c199c274...` | `be40b6b1...` |
 
-# 3. 导出 + 下发 Jetson
-python deploy.py
-scp -r hydropower_deploy/ hydropower@jetson:/tmp/
-ssh hydropower@jetson "sudo rsync -a /tmp/hydropower_deploy/ /opt/hydropower/ && sudo systemctl restart hydropower-inference"
+> 两种模型都是用**物理仿真数据在线生成**训练的，不是从数据库取的。
+> LSTM 用了水量平衡公式生成水位-流量序列，DQN 在仿真环境中探索最优调度策略。
+> 这种方式的优势：数据量大且覆盖各种极端工况（洪水/干旱/暴雨），比稀疏的现场数据更全面。
+
+### 15.2 部署新模型版本
+
+当算法工程师训练出新版本后，通过云端模型管理上传并激活：
+
+```
+本地训练 → deploy.py 导出 → POST /api/v1/settings/models/upload
+  → PyTorch 校验 → 灰度下发 1 个节点 → 观察 24h
+    → 模型健康评分 ≥ B 级 → POST /api/v1/settings/models/{id}/activate → 全量下发
 ```
 
-> 建议周期: 每季度重训练一次。
+> 灰度期间旧模型继续运行，不影响现有推理。激活后同类型旧模型自动标记为 deprecated。
 
-### 15.2 模型版本管理
+### 15.3 模型健康监控（不重新训练，只评分追踪）
 
-上传 → 格式校验 → 沙箱测试 → 可用/不可用 → 激活/回滚
+部署后的模型表现通过 **模型评判系统**（见 1.3 节）持续追踪：
+
+- 每小时计算三维评分（预测准确性 / 决策可靠性 / 物理合规性）
+- S/A/B/C/D 五级定级
+- 连续 3 次 D 级 → 自动告警，建议人工评估是否回退版本
+- 数据漂移检测：每 24h 对比当前数据分布与训练基线，偏移 > 0.6 告警
+
+**这些评分帮你判断"当前模型还行不行"，不是用来重新训练模型的。**
 
 ---
 
