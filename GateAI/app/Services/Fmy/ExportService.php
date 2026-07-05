@@ -12,13 +12,14 @@ class ExportService
      */
     public function csv(array $headers, array $rows, string $filename): \Illuminate\Http\Response
     {
-        $csv = implode(',', $headers) . "\n";
+        $escapedHeaders = array_map(fn ($v) => '"' . str_replace('"', '""', $v) . '"', $headers);
+        $csv = implode(',', $escapedHeaders) . "\n";
         foreach ($rows as $row) {
             $escaped = array_map(fn ($v) => '"' . str_replace('"', '""', $v) . '"', $row);
             $csv .= implode(',', $escaped) . "\n";
         }
 
-        return response($csv, 200, [
+        return response("\xEF\xBB\xBF" . $csv, 200, [
             'Content-Type'        => 'text/csv; charset=utf-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}.csv\"",
         ]);
