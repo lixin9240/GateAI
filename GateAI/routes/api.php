@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GYZ\AiInferenceController;
+use App\Http\Controllers\Api\GYZ\SecurityController;
 use App\Http\Controllers\Api\GYZ\SettingsModelController;
 use App\Http\Controllers\Api\GYZ\SettingsThresholdController;
 use App\Http\Controllers\Api\LX\PhysicsGuardConfigController;
@@ -36,6 +37,14 @@ Route::prefix('v1')->group(function () {
 
     // 水情检测（AI 推理）
     Route::post('/monitor/hydro-detect', [AiInferenceController::class, 'infer']);
+
+    // 安防监控（mock 数据）
+    Route::prefix('security')->group(function () {
+        Route::get('cameras', [SecurityController::class, 'cameras']);
+        Route::get('doors',    [SecurityController::class, 'doors']);
+        Route::get('patrols',  [SecurityController::class, 'patrols']);
+        Route::get('alarms',   [SecurityController::class, 'alarms']);
+    });
 });
 
 // 边缘端上报接口（EdgeToken 认证，不需要用户登录）
