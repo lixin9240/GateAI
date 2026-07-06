@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\ResponseCode;
+use App\Exceptions\BusinessException;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Services\Fmy\AuthService;
 use App\Support\Result;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +14,10 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
 {
+    public function __construct(
+        protected AuthService $authService,
+    ) {}
+
     public function login(Request $request): JsonResponse
     {
         $request->validate([
@@ -20,27 +25,31 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('account', $request->account)->first();
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return Result::error(ResponseCode::UNAUTHORIZED, '账号或密码错误');
+        try {
+            $result = $this->authService->login([
+                'account'  => $request->account,
+                'password' => $request->password,
+                'remember' => $request->boolean('remember', false),
+            ]);
+        } catch (BusinessException $e) {
+            $responseCode = ResponseCode::tryFrom($e->getCode()) ?: ResponseCode::UNAUTHORIZED;
+            return Result::error($responseCode, $e->getMessage());
         }
-
-        if (!$user->is_enabled) {
-            return Result::error(ResponseCode::FORBIDDEN, '账号已被禁用');
-        }
-
-        $token = JWTAuth::login($user);
 
         return Result::success('登录成功', [
-            'token'      => $token,
+            'token'      => $result['token'],
             'token_type' => 'Bearer',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            'expires_in' => $result['remember'] ? 43200 * 60 : 480 * 60,
         ]);
     }
 
     public function logout(): JsonResponse
     {
-        JWTAuth::logout();
+        $user = JWTAuth::user();
+        if ($user) {
+            $this->authService->logout($user->id);
+        }
+
         return Result::success('已登出');
     }
 
@@ -51,8 +60,17 @@ class AuthController extends Controller
 
     public function refresh(): JsonResponse
     {
+        $newToken = JWTAuth::refresh(true);
+        $user = JWTAuth::user();
+
+        if ($user) {
+            $user->login_token = 'Bearer ' . $newToken;
+            $user->token_expire_time = now()->addMinutes(JWTAuth::factory()->getTTL());
+            $user->save();
+        }
+
         return Result::success('刷新成功', [
-            'token'      => JWTAuth::refresh(true),
+            'token'      => $newToken,
             'token_type' => 'Bearer',
             'expires_in' => JWTAuth::factory()->getTTL() * 60,
         ]);
