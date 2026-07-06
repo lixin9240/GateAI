@@ -41,7 +41,10 @@ class AuthController extends Controller
             return Result::error(ResponseCode::FORBIDDEN, '账号已被禁用');
         }
 
-        $token = JWTAuth::login($user);
+        $token = auth('api')->login($user);
+
+        // 记录最新 token，配合 CheckTokenValidity 实现"重新登录后旧 token 失效"
+        $user->update(['login_token' => 'Bearer ' . $token]);
 
         LogHelper::business('用户登录成功', [
             'user_id' => $user->id,
@@ -52,14 +55,14 @@ class AuthController extends Controller
         return Result::success('登录成功', [
             'token'      => $token,
             'token_type' => 'Bearer',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
         ]);
     }
 
     public function logout(): JsonResponse
     {
-        $user = JWTAuth::user();
-        JWTAuth::logout();
+        $user = auth('api')->user();
+        auth('api')->logout();
 
         LogHelper::business('用户登出成功', [
             'user_id' => $user?->id,
@@ -71,15 +74,15 @@ class AuthController extends Controller
 
     public function me(): JsonResponse
     {
-        return Result::success('获取用户信息成功', JWTAuth::user());
+        return Result::success('获取用户信息成功', auth('api')->user());
     }
 
     public function refresh(): JsonResponse
     {
         return Result::success('刷新成功', [
-            'token'      => JWTAuth::refresh(true),
+            'token'      => auth('api')->refresh(true),
             'token_type' => 'Bearer',
-            'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
         ]);
     }
 }

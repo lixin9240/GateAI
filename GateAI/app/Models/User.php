@@ -39,7 +39,7 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'role_id'               => 'integer',
         'email_verified_at'     => 'datetime',
-        'password'              => 'hashed',
+        // 'hashed' cast Laravel 10.1 不支持，用 setPasswordAttribute() mutator 替代
         'force_change_password' => 'integer',
         'login_fail_count'      => 'integer',
         'lock_expire_time'      => 'datetime',
