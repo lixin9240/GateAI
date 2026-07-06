@@ -64,6 +64,14 @@
         "interval_seconds": 3600,
         "history_buffer_size": 24
     },
+    "cloud": {
+        "ws_url": "ws://47.108.169.152:8080/app/edge",
+        "api_url": "http://47.108.169.152:8089/api/v1/edge",
+        "edge_id": "jetson-hydropower-01",
+        "shared_secret": "GYZ_EDGE_SECURE_2026",
+        "report_interval_seconds": 5,
+        "heartbeat_interval_seconds": 30
+    },
     "activated_at": "2026-07-03 17:35:27",
     "active_models": {
         "lstm": {
