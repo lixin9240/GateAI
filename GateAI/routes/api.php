@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
 use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
 use App\Http\Controllers\Api\Fmy\EquipmentController;
+use App\Http\Controllers\Api\Fmy\GateController;
 use App\Http\Controllers\Api\Fmy\ModelMetricController;
 use App\Http\Controllers\Api\Fmy\MonitorController;
 use App\Http\Controllers\WjcController;
@@ -159,6 +160,10 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
     Route::get('/monitoring/realtime', [MonitorController::class, 'realtime']);
     //趋势图表数据
     Route::get('/monitoring/trend', [MonitorController::class, 'trend']);
+    //闸门列表 + 实时开度
+    Route::get('/monitoring/gates', [GateController::class, 'index']);
+    //闸门操作日志
+    Route::get('/monitoring/gates/actions', [GateController::class, 'actions']);
 
     // 3. 设备管理模块
     //列表
