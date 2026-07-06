@@ -32,6 +32,13 @@ class LXSimulationRequest extends FormRequest
             ];
         }
 
+        // 调节闸门开度
+        if ($route === 'simulation.gate') {
+            return [
+                'gate_opening' => 'required|numeric|min:0|max:100',// 闸门开度百分比
+            ];
+        }
+
         // result query
         return [
             'metric_type' => 'string|nullable',// 指标类型

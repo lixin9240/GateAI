@@ -28,6 +28,34 @@ class SimulationController extends Controller
         return Result::success('获取仿真结果成功', $data);
     }
 
+    public function pause(string $id): JsonResponse
+    {
+        $data = $this->service->pause($id);
+
+        return Result::success('仿真任务已暂停', $data);
+    }
+
+    public function resume(string $id): JsonResponse
+    {
+        $data = $this->service->resume($id);
+
+        return Result::success('仿真任务已恢复', $data);
+    }
+
+    public function reset(string $id): JsonResponse
+    {
+        $data = $this->service->reset($id);
+
+        return Result::success('仿真任务已重置', $data);
+    }
+
+    public function adjustGate(string $id, LXSimulationRequest $request): JsonResponse
+    {
+        $data = $this->service->adjustGate($id, $request->validated());
+
+        return Result::success('闸门开度已调节', $data);
+    }
+
     public function report(string $id, LXSimulationRequest $request): JsonResponse
     {
         $data = $this->service->report($id, $request->validated());

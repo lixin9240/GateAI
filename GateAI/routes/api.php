@@ -117,6 +117,10 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
         Route::put('scenarios/{id}', [ScenarioController::class, 'update']);// 更新场景
         Route::delete('scenarios/{id}', [ScenarioController::class, 'destroy']);// 删除场景
         Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');// 启动模拟
+        Route::post('{id}/pause', [SimulationController::class, 'pause'])->name('simulation.pause');// 暂停仿真
+        Route::post('{id}/resume', [SimulationController::class, 'resume'])->name('simulation.resume');// 恢复仿真
+        Route::post('{id}/reset', [SimulationController::class, 'reset'])->name('simulation.reset');// 重置仿真
+        Route::post('{id}/gate', [SimulationController::class, 'adjustGate'])->name('simulation.gate');// 调节闸门开度
         Route::get('{id}/result', [SimulationController::class, 'result']);// 获取模拟结果
         Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');// 提交模拟报告
         Route::get('incidents', [IncidentController::class, 'incidents']);// 获取事件列表
