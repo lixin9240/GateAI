@@ -81,10 +81,10 @@ class GateInterlockService
             $query->where('rule_id', $params['rule_id']);
         }
         if (!empty($params['start_time'])) {
-            $query->where('trigger_time', '>=', $params['start_time']);
+            $query->where('trigger_time', '>=', $this->normalizeStartTime($params['start_time']));
         }
         if (!empty($params['end_time'])) {
-            $query->where('trigger_time', '<=', $params['end_time']);
+            $query->where('trigger_time', '<=', $this->normalizeEndTime($params['end_time']));
         }
 
         $pageSize = $params['page_size'] ?? 20;
@@ -122,10 +122,10 @@ class GateInterlockService
 
         return array_map(function ($rule) {
             return [
-                'rule_code'         => $rule['rule_code'],
-                'rule_name'         => $rule['rule_name'],
-                'enabled'           => $rule['enabled'],
-                'priority'          => $rule['priority'],
+                'rule_code'          => $rule['rule_code'],
+                'rule_name'          => $rule['rule_name'],
+                'enabled'            => $rule['enabled'],
+                'priority'           => $rule['priority'],
                 'trigger_conditions' => $rule['trigger_conditions'],
                 'constraint_action'  => $rule['constraint_action'],
             ];
@@ -138,20 +138,36 @@ class GateInterlockService
     public function receiveInterlockLog(array $data): GateInterlockLog
     {
         return GateInterlockLog::create([
-            'reservoir_id'        => $data['reservoir_id'],
-            'rule_id'             => $data['rule_id'],
-            'decision_id'         => $data['decision_id'] ?? null,
-            'trigger_time'        => $data['trigger_time'] ?? now(),
+            'reservoir_id'         => $data['reservoir_id'],
+            'rule_id'              => $data['rule_id'],
+            'decision_id'          => $data['decision_id'] ?? null,
+            'trigger_time'         => $data['trigger_time'] ?? now(),
             'gate1_opening_before' => $data['gate1_opening_before'],
             'gate2_opening_before' => $data['gate2_opening_before'],
             'gate3_opening_before' => $data['gate3_opening_before'],
-            'upstream_level'      => $data['upstream_level'],
-            'downstream_level'    => $data['downstream_level'],
-            'inflow_rate'         => $data['inflow_rate'],
+            'upstream_level'       => $data['upstream_level'],
+            'downstream_level'     => $data['downstream_level'],
+            'inflow_rate'          => $data['inflow_rate'],
             'gate1_opening_after'  => $data['gate1_opening_after'],
             'gate2_opening_after'  => $data['gate2_opening_after'],
             'gate3_opening_after'  => $data['gate3_opening_after'],
             'action_detail'        => $data['action_detail'] ?? null,
         ]);
+    }
+
+    /**
+     * 日期补全：只有日期无时间 → 自动补 00:00:00
+     */
+    private function normalizeStartTime(string $time): string
+    {
+        return strlen($time) === 10 ? "{$time} 00:00:00" : $time;
+    }
+
+    /**
+     * 日期补全：只有日期无时间 → 自动补 23:59:59
+     */
+    private function normalizeEndTime(string $time): string
+    {
+        return strlen($time) === 10 ? "{$time} 23:59:59" : $time;
     }
 }
