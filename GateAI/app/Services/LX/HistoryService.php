@@ -127,10 +127,16 @@ class HistoryService
     {
         $headers = array_merge(['timestamp'], $metrics);
         $csv = fopen('php://temp', 'r+');
+        // UTF-8 BOM，确保 Excel 正确识别编码
+        fwrite($csv, "\xEF\xBB\xBF");
         fputcsv($csv, $headers);
 
         foreach ($rows as $row) {
-            $line = [$row->timestamp];
+            // Carbon 对象显式格式化为字符串，避免 Excel 显示 #####
+            $ts = $row->timestamp instanceof \DateTimeInterface
+                ? $row->timestamp->format('Y-m-d H:i:s')
+                : (string) $row->timestamp;
+            $line = [$ts];
             foreach ($metrics as $metric) {
                 $line[] = $row->{$metric} ?? '';
             }
