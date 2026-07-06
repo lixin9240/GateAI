@@ -57,6 +57,10 @@ def _build_result(cmd, sensor=None):
             "risk_probability": round(getattr(cmd, "risk_probability", 0.0), 4),
             "shadow_levels": getattr(cmd, "shadow_levels", []),
             "command_smoothed": getattr(cmd, "command_smoothed", False),
+            "interlock": {
+                "triggered": len(getattr(cmd, "interlock_rules", [])) > 0,
+                "rules": getattr(cmd, "interlock_rules", []),
+            },
         },
         "inference_time_ms": 0,
     }
@@ -170,6 +174,12 @@ def main():
     log.info("Loading AI models...")
     controller = GateController()
     log.info(f"Device: {controller.device} | Interval: {args.interval}s")
+
+    # 初始化 ConfigSync + InterlockGuard（延迟注入参数）
+    if hasattr(controller, '_init_config_sync'):
+        controller._init_config_sync(edge_node_id=1, cloud_url=args.cloud, cloud_token=args.token)
+    if hasattr(controller, '_init_interlock_guard'):
+        controller._init_interlock_guard(edge_node_id=1)
 
     # 传感器
     if args.plc:
@@ -317,7 +327,19 @@ def main():
                 except Exception:
                     pass
 
-            # 9. 等待下一周期
+            # 10. 每 6 周期：同步云端配置（阈值 + 互锁规则）
+            if cycle % 6 == 0 and hasattr(controller, 'config_sync') and controller.config_sync:
+                try:
+                    updated = controller.config_sync.sync_from_cloud()
+                    if updated and controller.interlock_guard:
+                        new_config = controller.config_sync.get_config()
+                        interlock_rules = new_config.get('interlock_rules', None)
+                        if interlock_rules:
+                            controller.interlock_guard.reload_rules(interlock_rules)
+                except Exception:
+                    pass
+
+            # 11. 等待下一周期
             log.info(f"Sleeping {args.interval}s...")
             time.sleep(args.interval)
 
