@@ -61,6 +61,7 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
     // 3. 告警管理模块
     Route::prefix('alarms')->group(function () {
         Route::get('/', [WjcAlarmController::class, 'index']);
+        Route::get('/{id}', [WjcAlarmController::class, 'show']);
         Route::put('/{id}/acknowledge', [WjcAlarmController::class, 'acknowledge']);
         Route::put('/{id}/dispose', [WjcAlarmController::class, 'dispose']);
         Route::get('/exceed-logs', [WjcAlarmController::class, 'exceedLogs']);

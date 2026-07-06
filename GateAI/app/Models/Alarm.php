@@ -46,4 +46,14 @@ class Alarm extends Model
     {
         return $this->belongsTo(Equipment::class, 'equipment_id');
     }
+
+    public function reservoir()
+    {
+        return $this->belongsTo(Reservoir::class, 'reservoir_id');
+    }
+
+    public function edgeNode()
+    {
+        return $this->belongsTo(EdgeNode::class, 'edge_node_id');
+    }
 }

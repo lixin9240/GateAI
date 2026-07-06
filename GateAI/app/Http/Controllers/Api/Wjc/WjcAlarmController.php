@@ -15,6 +15,15 @@ class WjcAlarmController extends Controller
     ) {}
 
     /**
+     * 3.1 告警详情
+     */
+    public function show(int $id): JsonResponse
+    {
+        $detail = $this->alarmService->getAlarmDetail($id);
+        return Result::success('操作成功', $detail);
+    }
+
+    /**
      * 3.1 正式告警分页列表
      */
     public function index(WjcAlarmRequest $request): JsonResponse

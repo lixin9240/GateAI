@@ -42,6 +42,14 @@ class WjcAlarmService
     }
 
     /**
+     * 3.1.1 告警详情
+     */
+    public function getAlarmDetail(int $id): Alarm
+    {
+        return Alarm::with(['equipment', 'reservoir', 'edgeNode'])->findOrFail($id);
+    }
+
+    /**
      * 3.2 确认告警
      */
     public function acknowledgeAlarm(int $id, int $userId): Alarm
