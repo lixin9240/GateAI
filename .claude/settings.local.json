@@ -30,7 +30,13 @@
       "Bash(curl -s -X POST \"http://localhost:8000/api/v1/monitor/hydro-detect\" -H \"Content-Type: application/json\" -d '{\"upstream_level\":170,\"downstream_level\":60,\"inflow\":15000}' --max-time 10)",
       "WebSearch",
       "Bash(mysqldump -u root -pGYZ032411 --no-create-info --complete-insert gateai settings_thresholds settings_weights settings_models settings_model_deployments)",
-      "Bash(mysql -h 47.108.169.152 -u GateAI -pzcFePCSnEmd5bb7c gateai)"
+      "Bash(mysql -h 47.108.169.152 -u GateAI -pzcFePCSnEmd5bb7c gateai)",
+      "Bash(python -c \"import re; c=open\\('GateAI/config/reverb.php'\\).read\\(\\); print\\('found'\\) if 'apps' in c else print\\('missing apps'\\)\")",
+      "Bash(php -l GateAI/routes/channels.php)",
+      "Bash(php -l GateAI/app/Events/EdgeDataUpdated.php)",
+      "Bash(php -l GateAI/app/Events/CommandIssued.php)",
+      "Bash(php -l GateAI/app/Events/GYZ/ModelHealthAlert.php)",
+      "Bash(php -l GateAI/app/Http/Controllers/Api/GYZ/EdgeStreamController.php)"
     ],
     "additionalDirectories": [
       "c:\\projects\\GateAI\\GateAI\\storage\\ai"
