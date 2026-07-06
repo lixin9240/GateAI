@@ -36,7 +36,12 @@
       "Bash(php -l GateAI/app/Events/EdgeDataUpdated.php)",
       "Bash(php -l GateAI/app/Events/CommandIssued.php)",
       "Bash(php -l GateAI/app/Events/GYZ/ModelHealthAlert.php)",
-      "Bash(php -l GateAI/app/Http/Controllers/Api/GYZ/EdgeStreamController.php)"
+      "Bash(php -l GateAI/app/Http/Controllers/Api/GYZ/EdgeStreamController.php)",
+      "Bash(grep -n \"^### 2.3\\\\|^### 3.4\\\\|^#### 修\\\\|#### 新\\\\|Python 侧\\\\|新建文件\\\\|修改 \\\\`\" \"D:\\\\GateAI_AI调度模块_前后端改动方案.md\")",
+      "Bash(python -c \"import sys; sys.path.insert\\(0,'GateAI/storage/ai'\\); from config_sync import ConfigSyncClient; print\\('config_sync OK'\\)\")",
+      "Bash(python -c \"import sys; sys.path.insert\\(0,'GateAI/storage/ai'\\); from gate_interlock import GateInterlockGuard, InterlockResult; r=GateInterlockGuard\\(\\).check\\([0.85,0.5,0.6]\\); print\\(f'gate_interlock OK \\(triggered={r.triggered}, rules={r.triggered_rules}\\)'\\)\")",
+      "Bash(python -c \"import py_compile; py_compile.compile\\('GateAI/storage/ai/inference_server.py', doraise=True\\); print\\('inference_server OK'\\)\")",
+      "Bash(python -c \"import py_compile; py_compile.compile\\('GateAI/storage/ai/edge_main.py', doraise=True\\); print\\('edge_main OK'\\)\")"
     ],
     "additionalDirectories": [
       "c:\\projects\\GateAI\\GateAI\\storage\\ai"
