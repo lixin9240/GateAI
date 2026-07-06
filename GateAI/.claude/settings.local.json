@@ -62,7 +62,14 @@
       "Bash(php -l config/filesystems.php)",
       "Bash(php *)",
       "Bash(composer dump-autoload *)",
-      "Bash(awk '/^## 附：接口总表/,/^> \\\\*\\\\*共计/' \"D:/git-base/labor/GateAI/GateAI/总接口文档.md\")"
+      "Bash(awk '/^## 附：接口总表/,/^> \\\\*\\\\*共计/' \"D:/git-base/labor/GateAI/GateAI/总接口文档.md\")",
+      "Bash(python infer_cli.py)",
+      "Bash(python -c ' *)",
+      "Read(//c/Users/32585/AppData/Local/Programs/Python/**)",
+      "Read(//c/Program Files/**)",
+      "Bash(where python *)",
+      "Bash(E:/document2/Python312/python.exe *)",
+      "Bash(pip list *)"
     ]
   }
 }

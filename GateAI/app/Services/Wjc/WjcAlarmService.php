@@ -18,9 +18,7 @@ class WjcAlarmService
         $query = Alarm::query()->with('equipment');
 
         if (!empty($params['reservoir_id'])) {
-            $query->whereHas('equipment', function($q) use ($params) {
-                $q->where('reservoir_id', $params['reservoir_id']);
-            });
+            $query->where('reservoir_id', $params['reservoir_id']);
         }
         if (!empty($params['level'])) {
             $query->where('level', $params['level']);
@@ -31,9 +29,16 @@ class WjcAlarmService
         if (!empty($params['type'])) {
             $query->where('type', $params['type']);
         }
+        if (!empty($params['start_time'])) {
+            $query->where('created_at', '>=', $params['start_time']);
+        }
+        if (!empty($params['end_time'])) {
+            $query->where('created_at', '<=', $params['end_time']);
+        }
 
-        $pageSize = $params['page_size'] ?? 20;
-        return $query->orderByDesc('created_at')->paginate($pageSize);
+        $pageSize = (int) ($params['page_size'] ?? 20);
+        $page = (int) ($params['page'] ?? 1);
+        return $query->orderByDesc('created_at')->paginate($pageSize, ['*'], 'page', $page);
     }
 
     /**
