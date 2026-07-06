@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id()->comment('主键');
             $table->string('name', 100)->comment('水库名称');
             $table->string('code', 50)->unique()->comment('水库编码');
-            $table->string('type', 30)->comment('水库类型：daily_regulation / seasonal / multi_year');
+            $table->string('type', 30)->comment('水库类型：daily_regulation / seasonal / multi_year');// daily_regulation：日调节水库 seasonal：季节调节水库 multi_year：多年调节水库
             $table->decimal('dead_water_level', 10, 3)->comment('死水位（m）');
             $table->decimal('normal_water_level', 10, 3)->comment('正常蓄水位（m）');
             $table->decimal('flood_limit_level', 10, 3)->comment('防洪限制水位（m）');
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->decimal('ecological_flow', 10, 3)->comment('生态流量（m³/s）');
             $table->decimal('location_lat', 10, 7)->nullable()->comment('纬度');
             $table->decimal('location_lng', 10, 7)->nullable()->comment('经度');
-            $table->string('status', 20)->default('active')->index()->comment('active / inactive / maintenance');
+            $table->string('status', 20)->default('active')->index()->comment('active / inactive / maintenance');// active：正常 inactive：停用 maintenance：维护中
             $table->timestamp('created_at')->nullable()->comment('创建时间');
             $table->timestamp('updated_at')->nullable()->comment('更新时间');
         });

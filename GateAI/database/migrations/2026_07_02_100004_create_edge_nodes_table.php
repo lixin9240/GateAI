@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('code', 50)->unique()->comment('节点编号');
             $table->unsignedBigInteger('reservoir_id')->comment('所属水库');
             $table->foreign('reservoir_id')->references('id')->on('reservoirs')->onDelete('restrict');
-            $table->string('status', 20)->default('offline')->index()->comment('online / offline / fault');
+            $table->string('status', 20)->default('offline')->index()->comment('online / offline / fault');// online：在线 offline：离线 fault：故障
             $table->string('location', 255)->nullable()->comment('安装位置');
             $table->string('ip', 50)->nullable()->comment('IP地址');
             $table->timestamp('last_heartbeat')->nullable()->index()->comment('最后心跳时间');

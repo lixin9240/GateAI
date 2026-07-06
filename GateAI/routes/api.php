@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Wjc\WjcDispatchController;
 use App\Http\Controllers\Api\Wjc\WjcReservoirController;
 use App\Http\Controllers\Api\Wjc\WjcEdgeNodeController;
 use App\Http\Controllers\Api\Wjc\GateInterlockController;
+use App\Http\Controllers\Api\Wjc\PowerController;
 use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
 use App\Http\Controllers\Api\Fmy\EquipmentController;
 use App\Http\Controllers\Api\Fmy\ModelMetricController;
@@ -76,6 +77,12 @@ Route::prefix('v1')->middleware(['auth:api'])->group(function () {
         Route::post('/emergency-stop', [WjcDispatchController::class, 'emergencyStop']);
         Route::put('/stop-recover/{id}', [WjcDispatchController::class, 'stopRecover']);
         Route::get('/emergency-stops', [WjcDispatchController::class, 'emergencyStops']);
+    });
+
+    // 发电模块
+    Route::prefix('power')->group(function () {
+        Route::get('units', [PowerController::class, 'units']);
+        Route::get('trend', [PowerController::class, 'trend']);
     });
 
     // 5. 水库管理
