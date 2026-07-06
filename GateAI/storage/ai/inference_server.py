@@ -181,6 +181,14 @@ class GateController:
         self.drift_detector = None
         self._init_evaluator(edge_node_id=None, reservoir_id=None, db=None)
 
+        # ── 配置同步客户端 (2.3 阈值动态加载) ──
+        self.config_sync = None
+        self._init_config_sync()
+
+        # ── 闸门互锁守卫 (3.4 Layer 2.5) ──
+        self.interlock_guard = None
+        self._init_interlock_guard()
+
     def _init_evaluator(self, edge_node_id=None, reservoir_id=None, db=None):
         """初始化模型评判器和漂移检测器 (延迟加载，由 edge_main 注入参数)"""
         try:
@@ -193,6 +201,26 @@ class GateController:
             print(f"[Eval] ModelEvaluator + DriftDetector initialized (node={eid}, reservoir={rid})")
         except ImportError as e:
             print(f"[Eval] Module not available: {e}")
+
+    def _init_config_sync(self, edge_node_id: int = None, cloud_url: str = None, cloud_token: str = None):
+        """初始化配置同步客户端 (2.3)"""
+        try:
+            from config_sync import ConfigSyncClient
+            eid = edge_node_id or 0
+            self.config_sync = ConfigSyncClient(edge_node_id=eid, cloud_base_url=cloud_url, cloud_token=cloud_token)
+            print(f"[ConfigSync] Client initialized (node={eid})")
+        except ImportError as e:
+            print(f"[ConfigSync] Module not available: {e}")
+
+    def _init_interlock_guard(self, edge_node_id: int = None):
+        """初始化闸门互锁守卫 (3.4)"""
+        try:
+            from gate_interlock import GateInterlockGuard
+            eid = edge_node_id or 0
+            self.interlock_guard = GateInterlockGuard(edge_node_id=eid)
+            print(f"[Interlock] Guard initialized (node={eid})")
+        except ImportError as e:
+            print(f"[Interlock] Module not available: {e}")
 
     # ==================== 模型热加载 ====================
 
@@ -270,6 +298,18 @@ class GateController:
             if not safety.passed:
                 cmd.gate_openings = safety.constrained_action
                 cmd.decision_level = safety.decision_level.value
+
+            # Layer 2.5: 闸门互锁 (仅在非 OVERRIDE 时生效)
+            if self.interlock_guard and cmd.decision_level != "OVERRIDE":
+                interlock = self.interlock_guard.check(
+                    cmd.gate_openings,
+                    current_state=state,
+                    prev_openings=sensor.gate_openings,
+                )
+                if interlock.triggered:
+                    cmd.gate_openings = interlock.constrained_openings
+                    if not hasattr(cmd, 'interlock_rules'):
+                        setattr(cmd, 'interlock_rules', interlock.triggered_rules)
 
             # Layer 3: 影子水位风险评估
             risk = self.physics.assess_risk(
