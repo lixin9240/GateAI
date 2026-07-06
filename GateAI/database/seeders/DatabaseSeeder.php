@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             MonitoringDataSeeder::class,
             PhysicsGuardConfigSeeder::class,
             ModelMetricSeeder::class,
+            GateInterlockRuleSeeder::class,
+            PowerUnitSeeder::class,
         ]);
     }
 }
