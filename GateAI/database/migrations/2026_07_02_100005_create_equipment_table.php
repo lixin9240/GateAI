@@ -15,10 +15,10 @@ return new class extends Migration
             $table->id()->comment('主键');
             $table->string('name', 100)->comment('设备名称');
             $table->string('code', 50)->unique()->comment('设备编号');
-            $table->string('type', 50)->index()->comment('设备类型：level_sensor / flow_sensor / plc / edge_gateway / actuator');
+            $table->string('type', 50)->index()->comment('设备类型：level_sensor / flow_sensor / plc / edge_gateway / actuator');// level_sensor：水位传感器 flow_sensor：流量传感器 plc：PLC edge_gateway：边缘网关 actuator：执行器
             $table->unsignedBigInteger('reservoir_id')->comment('所属水库');
             $table->foreign('reservoir_id')->references('id')->on('reservoirs')->onDelete('restrict');
-            $table->string('status', 20)->default('offline')->index()->comment('online / offline / fault / maintenance');
+            $table->string('status', 20)->default('offline')->index()->comment('online / offline / fault / maintenance');// online：在线 offline：离线 fault：故障 maintenance：维护中
             $table->index(['type', 'status'], 'idx_equipment_type_status');
             $table->string('location', 255)->nullable()->comment('安装位置描述');
             $table->string('manufacturer', 100)->nullable()->comment('制造商');

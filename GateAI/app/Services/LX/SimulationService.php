@@ -14,6 +14,7 @@ use Illuminate\Support\Str;
 
 class SimulationService
 {
+    // 启动仿真任务
     public function start(array $data): array
     {
         $scenario = SimulationScenario::findOrFail($data['scenario_id']);
@@ -45,7 +46,11 @@ class SimulationService
             'status'             => 'running',
             'start_time'         => now(),
             'estimated_end_time' => now()->addSeconds((int) ($duration / $speed)),
-            'ws_endpoint'        => 'ws://' . request()->getHost() . ':' . env('REVERB_PORT', 8080),
+            'ws_endpoint'        => sprintf('%s://%s:%s/app',
+                    env('REVERB_SCHEME', 'http'),
+                    env('REVERB_HOST', '47.108.169.152'),
+                    env('REVERB_PORT', 8089)
+                ),
             'created_by'         => auth()->id(),
         ]);
 
