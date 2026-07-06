@@ -103,6 +103,130 @@ class SimulationService
         ];
     }
 
+    // 暂停仿真
+    public function pause(string $taskId): array
+    {
+        $task = SimulationTask::where('task_no', $taskId)->firstOrFail();
+
+        if ($task->status !== 'running') {
+            throw new BusinessException('仅运行中的仿真任务可暂停', ResponseCode::STATUS_CANNOT_OPERATE);
+        }
+
+        $task->update(['status' => 'paused']);
+
+        LogHelper::business('[仿真] 暂停仿真任务', [
+            'task_no' => $taskId,
+            'user_id' => auth()->id(),
+        ], 'info', 'SIMULATION_PAUSE');
+
+        return [
+            'simulation_id' => $taskId,
+            'status'        => 'paused',
+            'progress'      => $task->progress,
+        ];
+    }
+
+    // 恢复仿真
+    public function resume(string $taskId): array
+    {
+        $task = SimulationTask::where('task_no', $taskId)->firstOrFail();
+
+        if ($task->status !== 'paused') {
+            throw new BusinessException('仅已暂停的仿真任务可恢复', ResponseCode::STATUS_CANNOT_OPERATE);
+        }
+
+        $remaining = (int) ($task->duration * (1 - ($task->progress ?? 0) / 100) / $task->speed);
+        $task->update([
+            'status'             => 'running',
+            'estimated_end_time' => now()->addSeconds($remaining),
+        ]);
+
+        LogHelper::business('[仿真] 恢复仿真任务', [
+            'task_no' => $taskId,
+            'user_id' => auth()->id(),
+        ], 'info', 'SIMULATION_RESUME');
+
+        return [
+            'simulation_id'      => $taskId,
+            'status'             => 'running',
+            'progress'           => $task->progress,
+            'estimated_end_time' => $task->estimated_end_time->toDateTimeString(),
+        ];
+    }
+
+    // 重置仿真
+    public function reset(string $taskId): array
+    {
+        $task = SimulationTask::where('task_no', $taskId)->firstOrFail();
+
+        if (!in_array($task->status, ['running', 'paused'])) {
+            throw new BusinessException('仅运行中或已暂停的仿真任务可重置', ResponseCode::STATUS_CANNOT_OPERATE);
+        }
+
+        // 删除已有结果数据
+        $result = SimulationResult::where('simulation_id', $task->id)->first();
+        if ($result) {
+            SimulationResultTimeSeries::where('result_id', $result->id)->delete();
+            $result->delete();
+        }
+
+        $task->update([
+            'status'             => 'terminated',
+            'end_time'           => now(),
+            'progress'           => 0,
+            'result_summary'     => null,
+            'anomaly_count'      => null,
+            'max_upstream_level' => null,
+            'min_upstream_level' => null,
+            'max_downstream_level' => null,
+            'max_inflow_rate'    => null,
+            'max_outflow_rate'   => null,
+            'total_energy'       => null,
+            'total_discharge'    => null,
+            'error_msg'          => null,
+        ]);
+
+        LogHelper::business('[仿真] 重置仿真任务', [
+            'task_no' => $taskId,
+            'user_id' => auth()->id(),
+        ], 'info', 'SIMULATION_RESET');
+
+        return [
+            'simulation_id' => $taskId,
+            'status'        => 'terminated',
+        ];
+    }
+
+    // 仿真中调节闸门开度
+    public function adjustGate(string $taskId, array $data): array
+    {
+        $task = SimulationTask::where('task_no', $taskId)->firstOrFail();
+
+        if ($task->status !== 'running') {
+            throw new BusinessException('仅运行中的仿真任务可调节闸门', ResponseCode::STATUS_CANNOT_OPERATE);
+        }
+
+        $gateOpening = $data['gate_opening'];
+
+        $params = $task->params ?? [];
+        $params['gate_opening'] = $gateOpening;
+
+        $task->update(['params' => $params]);
+
+        LogHelper::business('[仿真] 仿真中调节闸门开度', [
+            'task_no'      => $taskId,
+            'gate_opening' => $gateOpening,
+            'user_id'      => auth()->id(),
+        ], 'info', 'SIMULATION_GATE_ADJUST');
+
+        return [
+            'simulation_id' => $taskId,
+            'gate_opening'  => $gateOpening,
+            'status'        => $task->status,
+            'progress'      => $task->progress,
+        ];
+    }
+
     public function report(string $taskId, array $data): array
     {
         $task = SimulationTask::where('task_no', $taskId)->firstOrFail();

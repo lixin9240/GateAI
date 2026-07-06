@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\Wjc\GateInterlockController;
 use App\Http\Controllers\Api\Wjc\PowerController;
 use App\Http\Controllers\Api\Fmy\AuthController as FmyAuthController;
 use App\Http\Controllers\Api\Fmy\EquipmentController;
+use App\Http\Controllers\Api\Fmy\GateController;
 use App\Http\Controllers\Api\Fmy\ModelMetricController;
 use App\Http\Controllers\Api\Fmy\MonitorController;
 use App\Http\Controllers\WjcController;
@@ -61,9 +62,10 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
     // 3. 告警管理模块
     Route::prefix('alarms')->group(function () {
         Route::get('/', [WjcAlarmController::class, 'index']);
+        Route::get('/exceed-logs', [WjcAlarmController::class, 'exceedLogs']);
+        Route::get('/{id}', [WjcAlarmController::class, 'show']);
         Route::put('/{id}/acknowledge', [WjcAlarmController::class, 'acknowledge']);
         Route::put('/{id}/dispose', [WjcAlarmController::class, 'dispose']);
-        Route::get('/exceed-logs', [WjcAlarmController::class, 'exceedLogs']);
     });
 
     // 4. 调度决策模块
@@ -117,6 +119,10 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
         Route::put('scenarios/{id}', [ScenarioController::class, 'update']);// 更新场景
         Route::delete('scenarios/{id}', [ScenarioController::class, 'destroy']);// 删除场景
         Route::post('start', [SimulationController::class, 'start'])->name('simulation.start');// 启动模拟
+        Route::post('{id}/pause', [SimulationController::class, 'pause'])->name('simulation.pause');// 暂停仿真
+        Route::post('{id}/resume', [SimulationController::class, 'resume'])->name('simulation.resume');// 恢复仿真
+        Route::post('{id}/reset', [SimulationController::class, 'reset'])->name('simulation.reset');// 重置仿真
+        Route::post('{id}/gate', [SimulationController::class, 'adjustGate'])->name('simulation.gate');// 调节闸门开度
         Route::get('{id}/result', [SimulationController::class, 'result']);// 获取模拟结果
         Route::post('{id}/report', [SimulationController::class, 'report'])->name('simulation.report');// 提交模拟报告
         Route::get('incidents', [IncidentController::class, 'incidents']);// 获取事件列表
@@ -205,6 +211,10 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
     Route::get('/monitoring/realtime', [MonitorController::class, 'realtime']);
     //趋势图表数据
     Route::get('/monitoring/trend', [MonitorController::class, 'trend']);
+    //闸门列表 + 实时开度
+    Route::get('/monitoring/gates', [GateController::class, 'index']);
+    //闸门操作日志
+    Route::get('/monitoring/gates/actions', [GateController::class, 'actions']);
 
     // 3. 设备管理模块
     //列表
