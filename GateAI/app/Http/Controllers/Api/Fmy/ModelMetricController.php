@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Fmy;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Fmy\EdgeModelMetricsRequest;
+use App\Http\Requests\Fmy\ModelMetricsCompareRequest;
 use App\Http\Requests\Fmy\ModelMetricsHistoryRequest;
 use App\Http\Requests\Fmy\ModelMetricsRequest;
 use App\Services\Fmy\ModelMetricService;
@@ -43,6 +44,26 @@ class ModelMetricController extends Controller
             (int) ($request->input('days') ?? 7)
         );
         return Result::success('操作成功', $data);
+    }
+
+    /**
+     * 指标明细分页列表
+     * GET /api/settings/ai/metrics/list
+     */
+    public function listMetrics(ModelMetricsRequest $request): JsonResponse
+    {
+        $data = $this->modelMetricService->getList($request->validated());
+        return Result::success('操作成功', $data);
+    }
+
+    /**
+     * 模型版本/时段对比
+     * POST /api/settings/ai/metrics/compare
+     */
+    public function compare(ModelMetricsCompareRequest $request): JsonResponse
+    {
+        $data = $this->modelMetricService->compare($request->validated());
+        return Result::success('对比完成', $data);
     }
 
     /**

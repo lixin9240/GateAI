@@ -210,6 +210,159 @@ class ModelMetricService
     }
 
     /**
+     * 指标明细分页列表
+     */
+    public function getList(array $filters): array
+    {
+        $query = ModelMetric::query()
+            ->when(!empty($filters['reservoir_id']), fn ($q) => $q->where('reservoir_id', $filters['reservoir_id']))
+            ->when(!empty($filters['health_grade']), fn ($q) => $q->where('health_grade', $filters['health_grade']))
+            ->when(!empty($filters['start_time']), fn ($q) => $q->where('metric_time', '>=', $filters['start_time']))
+            ->when(!empty($filters['end_time']), fn ($q) => $q->where('metric_time', '<=', $filters['end_time']))
+            ->orderByDesc('metric_time');
+
+        $perPage = min((int) ($filters['page_size'] ?? 20), 100);
+        $data = $query->paginate($perPage, ['*'], 'page', (int) ($filters['page'] ?? 1));
+
+        return [
+            'total' => $data->total(),
+            'page'  => $data->currentPage(),
+            'list'  => $data->map(fn (ModelMetric $m) => $this->formatMetric($m))->toArray(),
+        ];
+    }
+
+    /**
+     * 模型版本对比
+     * 对比两个模型版本的训练指标 + 部署期间的运行时指标
+     */
+    public function compare(array $data): array
+    {
+        $reservoirId = $data['reservoir_id'];
+        $modelA = \App\Models\SettingsModel::findOrFail($data['model_a_id']);
+        $modelB = \App\Models\SettingsModel::findOrFail($data['model_b_id']);
+
+        // 确定每个模型版本的运行时间窗口
+        $windowA = $this->getModelActiveWindow($modelA);
+        $windowB = $this->getModelActiveWindow($modelB);
+
+        // 拉取各自窗口内的运行时指标
+        $metricsA = !empty($windowA)
+            ? ModelMetric::where('reservoir_id', $reservoirId)
+                ->whereBetween('metric_time', [$windowA['start'], $windowA['end']])
+                ->get()
+            : collect();
+
+        $metricsB = !empty($windowB)
+            ? ModelMetric::where('reservoir_id', $reservoirId)
+                ->whereBetween('metric_time', [$windowB['start'], $windowB['end']])
+                ->get()
+            : collect();
+
+        return [
+            'model_a' => [
+                'id'            => $modelA->id,
+                'name'          => $modelA->name,
+                'version'       => $modelA->version,
+                'type'          => $modelA->type,
+                'framework'     => $modelA->framework,
+                'training'      => [
+                    'accuracy'        => (float) $modelA->accuracy,
+                    'f1_score'        => (float) $modelA->f1_score,
+                    'training_date'   => $modelA->training_date?->toDateString(),
+                    'size'            => $modelA->size,
+                ],
+                'active_window' => $windowA,
+                'runtime_avg'   => $this->averageMetrics($metricsA),
+                'sample_count'  => $metricsA->count(),
+            ],
+            'model_b' => [
+                'id'            => $modelB->id,
+                'name'          => $modelB->name,
+                'version'       => $modelB->version,
+                'type'          => $modelB->type,
+                'framework'     => $modelB->framework,
+                'training'      => [
+                    'accuracy'        => (float) $modelB->accuracy,
+                    'f1_score'        => (float) $modelB->f1_score,
+                    'training_date'   => $modelB->training_date?->toDateString(),
+                    'size'            => $modelB->size,
+                ],
+                'active_window' => $windowB,
+                'runtime_avg'   => $this->averageMetrics($metricsB),
+                'sample_count'  => $metricsB->count(),
+            ],
+            'comparison' => $this->diffMetrics(
+                $this->averageMetrics($metricsA),
+                $this->averageMetrics($metricsB)
+            ),
+        ];
+    }
+
+    /**
+     * 推断模型的活跃时间窗口
+     */
+    private function getModelActiveWindow(\App\Models\SettingsModel $model): array
+    {
+        $start = $model->deployed_at ?? $model->created_at;
+
+        // 找到下一个同类型模型的部署时间作为本模型的结束时间
+        $nextModel = \App\Models\SettingsModel::where('type', $model->type)
+            ->where('id', '!=', $model->id)
+            ->where('deployed_at', '>', $start)
+            ->orderBy('deployed_at')
+            ->first();
+
+        $end = $nextModel?->deployed_at ?? now();
+
+        return [
+            'start' => $start->toDateTimeString(),
+            'end'   => $end->toDateTimeString(),
+        ];
+    }
+
+    private function averageMetrics($collection): array
+    {
+        if ($collection->isEmpty()) {
+            return [];
+        }
+
+        return [
+            'prediction_score'        => round($collection->avg('prediction_score'), 4),
+            'decision_score'          => round($collection->avg('decision_score'), 4),
+            'compliance_score'        => round($collection->avg('compliance_score'), 4),
+            'overall_score'           => round($collection->avg('overall_score'), 4),
+            'water_level_mae_24h'     => round($collection->avg('water_level_mae_24h'), 4),
+            'flow_mae_24h'            => round($collection->avg('flow_mae_24h'), 2),
+            'physics_correction_rate' => round($collection->avg('physics_correction_rate'), 4),
+            'trend_accuracy'          => round($collection->avg('trend_accuracy'), 4),
+            'safety_override_rate'    => round($collection->avg('safety_override_rate'), 4),
+            'shadow_risk_pass_rate'   => round($collection->avg('shadow_risk_pass_rate'), 4),
+            'smooth_filter_rate'      => round($collection->avg('smooth_filter_rate'), 4),
+            'avg_physics_violation'   => round($collection->avg('avg_physics_violation'), 4),
+            'gate_limit_touch_rate'   => round($collection->avg('gate_limit_touch_rate'), 4),
+            'rate_limit_exceed_rate'  => round($collection->avg('rate_limit_exceed_rate'), 4),
+        ];
+    }
+
+    private function diffMetrics(array $a, array $b): array
+    {
+        if (empty($a) || empty($b)) {
+            return [];
+        }
+
+        $diff = [];
+        foreach ($a as $key => $valA) {
+            $valB = $b[$key] ?? 0;
+            $diff[$key] = [
+                'model_a' => $valA,
+                'model_b' => $valB,
+                'change'  => round($valB - $valA, 4),
+            ];
+        }
+        return $diff;
+    }
+
+    /**
      * 标准化 JSON 字段：字符串 → 数组，防止 JSON Cast 双重编码
      */
     private function normalizeJsonField(mixed $value): ?array
