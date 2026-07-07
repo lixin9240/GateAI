@@ -4,14 +4,19 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5276c0d79b56041572615366a2fde2be",
+    "content-hash": "15ab1bf0e85c1778c95764a215afb7ea",
     "packages": [
         {
             "name": "aliyuncs/oss-sdk-php",
             "version": "v2.7.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/aliyun/aliyun-oss-php-sdk.git",
+                "reference": "10dbd2a7253131da60629d431c8eb6c216fbbbf7"
+            },
             "dist": {
                 "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/aliyuncs/oss-sdk-php/v2.7.3/aliyuncs-oss-sdk-php-v2.7.3.zip",
+                "url": "https://api.github.com/repos/aliyun/aliyun-oss-php-sdk/zipball/10dbd2a7253131da60629d431c8eb6c216fbbbf7",
                 "reference": "10dbd2a7253131da60629d431c8eb6c216fbbbf7",
                 "shasum": ""
             },
@@ -28,6 +33,7 @@
                     "OSS\\": "src/OSS"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
