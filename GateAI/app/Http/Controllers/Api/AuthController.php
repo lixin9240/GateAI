@@ -37,7 +37,7 @@ class AuthController extends Controller
             ]);
         } catch (BusinessException $e) {
             $responseCode = ResponseCode::tryFrom($e->getCode()) ?: ResponseCode::UNAUTHORIZED;
-            return Result::error($responseCode, $e->getMessage());
+            return Result::error($responseCode, $e->getMessage(), $e->errorData);
         }
 
         return Result::success('登录成功', [

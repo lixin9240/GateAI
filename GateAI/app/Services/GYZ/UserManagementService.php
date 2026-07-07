@@ -21,7 +21,7 @@ class UserManagementService
         $query = User::query()
             ->select([
                 'id', 'account', 'realname', 'role_id', 'phone', 'email', 'avatar',
-                'is_enabled', 'created_at',
+                'is_enabled', 'lock_expire_time', 'login_fail_count', 'created_at',
             ])
             ->with(['role:id,name,code']);
 
@@ -40,12 +40,27 @@ class UserManagementService
 
         $paginator = $query->orderByDesc('created_at')->paginate($pageSize, ['*'], 'page', $page);
 
+        // 批量获取所有用户的最近锁定原因
+        $userIds = array_map(fn($u) => $u->id, $paginator->items());
+        $lockReasons = UserLock::whereIn('user_id', $userIds)
+            ->orderByDesc('created_at')
+            ->get()
+            ->groupBy('user_id')
+            ->map(fn($locks) => $locks->first()->reason ?? '');
+
+        $now = now();
         $list = $paginator->items();
-        // 添加 role_name
-        $list = array_map(function ($user) {
+        $list = array_map(function ($user) use ($lockReasons, $now) {
             $arr = $user->toArray();
             $arr['role_name'] = $user->role->name ?? '';
             $arr['role_code'] = $user->role->code ?? '';
+            $arr['lock_reason'] = $lockReasons->get($user->id, '') ?? '';
+
+            // 判断锁定状态：lock_expire_time 存在且未过期
+            $locked = $user->lock_expire_time && $now->lt($user->lock_expire_time);
+            $arr['is_locked'] = $locked;
+            $arr['lock_expire_time'] = $user->lock_expire_time ? $user->lock_expire_time->toDateTimeString() : null;
+
             unset($arr['role']);
             return $arr;
         }, $list);
