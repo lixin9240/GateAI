@@ -13,7 +13,7 @@ use App\Support\Result;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use OSS\OssClient;
+use Illuminate\Support\Facades\Storage;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -71,14 +71,8 @@ class AuthController extends Controller
         $ossPath = 'avatars/' . date('Ym') . '/' . $filename;
 
         try {
-            $client = new OssClient(
-                env('OSS_ACCESS_KEY_ID'),
-                env('OSS_ACCESS_KEY_SECRET'),
-                env('OSS_ENDPOINT')
-            );
-            $client->putObject(env('OSS_BUCKET'), $ossPath, file_get_contents($file->getRealPath()));
-
-            $url = 'https://' . env('OSS_BUCKET') . '.' . env('OSS_ENDPOINT') . '/' . $ossPath;
+            Storage::disk('oss')->put($ossPath, file_get_contents($file->getRealPath()));
+            $url = Storage::disk('oss')->url($ossPath);
         } catch (\Exception $e) {
             return Result::error(ResponseCode::OSS_UPLOAD_FAILED);
         }
