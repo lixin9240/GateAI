@@ -112,4 +112,19 @@ class UserManagementController extends Controller
 
         return Result::success('用户已删除');
     }
+
+    /**
+     * 导出用户列表 CSV
+     */
+    public function export(): \Illuminate\Http\Response
+    {
+        $result = $this->service->list(null, null, null, 1, 1000);
+        $csv = "ID,账号,姓名,角色,手机,启用,锁定\n";
+        foreach ($result['list'] as $u) {
+            $locked = ($u['is_locked'] ?? false) ? '是' : '否';
+            $enabled = ($u['is_enabled'] ?? 0) ? '是' : '否';
+            $csv .= "{$u['id']},{$u['account']},{$u['realname']},{$u['role_name']},{$u['phone']},{$enabled},{$locked}\n";
+        }
+        return response($csv, 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => 'attachment; filename="users_export.csv"']);
+    }
 }

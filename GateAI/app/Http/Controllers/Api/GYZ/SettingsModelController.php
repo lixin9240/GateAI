@@ -87,6 +87,19 @@ class SettingsModelController extends Controller
     }
 
     /**
+     * 导出模型列表 CSV
+     */
+    public function export(): \Illuminate\Http\Response
+    {
+        $result = $this->service->list(null, null, null, 1, 1000);
+        $csv = "ID,名称,版本,类型,框架,状态,准确率,训练日期,大小(MB),激活\n";
+        foreach ($result['list'] as $m) {
+            $csv .= "{$m['id']},{$m['name']},{$m['version']},{$m['type']},{$m['framework']},{$m['status']},{$m['accuracy']}%,{$m['training_date']},{$m['size']}MB,{$m['is_active']}\n";
+        }
+        return response($csv, 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => 'attachment; filename="models_export.csv"']);
+    }
+
+    /**
      * 8.3.6 下发模型至边缘端
      */
     public function deploy(int $id, ModelDeployRequest $request): JsonResponse
