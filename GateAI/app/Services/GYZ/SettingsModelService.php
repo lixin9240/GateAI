@@ -167,6 +167,8 @@ class SettingsModelService
 
             return $model->fresh();
         });
+
+        try { broadcast(new \App\Events\LX\ModelReloadEvent($model->name, $model->version))->toOthers(); } catch (\Exception $e) {}
     }
 
     /**

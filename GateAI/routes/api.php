@@ -39,6 +39,8 @@ Route::prefix('v1')->group(function () {
 
     // 水情检测（AI 推理）
     Route::post('/monitor/hydro-detect', [AiInferenceController::class, 'infer']);
+    // 执行回填（调度执行后回写实际结果）
+    Route::post('/monitor/hydro-feedback', [AiInferenceController::class, 'feedback']);
 
     // 安防监控（mock 数据）
     Route::prefix('security')->group(function () {
@@ -157,23 +159,36 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
 
     // 9. 系统设置模块
     Route::prefix('settings')->group(function () {
+        // 查看：所有登录用户
         Route::get('thresholds', [SettingsThresholdController::class, 'index']);
-        Route::put('thresholds/{id}', [SettingsThresholdController::class, 'update']);
         Route::get('weights', [SettingsWeightController::class, 'show']);
-        Route::put('weights', [SettingsWeightController::class, 'update']);
         Route::get('models', [SettingsModelController::class, 'index']);
-        Route::post('models/upload', [SettingsModelController::class, 'upload']);
-        Route::post('models/{id}/activate', [SettingsModelController::class, 'activate']);
-        Route::post('models/{id}/rollback', [SettingsModelController::class, 'rollback']);
-        Route::delete('models/{id}', [SettingsModelController::class, 'destroy']);
-        Route::post('models/{id}/deploy', [SettingsModelController::class, 'deploy']);
         Route::get('users', [UserManagementController::class, 'index']);
-        Route::post('users', [UserManagementController::class, 'store']);
-        Route::put('users/{id}', [UserManagementController::class, 'update']);
-        Route::post('users/{id}/reset-password', [UserManagementController::class, 'resetPassword']);
-        Route::post('users/{id}/lock', [UserManagementController::class, 'lock']);
-        Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);
-        Route::delete('users/{id}', [UserManagementController::class, 'destroy']);
+
+        // 导出
+        Route::get('models/export', [SettingsModelController::class, 'export']);
+        Route::get('users/export', [UserManagementController::class, 'export']);
+
+        // 模型管理：admin + algorithm
+        Route::middleware('role:admin,algorithm')->group(function () {
+            Route::post('models/upload', [SettingsModelController::class, 'upload']);
+            Route::post('models/{id}/activate', [SettingsModelController::class, 'activate']);
+            Route::post('models/{id}/rollback', [SettingsModelController::class, 'rollback']);
+            Route::delete('models/{id}', [SettingsModelController::class, 'destroy']);
+            Route::post('models/{id}/deploy', [SettingsModelController::class, 'deploy']);
+            Route::put('weights', [SettingsWeightController::class, 'update']);
+            Route::put('thresholds/{id}', [SettingsThresholdController::class, 'update']);
+        });
+
+        // 用户管理：仅 admin
+        Route::middleware('role:admin')->group(function () {
+            Route::post('users', [UserManagementController::class, 'store']);
+            Route::put('users/{id}', [UserManagementController::class, 'update']);
+            Route::post('users/{id}/reset-password', [UserManagementController::class, 'resetPassword']);
+            Route::post('users/{id}/lock', [UserManagementController::class, 'lock']);
+            Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);
+            Route::delete('users/{id}', [UserManagementController::class, 'destroy']);
+        });
 
         // 闸门互锁规则管理
         Route::prefix('gate-interlock')->group(function () {

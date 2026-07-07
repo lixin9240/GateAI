@@ -56,6 +56,12 @@ class SettingsThresholdService
             ], 'info', 'THRESHOLD_UPDATE');
         });
 
+        try {
+            broadcast(new \App\Events\LX\ConfigUpdateEvent('thresholds', (int) now()->timestamp))->toOthers();
+        } catch (\Exception $e) {
+            LogHelper::error('WebSocket 推送失败', ['error' => $e->getMessage()]);
+        }
+
         return $threshold->fresh();
     }
 }

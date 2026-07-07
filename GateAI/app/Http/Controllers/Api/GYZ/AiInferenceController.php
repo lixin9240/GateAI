@@ -23,6 +23,7 @@ class AiInferenceController extends Controller
             'upstream_level'   => 'required|numeric',
             'downstream_level' => 'required|numeric',
             'inflow'           => 'required|numeric',
+            'reservoir_id'     => 'nullable|integer|min:1',
             'rainfall'         => 'nullable|numeric',
             'temperature'      => 'nullable|numeric',
             'gate1_opening'    => 'nullable|numeric',
@@ -55,6 +56,18 @@ class AiInferenceController extends Controller
 
         $result['models_used'] = $activeModels;
 
+        // 自动执行判断：L3_AUTO + 高置信度 + 低风险 → 可自动调度
+        $result['auto_dispatch'] = ($result['decision_mode'] ?? '') === 'L3_AUTO'
+            && ($result['confidence'] ?? 0) >= 0.85
+            && ($result['safety_flag'] ?? '') === 'safe';
+
+        // 附上水库信息
+        $reservoirId = $request->input('reservoir_id');
+        if ($reservoirId) {
+            $reservoir = \App\Models\Reservoir::find($reservoirId);
+            $result['reservoir'] = $reservoir ? ['id' => $reservoir->id, 'name' => $reservoir->name] : null;
+        }
+
         LogHelper::business('AI推理调用', [
             'sensor'        => array_intersect_key($sensor, array_flip(['upstream_level', 'downstream_level', 'inflow'])),
             'decision_mode' => $result['decision_mode'] ?? 'unknown',
@@ -64,5 +77,36 @@ class AiInferenceController extends Controller
         ], 'info', 'AI_INFERENCE');
 
         return Result::success('推理完成', $result);
+    }
+
+    /**
+     * 执行回填 —— 调度执行后回填实际水位和开度，供模型评判系统计算预测误差
+     * POST /api/v1/monitor/hydro-feedback
+     */
+    public function feedback(Request $request): JsonResponse
+    {
+        $request->validate([
+            'decision_id'       => 'required|integer',
+            'actual_level'      => 'required|numeric',
+            'actual_flow'       => 'required|numeric',
+            'executed_opening'  => 'required|numeric',
+        ]);
+
+        // 更新调度决策的实际执行结果
+        \App\Models\DispatchDecision::where('id', $request->decision_id)->update([
+            'executed_opening'   => $request->executed_opening,
+            'actual_level_after' => $request->actual_level,
+            'execution_status'   => 'executed',
+            'executed_at'        => now(),
+        ]);
+
+        LogHelper::business('推理执行回填', [
+            'decision_id'      => $request->decision_id,
+            'actual_level'     => $request->actual_level,
+            'actual_flow'      => $request->actual_flow,
+            'executed_opening' => $request->executed_opening,
+        ], 'info', 'FEEDBACK');
+
+        return Result::success('回填成功');
     }
 }

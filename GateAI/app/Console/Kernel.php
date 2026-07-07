@@ -13,6 +13,15 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('partition:maintain')->monthlyOn(1, '03:00');
+
+        // 每小时：刷新模型健康缓存
+        $schedule->command('model:health-cache')->hourly();
+
+        // 每天凌晨：清理过期日志
+        $schedule->command('model:prune-logs')->dailyAt('04:00');
+
+        // 每分钟：检查超时未响应的控制指令
+        $schedule->command('dispatch:check-timeout')->everyMinute();
     }
 
     /**
