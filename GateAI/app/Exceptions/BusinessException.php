@@ -8,10 +8,13 @@ use Exception;
 class BusinessException extends Exception
 {
     public readonly ResponseCode $codeEnum;
+    public readonly mixed $errorData;
 
-    public function __construct(string $message = '', ?ResponseCode $code = null)
+    public function __construct(string $message = '', ?ResponseCode $code = null, mixed $data = null)
     {
-        parent::__construct($message);
-        $this->codeEnum = $code ?? ResponseCode::BUSINESS_ERROR;
+        $codeEnum = $code ?? ResponseCode::BUSINESS_ERROR;
+        parent::__construct($message, $codeEnum->value);
+        $this->codeEnum  = $codeEnum;
+        $this->errorData = $data;
     }
 }

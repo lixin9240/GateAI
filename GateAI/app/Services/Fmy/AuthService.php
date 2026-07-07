@@ -54,12 +54,16 @@ class AuthService
 
         // 账号是否锁定
         if ($user->isLocked()) {
+            $remainSeconds = max(0, now()->diffInSeconds($user->lock_expire_time));
             LogHelper::business('用户登录失败-账号已锁定', [
                 'user_id'          => $user->id,
                 'account'          => $user->account,
                 'lock_expire_time' => $user->lock_expire_time->toDateTimeString(),
             ], 'warning', 'LOGIN');
-            throw new BusinessException('账号已锁定，请稍后再试', ResponseCode::ACCOUNT_FROZEN);
+            throw new BusinessException('账号已锁定，请稍后再试', ResponseCode::ACCOUNT_FROZEN, [
+                'lock_remain_seconds' => $remainSeconds,
+                'lock_expire_time'    => $user->lock_expire_time->toDateTimeString(),
+            ]);
         }
 
         // 校验密码
@@ -83,7 +87,11 @@ class AuthService
                 'max_fail_count' => self::MAX_LOGIN_FAIL_COUNT,
             ], 'info', 'LOGIN');
 
-            throw new BusinessException('账号或密码错误', ResponseCode::PASSWORD_ERROR);
+            $freshUser = $user->fresh();
+            throw new BusinessException('账号或密码错误', ResponseCode::PASSWORD_ERROR, [
+                'fail_count'         => (int) $freshUser->login_fail_count,
+                'remaining_attempts' => max(0, self::MAX_LOGIN_FAIL_COUNT - (int) $freshUser->login_fail_count),
+            ]);
         }
 
         // --- 登录成功 —— remember 决定 token 有效期 ---

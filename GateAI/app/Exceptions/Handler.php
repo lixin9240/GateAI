@@ -76,7 +76,8 @@ class Handler extends ExceptionHandler
         if ($e instanceof BusinessException) {
             return Result::error(
                 $e->codeEnum,
-                $e->getMessage()
+                $e->getMessage(),
+                $e->errorData
             )->setStatusCode($this->getBusinessExceptionStatusCode($e));
         }
 
