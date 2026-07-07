@@ -2,13 +2,16 @@
 
 namespace App\Services\Fmy;
 
+use App\Enums\ResponseCode;
 use App\Models\Alarm;
 use App\Models\ControlCommand;
 use App\Models\Equipment;
 use App\Models\EquipmentStatusLog;
 use App\Models\MonitoringData;
 use App\Support\LogHelper;
+use App\Support\Result;
 use Illuminate\Support\Facades\Log;
+use OSS\OssClient;
 
 class EquipmentService
 {
@@ -265,9 +268,9 @@ class EquipmentService
     }
 
     /**
-     * 7.5 导出设备台账 —— 查询数据 + 调用 ExportService 生成文件
+     * 7.5 导出设备台账 —— 查询数据 → 生成文件 → 上传 OSS → 返回下载链接
      */
-    public function export(string $format, array $params): \Illuminate\Http\Response
+    public function export(string $format, array $params): \Illuminate\Http\JsonResponse
     {
         LogHelper::business('设备管理-导出设备台账', [
             'format'       => $format,
@@ -313,7 +316,25 @@ class EquipmentService
             $eq->port ?? '',
         ]);
 
-        $filename = 'equipment_' . now()->format('Ymd');
+        $exportService = app(ExportService::class);
+        $content = $format === 'csv'
+            ? $exportService->csvContent($headers, $rows->toArray())
+            : $exportService->xlsxContent($headers, $rows->toArray());
+
+        $filename = 'equipment_' . now()->format('YmdHis') . '.' . $format;
+        $ossPath = 'exports/equipment/' . date('Ym') . '/' . $filename;
+
+        try {
+            $client = new OssClient(
+                env('OSS_ACCESS_KEY_ID'),
+                env('OSS_ACCESS_KEY_SECRET'),
+                env('OSS_ENDPOINT')
+            );
+            $client->putObject(env('OSS_BUCKET'), $ossPath, $content);
+            $downloadUrl = 'https://' . env('OSS_BUCKET') . '.' . env('OSS_ENDPOINT') . '/' . $ossPath;
+        } catch (\Exception $e) {
+            return Result::error(ResponseCode::OSS_UPLOAD_FAILED);
+        }
 
         LogHelper::business('导出设备台账', [
             'format'      => $format,
@@ -321,10 +342,9 @@ class EquipmentService
             'reservoir_id' => $params['reservoir_id'] ?? null,
             'type'         => $params['type'] ?? null,
             'user_id'     => auth()->id(),
+            'oss_path'    => $ossPath,
         ], 'info', 'EQUIPMENT_EXPORT');
 
-        return $format === 'csv'
-            ? app(ExportService::class)->csv($headers, $rows->toArray(), $filename)
-            : app(ExportService::class)->xlsx($headers, $rows->toArray(), $filename);
+        return Result::success('导出成功', ['download_url' => $downloadUrl]);
     }
 }
