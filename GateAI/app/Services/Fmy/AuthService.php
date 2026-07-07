@@ -22,8 +22,8 @@ class AuthService
     /** 记住登录态 —— token 有效期（分钟），默认 30 天 */
     private const REMEMBER_TTL = 43200;
 
-    /** 不记住 —— token 有效期（分钟），8 小时 */
-    private const SESSION_TTL = 480;
+    /** 不记住 —— token 有效期（分钟），7 天 */
+    private const SESSION_TTL = 10080;
 
     /**
      * 1.1 用户登录
