@@ -98,6 +98,17 @@ class SettingsModelController extends Controller
             (int) auth('api')->id()
         );
 
-        return Result::success('模型下发任务已创建', $results);
+        $successCount = count(array_filter($results, fn($r) => ($r['status'] ?? '') !== 'failed'));
+        $summary = [
+            'total'   => count($results),
+            'success' => $successCount,
+            'failed'  => count($results) - $successCount,
+            'details' => $results,
+        ];
+
+        return Result::success(
+            $successCount === count($results) ? '下发成功，共 ' . $successCount . ' 个节点' : '下发完成，成功 ' . $successCount . '/' . count($results) . ' 个节点',
+            $summary
+        );
     }
 }

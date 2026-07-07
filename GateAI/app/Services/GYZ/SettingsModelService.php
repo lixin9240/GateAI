@@ -352,13 +352,11 @@ PYTHON);
 
         DB::transaction(function () use ($model, $edgeNodeIds, $strategy, $userId, &$results) {
             foreach ($edgeNodeIds as $nodeId) {
-                $deployment = SettingsModelDeployment::create([
-                    'model_id'     => $model->id,
-                    'edge_node_id' => (int) $nodeId,
-                    'status'       => 'queued',
-                    'strategy'     => $strategy ?? 'immediate',
-                    'deployed_by'  => $userId,
-                ]);
+                // updateOrCreate：已存在的部署记录更新策略和状态，不存在则新建
+                $deployment = SettingsModelDeployment::updateOrCreate(
+                    ['model_id' => $model->id, 'edge_node_id' => (int) $nodeId],
+                    ['status' => 'queued', 'strategy' => $strategy ?? 'immediate', 'deployed_by' => $userId]
+                );
 
                 $results[] = $deployment->toArray();
             }
@@ -378,9 +376,11 @@ PYTHON);
             ], 'info', 'MODEL_DEPLOY');
         });
 
-        // 真实下发：将模型文件同步到边缘节点部署目录（模拟 scp/rsync 到 Jetson）
+        // 真实下发：尝试将模型文件同步到边缘节点部署目录（本地有文件才拷贝）
         $sourcePath = storage_path($model->file_path);
-        if (file_exists($sourcePath)) {
+        if (! file_exists($sourcePath)) {
+            LogHelper::business('模型文件不存在，跳过文件同步', ['file_path' => $model->file_path, 'model_id' => $model->id], 'warning', 'MODEL_DEPLOY');
+        } else {
             foreach ($results as &$result) {
                 $nodeId = $result['edge_node_id'];
                 $targetDir = storage_path("ai/deployed/node_{$nodeId}");
