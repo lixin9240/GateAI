@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "15ab1bf0e85c1778c95764a215afb7ea",
+    "content-hash": "037c2770d8a05f8d4ecc1283c8aff597",
     "packages": [
         {
             "name": "aliyuncs/oss-sdk-php",
@@ -1087,55 +1087,6 @@
                 "source": "https://github.com/guzzle/uri-template/tree/v1.0.8"
             },
             "time": "2026-06-23T13:02:23+00:00"
-        },
-        {
-            "name": "jacobcyl/ali-oss-storage",
-            "version": "2.1.0",
-            "dist": {
-                "type": "zip",
-                "url": "https://mirrors.cloud.tencent.com/repository/composer/jacobcyl/ali-oss-storage/2.1.0/jacobcyl-ali-oss-storage-2.1.0.zip",
-                "reference": "c0cb9ba1d3faf22a1e04a03602aac90a187b5959",
-                "shasum": ""
-            },
-            "require": {
-                "aliyuncs/oss-sdk-php": "~2.0"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Jacobcyl\\AliOSS\\AliOssServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Jacobcyl\\AliOSS\\": "src/"
-                }
-            },
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "jacobcyl",
-                    "email": "cyl.jacob@gmail.com"
-                }
-            ],
-            "description": "aliyun oss filesystem storage for laravel 5+",
-            "homepage": "http://jacobcyl.github.io/Aliyun-oss-storage/",
-            "keywords": [
-                "aliyun",
-                "filesystems",
-                "laravel",
-                "oss",
-                "storage"
-            ],
-            "support": {
-                "issues": "https://github.com/jacobcyl/Aliyun-oss-storage/issues",
-                "source": "https://github.com/jacobcyl/Aliyun-oss-storage/tree/2.1.0"
-            },
-            "time": "2018-04-02T03:44:01+00:00"
         },
         {
             "name": "laravel/framework",
