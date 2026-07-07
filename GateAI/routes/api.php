@@ -58,6 +58,7 @@ Route::prefix('v1/edge')->middleware(['edge.token'])->group(function () {
 Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);// 登出
     Route::get('/me', [AuthController::class, 'me']);// 获取用户信息
+    Route::post('/me/avatar', [AuthController::class, 'uploadAvatar']);// 头像上传
 
     // 3. 告警管理模块
     Route::prefix('alarms')->group(function () {

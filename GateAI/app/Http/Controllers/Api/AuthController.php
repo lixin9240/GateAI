@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Enums\ResponseCode;
 use App\Exceptions\BusinessException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\AvatarUploadRequest;
 use App\Services\Fmy\AuthService;
 use App\Models\User;
 use App\Support\LogHelper;
@@ -12,6 +13,7 @@ use App\Support\Result;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use OSS\OssClient;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -58,6 +60,33 @@ class AuthController extends Controller
     public function me(): JsonResponse
     {
         return Result::success('获取用户信息成功', JWTAuth::user());
+    }
+
+    public function uploadAvatar(AvatarUploadRequest $request): JsonResponse
+    {
+        $user = JWTAuth::user();
+        $file = $request->file('avatar');
+
+        $filename = 'avatar_' . $user->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $ossPath = 'avatars/' . date('Ym') . '/' . $filename;
+
+        try {
+            $client = new OssClient(
+                env('OSS_ACCESS_KEY_ID'),
+                env('OSS_ACCESS_KEY_SECRET'),
+                env('OSS_ENDPOINT')
+            );
+            $client->putObject(env('OSS_BUCKET'), $ossPath, file_get_contents($file->getRealPath()));
+
+            $url = 'https://' . env('OSS_BUCKET') . '.' . env('OSS_ENDPOINT') . '/' . $ossPath;
+        } catch (\Exception $e) {
+            return Result::error(ResponseCode::OSS_UPLOAD_FAILED);
+        }
+
+        $user->avatar = $url;
+        $user->save();
+
+        return Result::success('头像上传成功', ['avatar' => $url]);
     }
 
     public function refresh(): JsonResponse
