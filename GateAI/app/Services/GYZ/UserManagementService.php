@@ -20,7 +20,7 @@ class UserManagementService
     {
         $query = User::query()
             ->select([
-                'id', 'account', 'realname', 'role_id', 'phone',
+                'id', 'account', 'realname', 'role_id', 'phone', 'email', 'avatar',
                 'is_enabled', 'created_at',
             ])
             ->with(['role:id,name,code']);

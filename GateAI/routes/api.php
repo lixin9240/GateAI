@@ -58,6 +58,7 @@ Route::prefix('v1/edge')->middleware(['edge.token'])->group(function () {
 Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);// 登出
     Route::get('/me', [AuthController::class, 'me']);// 获取用户信息
+    Route::post('/me/avatar', [AuthController::class, 'uploadAvatar']);// 头像上传
 
     // 3. 告警管理模块
     Route::prefix('alarms')->group(function () {
@@ -230,8 +231,10 @@ Route::middleware(['auth:api', 'token.valid'])->group(function () {
 
     // 4. 模型三维评判体系
     Route::prefix('settings/ai')->group(function () {
-        Route::get('metrics',         [ModelMetricController::class, 'latest']);   // 最新指标
-        Route::get('metrics/history', [ModelMetricController::class, 'history']); // 历史趋势
-        Route::get('health',          [ModelMetricController::class, 'health']);  // 全局健康
+        Route::get('metrics',           [ModelMetricController::class, 'latest'])->name('fmy.metrics.latest');   // 最新指标
+        Route::get('metrics/history',  [ModelMetricController::class, 'history'])->name('fmy.metrics.history');  // 历史趋势
+        Route::get('metrics/list',     [ModelMetricController::class, 'listMetrics'])->name('fmy.metrics.list');     // 指标明细列表
+        Route::post('metrics/compare',  [ModelMetricController::class, 'compare'])->name('fmy.metrics.compare');  // 版本对比
+        Route::get('health',            [ModelMetricController::class, 'health'])->name('fmy.metrics.health');   // 全局健康
     });
 });

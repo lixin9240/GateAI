@@ -13,7 +13,8 @@ class UserCreateRequest extends FormRequest
             'password' => 'required|string|min:8|regex:/^(?=.*[a-zA-Z])(?=.*\d)/',
             'realname' => 'required|string|max:30',
             'role_id'  => 'required|integer|exists:roles,id',
-            'phone'    => 'nullable|string|max:20',
+            'phone'    => 'nullable|string|max:11|regex:/^1[3-9]\d{9}$/',
+            'email'    => 'nullable|email|max:100',
         ];
     }
 

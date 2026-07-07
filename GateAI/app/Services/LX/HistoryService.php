@@ -5,8 +5,8 @@ namespace App\Services\LX;
 use App\Models\HistoryExportTask;
 use App\Models\MonitoringData;
 use App\Support\LogHelper;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use OSS\OssClient;
 
 class HistoryService
 {
@@ -82,9 +82,15 @@ class HistoryService
 
             // 上传 OSS
             $fileName = $data['file_name'] ?? $taskNo;
-            $ossPath  = 'exports/' . date('Ym') . '/' . $fileName . '.' . $format;
-            Storage::disk('oss')->put($ossPath, $csv);
-            $downloadUrl = Storage::disk('oss')->url($ossPath);
+            $ossPath  = 'exports/history/' . date('Ym') . '/' . $fileName . '.' . $format;
+
+            $client = new OssClient(
+                env('OSS_ACCESS_KEY_ID'),
+                env('OSS_ACCESS_KEY_SECRET'),
+                env('OSS_ENDPOINT')
+            );
+            $client->putObject(env('OSS_BUCKET'), $ossPath, $csv);
+            $downloadUrl = 'https://' . env('OSS_BUCKET') . '.' . env('OSS_ENDPOINT') . '/' . $ossPath;
 
             $task->update([
                 'status'      => 'completed',
@@ -118,6 +124,7 @@ class HistoryService
         return [
             'task_id'        => $task->task_no,
             'status'         => $task->status,
+            'download_url'   => $downloadUrl ?? null,
             'estimated_size' => $task->estimated_size ?? '—',
             'estimated_time' => $task->estimated_time,
         ];

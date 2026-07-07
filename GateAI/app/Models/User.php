@@ -22,6 +22,8 @@ class User extends Authenticatable implements JWTSubject
         'realname',              // 真实姓名
         'role_id',               // 角色ID
         'phone',                 // 手机号
+        'email',                 // 邮箱
+        'avatar',                // 头像路径
         'force_change_password', // 是否强制修改密码
         'login_fail_count',      // 登录失败次数
         'lock_expire_time',      // 锁定到期时间
