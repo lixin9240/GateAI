@@ -69,7 +69,8 @@
       "Read(//c/Program Files/**)",
       "Bash(where python *)",
       "Bash(E:/document2/Python312/python.exe *)",
-      "Bash(pip list *)"
+      "Bash(pip list *)",
+      "Bash(composer remove *)"
     ]
   }
 }

@@ -72,8 +72,13 @@ class AuthController extends Controller
 
         try {
             Storage::disk('oss')->put($ossPath, file_get_contents($file->getRealPath()));
-            $url = config('filesystems.disks.oss.endpoint') . '/' . $ossPath;
+            $url = Storage::disk('oss')->url($ossPath);
         } catch (\Exception $e) {
+            LogHelper::error('头像上传OSS失败', [
+                'error' => $e->getMessage(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+            ]);
             return Result::error(ResponseCode::OSS_UPLOAD_FAILED);
         }
 
