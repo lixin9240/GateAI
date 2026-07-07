@@ -195,8 +195,9 @@ class GateInterlockGuard:
     # ─── 辅助 ───────────────────────────────────
 
     def _log(self, rule_code: str, message: str):
-        """记录触发事件（本地 + 云端）"""
-        print(f"[Interlock] {rule_code}: {message}")
+        """记录触发事件（本地stderr，不污染stdout JSON输出）"""
+        import sys
+        print(f"[Interlock] {rule_code}: {message}", file=sys.stderr)
 
     def reload_rules(self, remote_rules: list = None):
         """热加载规则（从云端或本地覆盖默认规则）
