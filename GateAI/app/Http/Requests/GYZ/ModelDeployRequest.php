@@ -10,7 +10,7 @@ class ModelDeployRequest extends FormRequest
     {
         return [
             'edge_node_ids' => 'required|array|min:1',
-            'edge_node_ids.*' => 'integer|min:1|exists:edge_nodes,id',
+            'edge_node_ids.*' => 'integer|min:1',
             'strategy'      => 'nullable|string|in:immediate,gradual,scheduled',
         ];
     }

@@ -348,6 +348,13 @@ PYTHON);
             throw new BusinessException('模型状态不允许下发', ResponseCode::STATUS_CANNOT_OPERATE);
         }
 
+        // 校验边缘节点是否存在
+        $existingIds = \App\Models\EdgeNode::whereIn('id', $edgeNodeIds)->pluck('id')->toArray();
+        $invalidIds = array_diff($edgeNodeIds, $existingIds);
+        if (! empty($invalidIds)) {
+            throw new BusinessException('边缘节点 ID ' . implode(', ', $invalidIds) . ' 不存在，当前可用节点ID：1~8', ResponseCode::PARAM_ERROR);
+        }
+
         $results = [];
 
         DB::transaction(function () use ($model, $edgeNodeIds, $strategy, $userId, &$results) {
