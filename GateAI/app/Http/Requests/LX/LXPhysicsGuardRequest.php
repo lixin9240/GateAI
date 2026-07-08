@@ -40,7 +40,7 @@ class LXPhysicsGuardRequest extends FormRequest
                 'fusion_l2_confidence'      => 'numeric|min:0|max:1|nullable',//置信度
                 'fusion_l2_risk'            => 'numeric|min:0|max:1|nullable',//风险值
                 'gate_max_discharge'        => 'array|nullable',
-                'description'               => 'string|max:255|nullable',
+                'description'               => 'required|string|max:255',//描述
             ];
         }
 

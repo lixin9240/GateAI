@@ -183,7 +183,7 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
         // 用户管理：仅 admin
         Route::middleware('role:admin')->group(function () {
             Route::post('users', [UserManagementController::class, 'store']);
-            Route::put('users/{id}', [UserManagementController::class, 'update']);
+            Route::match(['post', 'put'], 'users/{id}', [UserManagementController::class, 'update']);
             Route::post('users/{id}/reset-password', [UserManagementController::class, 'resetPassword']);
             Route::post('users/{id}/lock', [UserManagementController::class, 'lock']);
             Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);

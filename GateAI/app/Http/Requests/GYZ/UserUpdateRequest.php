@@ -13,7 +13,7 @@ class UserUpdateRequest extends FormRequest
             'role_id'    => 'nullable|integer|exists:roles,id',
             'phone'      => 'nullable|string|max:11|regex:/^1[3-9]\d{9}$/',
             'email'      => 'nullable|email|max:100',
-            'avatar'     => 'nullable|string|max:255',
+            'avatar'     => 'nullable|max:255',
             'is_enabled' => 'nullable|integer|in:0,1',
         ];
     }
