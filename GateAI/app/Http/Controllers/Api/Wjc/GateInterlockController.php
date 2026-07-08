@@ -27,6 +27,16 @@ class GateInterlockController extends Controller
     }
 
     /**
+     * 创建规则
+     * POST /api/v1/settings/gate-interlock/rules
+     */
+    public function store(GateInterlockRequest $request): JsonResponse
+    {
+        $rule = $this->interlockService->createRule($request->validated());
+        return Result::success('规则已创建', $rule);
+    }
+
+    /**
      * 更新规则
      * PUT /api/v1/settings/gate-interlock/rules/{id}
      */

@@ -47,6 +47,14 @@ class GateInterlockService
     }
 
     /**
+     * 创建规则
+     */
+    public function createRule(array $data): GateInterlockRule
+    {
+        return GateInterlockRule::create($data);
+    }
+
+    /**
      * 更新单条规则
      */
     public function updateRule(int $ruleId, array $data): GateInterlockRule
