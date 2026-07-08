@@ -72,7 +72,7 @@ class AuthController extends Controller
 
         try {
             Storage::disk('oss')->put($ossPath, file_get_contents($file->getRealPath()));
-            $url = Storage::disk('oss')->url($ossPath);
+            $url = config('filesystems.disks.oss.endpoint') . '/' . $ossPath;
         } catch (\Exception $e) {
             LogHelper::error('头像上传OSS失败', [
                 'error' => $e->getMessage(),
