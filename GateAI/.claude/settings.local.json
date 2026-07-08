@@ -70,7 +70,9 @@
       "Bash(where python *)",
       "Bash(E:/document2/Python312/python.exe *)",
       "Bash(pip list *)",
-      "Bash(composer remove *)"
+      "Bash(composer remove *)",
+      "Bash(crontab -l)",
+      "Bash(schtasks /query /fo LIST)"
     ]
   }
 }
