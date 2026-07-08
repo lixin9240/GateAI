@@ -12,6 +12,7 @@ use App\Http\Requests\GYZ\UserUpdateRequest;
 use App\Services\GYZ\UserManagementService;
 use App\Support\Result;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class UserManagementController extends Controller
 {
@@ -53,7 +54,18 @@ class UserManagementController extends Controller
      */
     public function update(int $id, UserUpdateRequest $request): JsonResponse
     {
-        $user = $this->service->update($id, $request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('avatar')) {
+            $file = $request->file('avatar');
+            $filename = 'avatar_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $ossPath = 'avatars/' . date('Ym') . '/' . $filename;
+
+            Storage::disk('oss')->put($ossPath, file_get_contents($file->getRealPath()));
+            $data['avatar'] = config('filesystems.disks.oss.endpoint') . '/' . $ossPath;
+        }
+
+        $user = $this->service->update($id, $data);
 
         return Result::success('用户更新成功', $user);
     }
