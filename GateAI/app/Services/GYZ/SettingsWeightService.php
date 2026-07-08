@@ -66,7 +66,7 @@ class SettingsWeightService
             ], 'info', 'WEIGHT_UPDATE');
         });
 
-        try { broadcast(new \App\Events\LX\ConfigUpdateEvent('weights', (int) now()->timestamp))->toOthers(); } catch (\Exception $e) {}
+        try { broadcast(new \App\Events\LX\ConfigUpdateEvent('weights', (int) now()->timestamp, '权重配置已更新'))->toOthers(); } catch (\Exception $e) {}
 
         return $weight->fresh();
     }
