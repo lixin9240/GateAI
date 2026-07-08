@@ -16,15 +16,31 @@ class GateInterlockRequest extends FormRequest
         $method = $this->method();
         $path = $this->path();
 
+        // 创建规则
+        if ($method === 'POST' && str_contains($path, 'rules') && !str_contains($path, 'toggle')) {
+            return [
+                'reservoir_id'       => 'nullable|integer|exists:reservoirs,id',
+                'rule_code'          => 'required|string|max:50',
+                'rule_name'          => 'required|string|max:100',
+                'description'        => 'required|string|max:255',
+                'enabled'            => 'required|boolean',
+                'priority'           => 'required|integer|min:0',
+                'trigger_conditions' => 'required|array',
+                'constraint_action'  => 'required|array',
+            ];
+        }
+
         // 更新规则
         if ($method === 'PUT' && str_contains($path, 'rules')) {
             return [
-                'rule_name'         => 'nullable|string|max:100',
-                'description'       => 'nullable|string|max:255',
-                'enabled'           => 'nullable|boolean',
-                'priority'          => 'nullable|integer|min:0',
-                'trigger_conditions' => 'nullable|array',
-                'constraint_action'  => 'nullable|array',
+                'reservoir_id'       => 'nullable|integer|exists:reservoirs,id',
+                'rule_code'          => 'required|string|max:50',
+                'rule_name'          => 'required|string|max:100',
+                'description'        => 'required|string|max:255',
+                'enabled'            => 'required|boolean',
+                'priority'           => 'required|integer|min:0',
+                'trigger_conditions' => 'required|array',
+                'constraint_action'  => 'required|array',
             ];
         }
 

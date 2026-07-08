@@ -193,6 +193,7 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
         // 闸门互锁规则管理
         Route::prefix('gate-interlock')->group(function () {
             Route::get('rules', [GateInterlockController::class, 'rules']);
+            Route::post('rules', [GateInterlockController::class, 'store']);
             Route::put('rules/{id}', [GateInterlockController::class, 'updateRule']);
             Route::post('rules/{id}/toggle', [GateInterlockController::class, 'toggleRule']);
             Route::get('logs', [GateInterlockController::class, 'logs']);
