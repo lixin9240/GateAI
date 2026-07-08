@@ -168,7 +168,7 @@ class SettingsModelService
             return $model->fresh();
         });
 
-        try { broadcast(new \App\Events\LX\ModelReloadEvent($model->name, $model->version))->toOthers(); } catch (\Exception $e) {}
+        try { broadcast(new \App\Events\LX\ModelReloadEvent($model->name, $model->version, '新模型已激活，请热加载'))->toOthers(); } catch (\Exception $e) {}
     }
 
     /**

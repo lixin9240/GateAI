@@ -57,10 +57,8 @@ class SettingsThresholdService
         });
 
         try {
-            broadcast(new \App\Events\LX\ConfigUpdateEvent('thresholds', (int) now()->timestamp))->toOthers();
-        } catch (\Exception $e) {
-            LogHelper::error('WebSocket 推送失败', ['error' => $e->getMessage()]);
-        }
+            broadcast(new \App\Events\LX\ConfigUpdateEvent('thresholds', (int) now()->timestamp, '阈值配置已更新'))->toOthers();
+        } catch (\Exception $e) {}
 
         return $threshold->fresh();
     }
