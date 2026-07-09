@@ -54,7 +54,7 @@ class UserManagementController extends Controller
      */
     public function update(int $id, UserUpdateRequest $request): JsonResponse
     {
-        $data = $request->validated();
+        $data = array_filter($request->validated(), fn($v) => $v !== null);
 
         if ($request->hasFile('avatar')) {
             $file = $request->file('avatar');

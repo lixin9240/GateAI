@@ -1,6 +1,6 @@
 {
     "project": "Hydropower Intelligent Gate Scheduling",
-    "version": "5.0.0-active",
+    "version": "5.5.0-activated",
     "created": "2026-07-02T22:03:00",
     "device": "Jetson Orin Nano / CPU",
     "models": {
@@ -31,7 +31,7 @@
             "hidden_size": 96,
             "num_layers": 2,
             "dropout": 0.4,
-            "version": "5.0.0"
+            "version": "5.5.0"
         },
         "scaler": "models/scaler_X.pkl"
     },
@@ -73,15 +73,15 @@
         "report_interval_seconds": 5,
         "heartbeat_interval_seconds": 30
     },
-    "activated_at": "2026-07-07 10:06:01",
+    "activated_at": "2026-07-09 09:47:59",
     "active_models": {
         "lstm": {
             "name": "Physics-Informed LSTM v5.0",
-            "version": "5.0.0"
+            "version": "5.5.0"
         },
         "dqn": {
             "name": "Physics-Informed DQN v5.0",
-            "version": "5.2.0"
+            "version": "5.6.0"
         }
     }
 }
