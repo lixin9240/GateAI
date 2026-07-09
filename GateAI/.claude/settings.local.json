@@ -72,7 +72,10 @@
       "Bash(pip list *)",
       "Bash(composer remove *)",
       "Bash(crontab -l)",
-      "Bash(schtasks /query /fo LIST)"
+      "Bash(schtasks /query /fo LIST)",
+      "Bash(pip --version)",
+      "Bash(pip3 --version)",
+      "Bash(python -c \"import torch; print\\('torch', torch.__version__\\)\")"
     ]
   }
 }
