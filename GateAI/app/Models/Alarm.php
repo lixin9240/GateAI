@@ -56,4 +56,9 @@ class Alarm extends Model
     {
         return $this->belongsTo(EdgeNode::class, 'edge_node_id');
     }
+
+    public function handler()
+    {
+        return $this->belongsTo(User::class, 'disposed_by');
+    }
 }
