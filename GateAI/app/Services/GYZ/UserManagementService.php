@@ -76,7 +76,7 @@ class UserManagementService
      */
     public function create(array $data): User
     {
-        // 检查账号唯一性
+        // 检查账号唯一性（仅查未删除记录，软删除后可复用同名账号）
         $exists = User::where('account', $data['account'])->exists();
         if ($exists) {
             throw new BusinessException('账号已存在', ResponseCode::DATA_DUPLICATE);
