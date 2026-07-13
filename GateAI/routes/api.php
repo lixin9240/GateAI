@@ -106,11 +106,11 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
 
     // 6. 边缘节点管理
     Route::prefix('edge-nodes')->group(function () {
-        Route::get('/', [WjcEdgeNodeController::class, 'index']);
-        Route::post('/', [WjcEdgeNodeController::class, 'store']);
-        Route::get('/{id}', [WjcEdgeNodeController::class, 'show']);
-        Route::post('/{id}/heartbeat', [WjcEdgeNodeController::class, 'heartbeat']);
-        Route::delete('/{id}', [WjcEdgeNodeController::class, 'destroy']);
+        Route::get('/', [WjcEdgeNodeController::class, 'index']);// 边缘节点列表
+        Route::post('/', [WjcEdgeNodeController::class, 'store']);// 创建边缘节点
+        Route::get('/{id}', [WjcEdgeNodeController::class, 'show']);// 边缘节点详情
+        Route::post('/{id}/heartbeat', [WjcEdgeNodeController::class, 'heartbeat']);// 边缘节点心跳
+        Route::delete('/{id}', [WjcEdgeNodeController::class, 'destroy']);// 删除边缘节点
     });
 
     // 10. 历史查询模块
