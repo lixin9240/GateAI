@@ -14,6 +14,29 @@ class User extends Authenticatable implements JWTSubject
 {
     use BeijingTime, HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
+    /**
+     * 头像访问器 —— 自动将 OSS 路径转换为带签名的临时 URL
+     */
+    public function getAvatarAttribute($value): ?string
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        // 兼容旧数据：完整URL格式（含 .aliyuncs.com/）提取相对路径
+        $path = $value;
+        if (str_contains($value, '.aliyuncs.com/')) {
+            $path = substr($value, strpos($value, '.aliyuncs.com/') + 15);
+        }
+
+        try {
+            return app(\App\Filesystems\OssAdapter::class)->signUrl($path, 3600);
+        } catch (\Exception $e) {
+            // 签名失败时回退到原始值，避免影响用户信息读取
+            return $value;
+        }
+    }
+
     protected $table = 'users';
 
     protected $fillable = [

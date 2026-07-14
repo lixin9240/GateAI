@@ -29,8 +29,12 @@ class AppServiceProvider extends ServiceProvider
                 $config['access_key'] ?? '',
                 $config['endpoint'] ?? '',
             );
+            $client->setUseSSL(true);
 
             $adapter = new OssAdapter($client, $config['bucket'] ?? '', $config['endpoint'] ?? '');
+
+            // 注册到容器，供 User 模型等需要签名URL的场景使用
+            $app->instance(OssAdapter::class, $adapter);
 
             $driver = new Filesystem($adapter, $config);
 
@@ -39,5 +43,8 @@ class AppServiceProvider extends ServiceProvider
                 'prefix' => null,
             ]);
         });
+
+        // 强制解析 OSS 磁盘，确保 OssAdapter 单例在任意请求中可用
+        Storage::disk('oss');
     }
 }

@@ -23,6 +23,14 @@ class OssAdapter implements FilesystemAdapter
         return 'https://' . $this->bucket . '.' . $this->endpoint . '/' . $path;
     }
 
+    /**
+     * 生成带签名的临时访问URL（用于私有bucket）
+     */
+    public function signUrl(string $path, int $timeout = 3600): string
+    {
+        return $this->client->signUrl($this->bucket, $path, $timeout, OssClient::OSS_HTTP_GET);
+    }
+
     public function fileExists(string $path): bool
     {
         return $this->client->doesObjectExist($this->bucket, $path);
