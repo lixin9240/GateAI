@@ -2,6 +2,8 @@
 // 用户模型
 namespace App\Models;
 
+use App\Models\Concerns\HasBeijingTime;
+
 use App\Models\Concerns\BeijingTime;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,30 +14,7 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    use BeijingTime, HasApiTokens, HasFactory, Notifiable, SoftDeletes;
-
-    /**
-     * 头像访问器 —— 自动将 OSS 路径转换为带签名的临时 URL
-     */
-    public function getAvatarAttribute($value): ?string
-    {
-        if (empty($value)) {
-            return null;
-        }
-
-        // 兼容旧数据：完整URL格式（含 .aliyuncs.com/）提取相对路径
-        $path = $value;
-        if (str_contains($value, '.aliyuncs.com/')) {
-            $path = substr($value, strpos($value, '.aliyuncs.com/') + 15);
-        }
-
-        try {
-            return app(\App\Filesystems\OssAdapter::class)->signUrl($path, 3600);
-        } catch (\Exception $e) {
-            // 签名失败时回退到原始值，避免影响用户信息读取
-            return $value;
-        }
-    }
+    use HasBeijingTime, HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     protected $table = 'users';
 
@@ -45,8 +24,6 @@ class User extends Authenticatable implements JWTSubject
         'realname',              // 真实姓名
         'role_id',               // 角色ID
         'phone',                 // 手机号
-        'email',                 // 邮箱
-        'avatar',                // 头像路径
         'force_change_password', // 是否强制修改密码
         'login_fail_count',      // 登录失败次数
         'lock_expire_time',      // 锁定到期时间
@@ -64,7 +41,7 @@ class User extends Authenticatable implements JWTSubject
     protected $casts = [
         'role_id'               => 'integer',
         'email_verified_at'     => 'datetime',
-        // 'hashed' cast Laravel 10.1 不支持，用 setPasswordAttribute() mutator 替代
+        // 'hashed' cast 在 Laravel 10.1 不支持，改用 setPasswordAttribute() mutator
         'force_change_password' => 'integer',
         'login_fail_count'      => 'integer',
         'lock_expire_time'      => 'datetime',
@@ -77,7 +54,6 @@ class User extends Authenticatable implements JWTSubject
         $this->attributes['password'] = bcrypt($value);
     }
 
-    // ─── JWT ──────────────────────────────────────
     public function getJWTIdentifier(): mixed
     {
         return $this->getKey();
@@ -87,8 +63,6 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
-
-
 
     public function role()
     {
