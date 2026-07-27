@@ -49,7 +49,7 @@ class WjcAlarmController extends Controller
      */
     public function dispose(WjcAlarmRequest $request, int $id): JsonResponse
     {
-        $this->alarmService->disposeAlarm($id, $request->input('dispose_note'));
+        $this->alarmService->disposeAlarm($id, $request->input('dispose_note'), auth()->id());
         return Result::success('处置成功');
     }
 

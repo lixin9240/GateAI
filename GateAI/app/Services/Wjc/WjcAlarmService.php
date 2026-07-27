@@ -46,7 +46,7 @@ class WjcAlarmService
      */
     public function getAlarmDetail(int $id): Alarm
     {
-        return Alarm::with(['equipment', 'reservoir', 'edgeNode'])->findOrFail($id);
+        return Alarm::with(['equipment', 'reservoir', 'edgeNode', 'handler'])->findOrFail($id);
     }
 
     /**
@@ -79,7 +79,7 @@ class WjcAlarmService
     /**
      * 3.3 处置告警
      */
-    public function disposeAlarm(int $id, ?string $note): Alarm
+    public function disposeAlarm(int $id, ?string $note, int $userId): Alarm
     {
         $alarm = Alarm::findOrFail($id);
 
@@ -90,6 +90,7 @@ class WjcAlarmService
         $alarm->update([
             'status'       => 'disposed',
             'dispose_note' => $note,
+            'disposed_by'  => $userId,
             'disposed_at'  => now(),
         ]);
 
