@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GYZ\AiInferenceController;
+use App\Http\Controllers\Api\GYZ\RolePermissionController;
 use App\Http\Controllers\Api\GYZ\SecurityController;
 use App\Http\Controllers\Api\GYZ\SettingsModelController;
 use App\Http\Controllers\Api\GYZ\SettingsThresholdController;
@@ -173,6 +174,13 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
         // 导出
         Route::get('models/export', [SettingsModelController::class, 'export']);
         Route::get('users/export', [UserManagementController::class, 'export']);
+
+        // 角色页面权限（仅 admin）
+        Route::middleware('role:admin')->group(function () {
+            Route::get('role-permissions', [RolePermissionController::class, 'index']);
+            Route::post('role-permissions/save', [RolePermissionController::class, 'save']);
+            Route::post('role-permissions/reset', [RolePermissionController::class, 'reset']);
+        });
 
         // 模型管理：admin + algorithm
         Route::middleware('role:admin,algorithm')->group(function () {
