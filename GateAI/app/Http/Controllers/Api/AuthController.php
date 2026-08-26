@@ -71,7 +71,9 @@ class AuthController extends Controller
         $ossPath = 'avatars/' . date('Ym') . '/' . $filename;
 
         try {
+<<<<<<< Updated upstream
             Storage::disk('oss')->put($ossPath, file_get_contents($file->getRealPath()));
+=======
             $client = new OssClient(
                 env('OSS_ACCESS_KEY_ID'),
                 env('OSS_ACCESS_KEY_SECRET'),
@@ -80,6 +82,7 @@ class AuthController extends Controller
             $client->putObject(env('OSS_BUCKET'), $ossPath, file_get_contents($file->getRealPath()));
 
             $url = 'https://' . env('OSS_BUCKET') . '.' . env('OSS_ENDPOINT') . '/' . $ossPath;
+>>>>>>> Stashed changes
         } catch (\Exception $e) {
             LogHelper::error('头像上传OSS失败', [
                 'error' => $e->getMessage(),
