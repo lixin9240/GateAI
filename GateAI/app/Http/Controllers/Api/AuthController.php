@@ -13,7 +13,7 @@ use App\Support\Result;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
+use OSS\OssClient;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends Controller
@@ -72,6 +72,14 @@ class AuthController extends Controller
 
         try {
             Storage::disk('oss')->put($ossPath, file_get_contents($file->getRealPath()));
+            $client = new OssClient(
+                env('OSS_ACCESS_KEY_ID'),
+                env('OSS_ACCESS_KEY_SECRET'),
+                env('OSS_ENDPOINT')
+            );
+            $client->putObject(env('OSS_BUCKET'), $ossPath, file_get_contents($file->getRealPath()));
+
+            $url = 'https://' . env('OSS_BUCKET') . '.' . env('OSS_ENDPOINT') . '/' . $ossPath;
         } catch (\Exception $e) {
             LogHelper::error('头像上传OSS失败', [
                 'error' => $e->getMessage(),
