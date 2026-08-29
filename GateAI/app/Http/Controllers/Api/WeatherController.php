@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Weather\WeatherCurrentRequest;
 use App\Http\Requests\Weather\WeatherDailyRequest;
 use App\Http\Requests\Weather\WeatherHourlyRequest;
+use App\Http\Requests\Weather\WeatherRequest;
 use App\Services\Weather\WeatherService;
 use App\Support\Result;
 use Illuminate\Http\JsonResponse;
@@ -15,6 +16,18 @@ class WeatherController extends Controller
     public function __construct(
         protected WeatherService $weatherService
     ) {}
+
+    public function index(WeatherRequest $request): JsonResponse
+    {
+        $lat   = $request->input('latitude', config('weather.station.latitude'));
+        $lon   = $request->input('longitude', config('weather.station.longitude'));
+        $hours = (int) $request->input('hours', 24);
+        $days  = (int) $request->input('days', 7);
+
+        $data = $this->weatherService->getWeather((float) $lat, (float) $lon, $hours, $days);
+
+        return Result::success('获取天气成功', $data);
+    }
 
     public function current(WeatherCurrentRequest $request): JsonResponse
     {

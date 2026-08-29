@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);// 登录
 
+    Route::get('/weather', [WeatherController::class, 'index']);// 综合天气（实时 + 逐时 + 逐日）
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
