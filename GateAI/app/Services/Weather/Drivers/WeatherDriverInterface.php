@@ -4,6 +4,8 @@ namespace App\Services\Weather\Drivers;
 
 interface WeatherDriverInterface
 {
+    public function getWeather(float $lat, float $lon, int $hours = 24, int $days = 7): array;
+
     public function getCurrentWeather(float $lat, float $lon): array;
 
     public function getHourlyForecast(float $lat, float $lon, int $hours = 24): array;

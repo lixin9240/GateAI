@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GYZ\AiInferenceController;
+use App\Http\Controllers\Api\GYZ\RolePermissionController;
 use App\Http\Controllers\Api\GYZ\SecurityController;
 use App\Http\Controllers\Api\GYZ\SettingsModelController;
 use App\Http\Controllers\Api\GYZ\SettingsThresholdController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\Api\LX\PhysicsGuardConfigController;
 use App\Http\Controllers\Api\GYZ\SettingsWeightController;
 use App\Http\Controllers\Api\GYZ\UserManagementController;
 use App\Http\Controllers\Api\LX\EdgeController;
+use App\Http\Controllers\Api\LX\LXDispatchController;
 use App\Http\Controllers\Api\LX\HistoryController;
 use App\Http\Controllers\Api\LX\IncidentController;
 use App\Http\Controllers\Api\LX\PhysicalController;
@@ -33,6 +35,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);// 登录
 
+    Route::get('/weather', [WeatherController::class, 'index']);// 综合天气（实时 + 逐时 + 逐日）
     Route::get('/weather/current', [WeatherController::class, 'current']);// 当前天气
     Route::get('/weather/hourly', [WeatherController::class, 'hourly']);//小时天气
     Route::get('/weather/daily', [WeatherController::class, 'daily']);// 日天气
@@ -44,10 +47,10 @@ Route::prefix('v1')->group(function () {
 
     // 安防监控（mock 数据）
     Route::prefix('security')->group(function () {
-        Route::get('cameras', [SecurityController::class, 'cameras']);
-        Route::get('doors',    [SecurityController::class, 'doors']);
-        Route::get('patrols',  [SecurityController::class, 'patrols']);
-        Route::get('alarms',   [SecurityController::class, 'alarms']);
+        Route::get('cameras', [SecurityController::class, 'cameras']);// 相机列表
+        Route::get('doors',    [SecurityController::class, 'doors']);// 门列表
+        Route::get('patrols',  [SecurityController::class, 'patrols']);// 巡逻列表
+        Route::get('alarms',   [SecurityController::class, 'alarms']);// 告警列表
     });
 });
 
@@ -64,24 +67,28 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
 
     // 3. 告警管理模块
     Route::prefix('alarms')->group(function () {
-        Route::get('/', [WjcAlarmController::class, 'index']);
-        Route::get('/exceed-logs', [WjcAlarmController::class, 'exceedLogs']);
-        Route::get('/{id}', [WjcAlarmController::class, 'show']);
-        Route::put('/{id}/acknowledge', [WjcAlarmController::class, 'acknowledge']);
-        Route::put('/{id}/dispose', [WjcAlarmController::class, 'dispose']);
+        Route::get('/', [WjcAlarmController::class, 'index']);// 正式告警分页列表
+        Route::get('/exceed-logs', [WjcAlarmController::class, 'exceedLogs']);// 瞬时超限日志
+        Route::get('/{id}', [WjcAlarmController::class, 'show']);// 告警详情
+        Route::put('/{id}/acknowledge', [WjcAlarmController::class, 'acknowledge']);// 确认告警
+        Route::put('/{id}/dispose', [WjcAlarmController::class, 'dispose']);// 处置告警
     });
 
     // 4. 调度决策模块
     Route::prefix('dispatch')->group(function () {
-        Route::get('/predictions', [WjcDispatchController::class, 'predictions']);
-        Route::get('/decisions', [WjcDispatchController::class, 'decisions']);
-        Route::get('/decisions/{id}', [WjcDispatchController::class, 'decisionDetail']);
-        Route::post('/execute', [WjcDispatchController::class, 'execute']);
-        Route::get('/commands/{command_id}/trace', [WjcDispatchController::class, 'traceCommand']);
-        Route::get('/gate-actions', [WjcDispatchController::class, 'gateActions']);
-        Route::post('/emergency-stop', [WjcDispatchController::class, 'emergencyStop']);
-        Route::put('/stop-recover/{id}', [WjcDispatchController::class, 'stopRecover']);
-        Route::get('/emergency-stops', [WjcDispatchController::class, 'emergencyStops']);
+        Route::get('/predictions', [WjcDispatchController::class, 'predictions']);// 预测
+        Route::get('/decisions', [WjcDispatchController::class, 'decisions']);// 决策
+        Route::get('/decisions/{id}', [WjcDispatchController::class, 'decisionDetail']);// 决策详情
+        Route::post('/execute', [WjcDispatchController::class, 'execute']);// 执行
+        Route::get('/commands/{command_id}/trace', [WjcDispatchController::class, 'traceCommand']);// 命令跟踪
+        Route::get('/gate-actions', [WjcDispatchController::class, 'gateActions']);// 门操作
+        Route::post('/emergency-stop', [WjcDispatchController::class, 'emergencyStop']);// 紧急停止
+        Route::put('/stop-recover/{id}', [WjcDispatchController::class, 'stopRecover']);// 恢复停止
+        Route::get('/emergency-stops', [WjcDispatchController::class, 'emergencyStops']);// 紧急停止列表
+        Route::post('/commands/{command_id}/cancel', [LXDispatchController::class, 'cancelCommand']);// 取消命令
+        Route::post('/gate-execute', [LXDispatchController::class, 'gateExecute']);// 执行门操作
+        Route::post('/gate-execute/batch', [LXDispatchController::class, 'gateExecuteBatch']);// 批量执行门操作
+        Route::put('/mode', [LXDispatchController::class, 'switchMode']);// 切换模式
     });
 
     // 发电模块
@@ -101,11 +108,11 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
 
     // 6. 边缘节点管理
     Route::prefix('edge-nodes')->group(function () {
-        Route::get('/', [WjcEdgeNodeController::class, 'index']);
-        Route::post('/', [WjcEdgeNodeController::class, 'store']);
-        Route::get('/{id}', [WjcEdgeNodeController::class, 'show']);
-        Route::post('/{id}/heartbeat', [WjcEdgeNodeController::class, 'heartbeat']);
-        Route::delete('/{id}', [WjcEdgeNodeController::class, 'destroy']);
+        Route::get('/', [WjcEdgeNodeController::class, 'index']);// 边缘节点列表
+        Route::post('/', [WjcEdgeNodeController::class, 'store']);// 创建边缘节点
+        Route::get('/{id}', [WjcEdgeNodeController::class, 'show']);// 边缘节点详情
+        Route::post('/{id}/heartbeat', [WjcEdgeNodeController::class, 'heartbeat']);// 边缘节点心跳
+        Route::delete('/{id}', [WjcEdgeNodeController::class, 'destroy']);// 删除边缘节点
     });
 
     // 10. 历史查询模块
@@ -169,6 +176,13 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
         Route::get('models/export', [SettingsModelController::class, 'export']);
         Route::get('users/export', [UserManagementController::class, 'export']);
 
+        // 角色页面权限（仅 admin）
+        Route::middleware('role:admin')->group(function () {
+            Route::get('role-permissions', [RolePermissionController::class, 'index']);
+            Route::post('role-permissions/save', [RolePermissionController::class, 'save']);
+            Route::post('role-permissions/reset', [RolePermissionController::class, 'reset']);
+        });
+
         // 模型管理：admin + algorithm
         Route::middleware('role:admin,algorithm')->group(function () {
             Route::post('models/upload', [SettingsModelController::class, 'upload']);
@@ -185,6 +199,10 @@ Route::prefix('v1')->middleware(['auth:api', 'token.valid'])->group(function () 
             Route::post('users', [UserManagementController::class, 'store']);
             Route::match(['post', 'put'], 'users/{id}', [UserManagementController::class, 'update']);
             Route::post('users/{id}/reset-password', [UserManagementController::class, 'resetPassword']);
+        });
+
+        // 锁定/解锁/删除：admin + 站长均可操作（Service 层有额外权限控制）
+        Route::middleware('role:admin,station_master')->group(function () {
             Route::post('users/{id}/lock', [UserManagementController::class, 'lock']);
             Route::post('users/{id}/unlock', [UserManagementController::class, 'unlock']);
             Route::delete('users/{id}', [UserManagementController::class, 'destroy']);

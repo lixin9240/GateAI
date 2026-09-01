@@ -54,9 +54,34 @@ class CaiyunDriver implements WeatherDriverInterface
         return 'caiyun';
     }
 
+    public function getWeather(float $lat, float $lon, int $hours = 24, int $days = 7): array
+    {
+        $data = $this->request($lat, $lon);
+
+        return [
+            'current' => $this->extractCurrent($data),
+            'hourly'  => $this->extractHourly($data, $hours),
+            'daily'   => $this->extractDaily($data, $days),
+        ];
+    }
+
     public function getCurrentWeather(float $lat, float $lon): array
     {
-        $data     = $this->request($lat, $lon);
+        return $this->extractCurrent($this->request($lat, $lon));
+    }
+
+    public function getHourlyForecast(float $lat, float $lon, int $hours = 24): array
+    {
+        return $this->extractHourly($this->request($lat, $lon), $hours);
+    }
+
+    public function getDailyForecast(float $lat, float $lon, int $days = 7): array
+    {
+        return $this->extractDaily($this->request($lat, $lon), $days);
+    }
+
+    protected function extractCurrent(array $data): array
+    {
         $realtime = $data['realtime'] ?? [];
 
         return [
@@ -72,10 +97,8 @@ class CaiyunDriver implements WeatherDriverInterface
         ];
     }
 
-    public function getHourlyForecast(float $lat, float $lon, int $hours = 24): array
+    protected function extractHourly(array $data, int $hours): array
     {
-        $data   = $this->request($lat, $lon);
-        $hourly = $data['hourly']['precipitation'] ?? $data['hourly']['temperature'] ?? [];
         $temps  = $data['hourly']['temperature'] ?? [];
         $humids = $data['hourly']['humidity'] ?? [];
         $winds  = $data['hourly']['wind'] ?? [];
@@ -103,13 +126,12 @@ class CaiyunDriver implements WeatherDriverInterface
         return $result;
     }
 
-    public function getDailyForecast(float $lat, float $lon, int $days = 7): array
+    protected function extractDaily(array $data, int $days): array
     {
-        $data  = $this->request($lat, $lon);
-        $daily = $data['daily']['temperature'] ?? [];
-        $sky   = $data['daily']['skycon'] ?? [];
+        $daily  = $data['daily']['temperature'] ?? [];
+        $sky    = $data['daily']['skycon'] ?? [];
         $precip = $data['daily']['precipitation'] ?? [];
-        $wind  = $data['daily']['wind'] ?? [];
+        $wind   = $data['daily']['wind'] ?? [];
 
         $result = [];
         $count  = min($days, count($daily));

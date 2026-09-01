@@ -3,8 +3,6 @@
 namespace App\Services\Weather;
 
 use App\Services\Weather\Drivers\CaiyunDriver;
-use App\Services\Weather\Drivers\HeFengDriver;
-use App\Services\Weather\Drivers\OpenMeteoDriver;
 use App\Services\Weather\Drivers\WeatherDriverInterface;
 use App\Support\LogHelper;
 use Illuminate\Support\Facades\Cache;
@@ -15,13 +13,35 @@ class WeatherService
 
     public function __construct()
     {
-        $driver = config('weather.default', 'hefeng');
+        $this->primaryDriver = new CaiyunDriver();
+    }
 
-        $this->primaryDriver = match ($driver) {
-            'openmeteo' => new OpenMeteoDriver(),
-            'hefeng'    => new HeFengDriver(),
-            default     => new CaiyunDriver(),
-        };
+    public function getWeather(?float $lat = null, ?float $lon = null, int $hours = 24, int $days = 7): array
+    {
+        $lat = $lat ?? config('weather.station.latitude');
+        $lon = $lon ?? config('weather.station.longitude');
+        $ttl = config('weather.cache_ttl', 300);
+
+        $cacheKey = "weather:all:{$lat}:{$lon}:{$hours}:{$days}";
+
+        return Cache::remember($cacheKey, $ttl, function () use ($lat, $lon, $hours, $days) {
+            LogHelper::business('[Weather] 获取综合天气', [
+                'lat'   => $lat,
+                'lon'   => $lon,
+                'hours' => $hours,
+                'days'  => $days,
+            ]);
+
+            $result = $this->primaryDriver->getWeather($lat, $lon, $hours, $days);
+
+            LogHelper::business('[Weather] 综合天气获取成功', [
+                'source' => $result['current']['source'] ?? 'unknown',
+                'hourly' => count($result['hourly']),
+                'daily'  => count($result['daily']),
+            ]);
+
+            return $result;
+        });
     }
 
     public function getCurrentWeather(?float $lat = null, ?float $lon = null): array

@@ -62,7 +62,7 @@ class UserManagementController extends Controller
             $ossPath = 'avatars/' . date('Ym') . '/' . $filename;
 
             Storage::disk('oss')->put($ossPath, file_get_contents($file->getRealPath()));
-            $data['avatar'] = config('filesystems.disks.oss.endpoint') . '/' . $ossPath;
+            $data['avatar'] = $ossPath;
         }
 
         $user = $this->service->update($id, $data);
