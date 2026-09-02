@@ -9,6 +9,7 @@ use App\Models\GateAction;
 use App\Models\MonitoringData;
 use App\Support\LogHelper;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class EdgeService
@@ -35,7 +36,7 @@ class EdgeService
             ]);
         }
 
-        \DB::insert(
+        DB::insert(
             'INSERT INTO monitoring_data (timestamp, reservoir_id, edge_node_id, upstream_level, downstream_level, water_head, inflow_rate, outflow_rate, gate_opening, power_output, cumulative_energy, data_source, created_at) VALUES ' . implode(',', $values),
             $bindings
         );
