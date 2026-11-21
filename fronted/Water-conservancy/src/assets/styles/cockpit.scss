@@ -1,0 +1,265 @@
+// ============================================================
+// 驾驶舱 — 浅蓝 / 白色主题
+// ============================================================
+
+$cockpit-bg: #eef6fc;
+$cockpit-panel: rgba(255, 255, 255, 0.92);
+$cockpit-border: rgba(24, 144, 255, 0.22);
+$cockpit-accent: #1890ff;
+$cockpit-cyan: #1890ff;
+$cockpit-text: #1e3a5f;
+$cockpit-text-dim: #64748b;
+$cockpit-glow: rgba(24, 144, 255, 0.12);
+
+// ---------- 驾驶舱字号阶梯（大屏展示） ----------
+$cockpit-font-xs: 13px;
+$cockpit-font-sm: 15px;
+$cockpit-font-base: 16px;
+$cockpit-font-md: 18px;
+$cockpit-font-lg: 20px;
+$cockpit-font-xl: 24px;
+$cockpit-font-2xl: 32px;
+$cockpit-font-3xl: 40px;
+
+@mixin cockpit-typography {
+  font-size: $cockpit-font-base;
+  line-height: 1.55;
+
+  :deep(.el-button) {
+    font-size: $cockpit-font-sm;
+  }
+
+  :deep(.el-button--small) {
+    font-size: $cockpit-font-sm;
+    padding: 8px 16px;
+  }
+
+  :deep(.el-input__inner),
+  :deep(.el-select__wrapper),
+  :deep(.el-form-item__label) {
+    font-size: $cockpit-font-sm;
+  }
+
+  :deep(.el-pagination),
+  :deep(.el-pagination button),
+  :deep(.el-pagination span) {
+    font-size: $cockpit-font-sm;
+  }
+
+  :deep(.el-descriptions__label),
+  :deep(.el-descriptions__content) {
+    font-size: $cockpit-font-sm;
+  }
+
+  :deep(.el-dialog__title) {
+    font-size: $cockpit-font-lg;
+    font-weight: 600;
+  }
+
+  :deep(.el-tag) {
+    font-size: $cockpit-font-sm;
+    height: auto;
+    padding: 4px 10px;
+  }
+
+  :deep(.el-timeline-item__content) {
+    font-size: $cockpit-font-sm;
+  }
+}
+
+@mixin hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
+}
+
+@mixin cockpit-page-base {
+  position: relative;
+  min-height: 100%;
+  background: linear-gradient(165deg, #f7fbff 0%, #eef6fc 45%, #e3f0fa 100%);
+  color: $cockpit-text;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 20%, rgba(24, 144, 255, 0.06) 0%, transparent 45%),
+      radial-gradient(circle at 85% 75%, rgba(14, 165, 233, 0.05) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/** 纯白页面底 — 告警 / 调度 / 数字孪生等驾驶舱页 */
+@mixin cockpit-page-white {
+  position: relative;
+  min-height: 100%;
+  background: #ffffff;
+  color: $cockpit-text;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+@mixin glass-panel-dark {
+  background: linear-gradient(145deg, rgba(8, 18, 32, 0.72) 0%, rgba(4, 12, 24, 0.68) 100%);
+  border: 1px solid rgba(56, 140, 255, 0.22);
+  border-radius: 12px;
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(100, 180, 255, 0.08),
+    inset 0 0 24px rgba(24, 100, 200, 0.06);
+}
+
+@mixin neon-text-blue {
+  color: #b8dcff;
+  text-shadow: 0 0 8px rgba(56, 160, 255, 0.45), 0 0 18px rgba(24, 144, 255, 0.2);
+}
+
+@mixin glass-panel-cyber {
+  @include glass-panel-dark;
+  border-color: rgba(64, 180, 255, 0.28);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(120, 200, 255, 0.1),
+    inset 0 0 40px rgba(24, 120, 220, 0.08),
+    0 0 1px rgba(64, 200, 255, 0.5);
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(64, 180, 255, 0.03) 2px,
+      rgba(64, 180, 255, 0.03) 4px
+    );
+    pointer-events: none;
+    opacity: 0.6;
+  }
+}
+
+@mixin cockpit-twin-page {
+  position: relative;
+  min-height: 100%;
+  background: linear-gradient(165deg, #020408 0%, #040810 35%, #060a12 70%, #030610 100%);
+  color: #b8dcff;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 18% 8%, rgba(255, 180, 80, 0.05) 0%, transparent 32%),
+      radial-gradient(circle at 82% 92%, rgba(24, 100, 220, 0.07) 0%, transparent 38%),
+      linear-gradient(rgba(64, 180, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(64, 180, 255, 0.02) 1px, transparent 1px);
+    background-size: auto, auto, 48px 48px, 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@mixin cockpit-twin-page-light {
+  position: relative;
+  min-height: 100%;
+  background: linear-gradient(165deg, #dceefb 0%, #e8f4fc 35%, #eef6fc 70%, #f4f9ff 100%);
+  color: #1e4976;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 12% 10%, rgba(24, 144, 255, 0.08) 0%, transparent 36%),
+      radial-gradient(circle at 88% 88%, rgba(56, 189, 248, 0.1) 0%, transparent 40%),
+      linear-gradient(rgba(24, 144, 255, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(24, 144, 255, 0.04) 1px, transparent 1px);
+    background-size: auto, auto, 40px 40px, 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@mixin glass-panel-3d {
+  background: #ffffff;
+  border: 1px solid #e8eef4;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+}
+
+/** 可点击控件 — 按钮、标签、列表项 */
+@mixin interactive-tactile($lift: -2px) {
+  cursor: pointer;
+}
+
+/** 数据块 / 卡片悬停 */
+@mixin interactive-card {
+  border-radius: 8px;
+}
+
+@mixin hud-corner {
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    border-color: $cockpit-accent;
+    border-style: solid;
+    opacity: 0.45;
+  }
+
+  &::before {
+    top: -1px;
+    left: -1px;
+    border-width: 2px 0 0 2px;
+  }
+
+  &::after {
+    bottom: -1px;
+    right: -1px;
+    border-width: 0 2px 2px 0;
+  }
+}
+
+@mixin glow-text {
+  text-shadow: none;
+}
+
+@mixin data-value {
+  font-family: 'DIN Alternate', 'SF Mono', monospace;
+  font-weight: 700;
+  font-size: $cockpit-font-xl;
+  color: $cockpit-accent;
+}

@@ -1,0 +1,150 @@
+@use './design-tokens.scss' as *;
+
+$gateai-section-gap: 20px;
+$gateai-pad-x: 24px;
+$gateai-pad-y: 20px;
+
+// GateAI 设置页 / 独立页 — 统一字号与 Element Plus 组件尺度
+@mixin gateai-element-styles {
+  .el-table {
+    width: 100%;
+    font-size: $font-size-base;
+  }
+  .el-table th.el-table__cell {
+    font-size: $font-size-base;
+    font-weight: 600;
+    padding: 14px 0;
+    background: #f8fafc;
+    color: #334155;
+  }
+  .el-table td.el-table__cell {
+    font-size: $font-size-base;
+    padding: 13px 0;
+    color: #1e293b;
+  }
+  .el-table .cell {
+    line-height: 1.5;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .el-button {
+    font-size: $font-size-base;
+  }
+  .el-button--small {
+    font-size: $font-size-sm;
+  }
+  .el-select .el-input__inner,
+  .el-input__inner {
+    font-size: $font-size-base;
+  }
+  .el-form-item__label {
+    font-size: $font-size-base;
+  }
+  .el-tag {
+    font-size: $font-size-sm;
+    padding: 2px 10px;
+  }
+  .el-descriptions__label,
+  .el-descriptions__content {
+    font-size: $font-size-base;
+  }
+  .el-switch {
+    transform: scale(1.08);
+    transform-origin: center;
+  }
+  .el-collapse-item__header {
+    font-size: $font-size-base;
+    font-weight: 600;
+    height: 48px;
+    line-height: 48px;
+    color: #334155;
+  }
+  .el-input-number {
+    width: 100%;
+  }
+}
+
+@mixin gateai-panel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+
+  > span:not(.gateai-panel__hint) {
+    font-size: $font-size-base;
+    font-weight: 600;
+    color: #475569;
+    white-space: nowrap;
+  }
+}
+
+@mixin gateai-view-toggle {
+  display: flex;
+  gap: 8px;
+
+  button {
+    padding: 8px 18px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-size: $font-size-base;
+    color: #475569;
+    &.active {
+      background: #e6f4ff;
+      border-color: #1890ff;
+      color: #1890ff;
+      font-weight: 600;
+    }
+  }
+}
+
+// 面板内各区块统一纵向间距，避免 margin 叠加重复
+.gateai-panel {
+  display: flex;
+  flex-direction: column;
+  gap: $gateai-section-gap;
+  width: 100%;
+  @include gateai-element-styles;
+
+  &__toolbar {
+    @include gateai-panel-toolbar;
+  }
+
+  &__hint {
+    display: none;
+  }
+
+  // 子区块不再额外撑开间距
+  > .log-filters,
+  > .el-table,
+  > .metric-cards,
+  > .metric-chart,
+  > .compare-columns,
+  > .physics-layout,
+  > .health-overview {
+    margin: 0;
+  }
+}
+
+.gateai-tab-content {
+  @include gateai-element-styles;
+  padding: 0;
+  width: 100%;
+}
+
+// 独立页：单层白底容器，与主布局只保留一圈外边距
+.gateai-page {
+  padding: $gateai-pad-y $gateai-pad-x;
+  background: #fff;
+  border-radius: var(--border-radius-lg);
+  border: 1px solid var(--color-border);
+  min-height: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  @include gateai-element-styles;
+}

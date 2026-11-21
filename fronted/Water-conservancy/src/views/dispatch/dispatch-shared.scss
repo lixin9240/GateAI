@@ -1,0 +1,136 @@
+@use '@/assets/styles/cockpit.scss' as *;
+
+.dispatch-control-page,
+.dispatch-analysis-page,
+.dispatch-gates-page {
+  @include cockpit-page-white;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 0 16px 16px;
+  font-size: 15px;
+}
+
+.kpi-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(24, 144, 255, 0.08), rgba(24, 144, 255, 0.02));
+  border: 1px solid rgba(24, 144, 255, 0.15);
+
+  &__item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 120px;
+
+    span {
+      font-size: 12px;
+      color: $cockpit-text-dim;
+      font-weight: 600;
+    }
+
+    strong {
+      font-size: 20px;
+      font-family: 'SF Mono', monospace;
+      color: #1e293b;
+    }
+
+    &--accent strong {
+      color: #1890ff;
+    }
+  }
+}
+
+.dispatch-top {
+  display: grid;
+  grid-template-columns: 1.35fr 0.85fr;
+  gap: 14px;
+  align-items: stretch;
+  @media (max-width: 1200px) { grid-template-columns: 1fr; }
+}
+
+.dispatch-control-group {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  min-width: 0;
+  @media (max-width: 1100px) { grid-template-columns: 1fr; }
+}
+
+.panel-decision { min-height: 100%; display: flex; flex-direction: column; }
+
+.lbl { font-size: 13px; color: $cockpit-text-dim; display: block; margin-bottom: 4px; }
+
+.mode-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap;
+  .lbl { margin: 0; }
+}
+.mode-btns { display: flex; gap: 6px; }
+.mode-btn {
+  padding: 7px 18px; border: 1px solid #cbd5e1; border-radius: 6px;
+  background: #fff; color: #475569; cursor: pointer; font-size: 14px;
+  &.active { background: #1890ff; border-color: #1890ff; color: #fff; font-weight: 600; }
+}
+
+.metric-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 12px;
+  &--compact { grid-template-columns: repeat(2, 1fr); }
+}
+.metric {
+  padding: 12px 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+  span { display: block; font-size: 13px; color: $cockpit-text-dim; margin-bottom: 4px; }
+  strong { font-size: 19px; color: #1e293b; font-family: 'SF Mono', monospace; }
+}
+.status-foot {
+  font-size: 14px; color: $cockpit-text-dim; padding-top: 10px; border-top: 1px solid #e2e8f0;
+}
+
+.decision-summary { display: grid; grid-template-columns: 1fr 200px; gap: 16px; margin-bottom: 14px;
+  @media (max-width: 700px) { grid-template-columns: 1fr; }
+}
+.action-val {
+  margin: 0 0 12px; font-size: 16px; color: #1e293b;
+  strong { font-size: 26px; color: #1890ff; }
+  em { font-style: normal; color: #64748b; margin-left: 8px; font-size: 14px; }
+}
+.effect-val { margin: 0; font-size: 14px; color: #475569; line-height: 1.5; }
+.conf-head { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+.decision-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.decision-readonly-hint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.level-card {
+  padding: 14px 16px; margin-bottom: 10px; border: 1px solid #e2e8f0; border-radius: 8px;
+  cursor: pointer; background: #fff; transition: border-color 0.2s;
+  strong { display: block; font-size: 16px; margin-bottom: 6px; }
+  p { margin: 0; font-size: 14px; color: $cockpit-text-dim; line-height: 1.55; }
+  &.active { border-color: var(--lv-color); background: #f8fafc; box-shadow: inset 3px 0 0 var(--lv-color); }
+}
+.readonly-tip, .manual-tip { font-size: 13px; color: $cockpit-text-dim; text-align: center; margin-top: 8px; }
+
+.manual-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 15px; flex-wrap: wrap;
+  .unit { font-size: 16px; font-weight: 600; color: #1890ff; }
+  .delta { font-size: 14px; color: #64748b; margin-left: auto; }
+}
+.manual-input {
+  width: 120px;
+  :deep(.el-input__inner) { font-size: 18px; font-weight: 600; text-align: center; }
+}
+.manual-exec-banner {
+  margin-bottom: 10px; padding: 10px 12px; border-radius: 8px;
+  background: #fffbeb; border: 1px solid #fcd34d; font-size: 14px; color: #92400e;
+  strong { color: #b45309; font-size: 18px; }
+}
+.manual-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.manual-action-btn { flex: 1; min-width: 0; height: 40px; font-size: 15px; }
+
+.quick-links { display: flex; gap: 12px; flex-wrap: wrap; }
+
+.sub { font-size: 14px; color: $cockpit-text-dim; margin-top: 8px; }

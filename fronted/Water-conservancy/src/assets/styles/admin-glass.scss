@@ -1,0 +1,37 @@
+// ============================================================
+// 后台 — 浅蓝简约玻璃 UI 通用 mixin
+// ============================================================
+@use './design-tokens.scss' as *;
+
+@mixin glass-surface {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(247, 251, 255, 0.92) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@mixin glass-border-bottom {
+  border-bottom: 1px solid rgba(24, 144, 255, 0.12);
+  box-shadow: 0 2px 12px rgba(24, 144, 255, 0.06);
+}
+
+@mixin btn-hover-light {
+  transition:
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.2s ease,
+    background 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    color: $color-primary !important;
+    background: #e6f4ff !important;
+    border-color: rgba(24, 144, 255, 0.35) !important;
+    box-shadow: 0 4px 14px rgba(24, 144, 255, 0.16);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) scale(0.97);
+    transition-duration: 0.08s;
+  }
+}

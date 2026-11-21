@@ -1,0 +1,1230 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "水电站阀门智能调度系统 API",
+    "version": "v2.4",
+    "description": "告警管理 / 调度决策 / 水库管理 / 边缘节点管理 / 数字孪生 / 边缘端上报 / 边缘端配置下发 / 阀门互锁"
+  },
+  "servers": [
+    { "url": "http://47.108.169.152:8089", "description": "后端部署(8089)" },
+    { "url": "http://47.108.169.152:8089", "description": "后端部署(8089)" },
+    { "url": "http://m42aa5c9.natappfree.cc", "description": "natapp内网隧道" },
+    { "url": "http://localhost:8000", "description": "本机后端" }
+  ],
+  "security": [{ "BearerAuth": [] }],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": { "type": "http", "scheme": "bearer", "bearerFormat": "JWT" }
+    },
+    "schemas": {
+      "ApiResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "description": "0=成功" },
+          "msg": { "type": "string" },
+          "data": {},
+          "success": { "type": "boolean" },
+          "trace_id": { "type": "string" }
+        }
+      },
+      "PageResult": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer" },
+          "list": { "type": "array", "items": {} }
+        }
+      },
+      "AlarmRecord": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "alarm_no": { "type": "string", "description": "告警编号" },
+          "equipment_id": { "type": "integer" },
+          "equipment_name": { "type": "string" },
+          "type": { "type": "string", "enum": ["water_level","flow","gate","power","equipment","physics_violation","comm_loss"] },
+          "level": { "type": "string", "enum": ["urgent","important","normal"] },
+          "message": { "type": "string", "description": "告警描述" },
+          "metric_value": { "type": "number" },
+          "threshold_value": { "type": "number" },
+          "status": { "type": "string", "enum": ["unhandled","acknowledged","disposed"] },
+          "created_at": { "type": "string" }
+        }
+      },
+      "EdgeNodeItem": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "code": { "type": "string" },
+          "reservoir_id": { "type": "integer" },
+          "reservoir_name": { "type": "string" },
+          "status": { "type": "string", "enum": ["online","offline","fault"] },
+          "ip": { "type": "string" },
+          "last_heartbeat": { "type": "string" },
+          "cpu_usage": { "type": "number" },
+          "memory_usage": { "type": "number" },
+          "model_version": { "type": "string" },
+          "autonomy_mode": { "type": "integer" }
+        }
+      },
+      "DispatchDecision": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "trace_id": { "type": "string" },
+          "reservoir_id": { "type": "integer" },
+          "decision_time": { "type": "string" },
+          "decision_mode": { "type": "string", "enum": ["L1","L2","L3"] },
+          "risk_rank": { "type": "integer", "enum": [1,2,3] },
+          "recommended_opening": { "type": "number" },
+          "confidence": { "type": "number" },
+          "execution_status": { "type": "string", "enum": ["pending","executed","rejected","failed"] },
+          "physics_validation": { "type": "object" }
+        }
+      },
+      "SimulationScenario": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["production","energy","fault"] },
+          "status": { "type": "string", "enum": ["active","inactive","draft"] },
+          "description": { "type": "string" },
+          "model_id": { "type": "integer" }
+        }
+      },
+      "EdgeMonitoringReport": {
+        "type": "object",
+        "required": ["reservoir_id","edge_node_id","data"],
+        "properties": {
+          "reservoir_id": { "type": "integer" },
+          "edge_node_id": { "type": "integer" },
+          "data": {
+            "type": "array",
+            "maxItems": 1000,
+            "items": {
+              "type": "object",
+              "properties": {
+                "timestamp": { "type": "string" },
+                "upstream_level": { "type": "number" },
+                "downstream_level": { "type": "number" },
+                "water_head": { "type": "number" },
+                "inflow_rate": { "type": "number" },
+                "outflow_rate": { "type": "number" },
+                "gate_opening": { "type": "number" },
+                "power_output": { "type": "number" },
+                "cumulative_energy": { "type": "number" }
+              }
+            }
+          }
+        }
+      },
+      "PhysicsGuardConfig": {
+        "type": "object",
+        "properties": {
+          "reservoir_id": { "type": "integer" },
+          "config_version": { "type": "string" },
+          "is_active": { "type": "boolean" },
+          "upstream_danger": { "type": "number" },
+          "upstream_emergency": { "type": "number" },
+          "upstream_warning": { "type": "number" },
+          "fusion_l3_confidence": { "type": "number" },
+          "fusion_l3_risk": { "type": "number" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "告警管理", "description": "§3 告警管理模块 — Wjc 负责" },
+    { "name": "调度决策", "description": "§4 调度决策模块 — Wjc 负责" },
+    { "name": "水库管理", "description": "§5 水库管理模块 — Wjc 负责" },
+    { "name": "边缘节点管理", "description": "§6 边缘节点管理模块 — Wjc 负责" },
+    { "name": "数字孪生", "description": "§9 数字孪生模块 — LX 负责" },
+    { "name": "边缘端上报", "description": "§11 边缘端数据上报接口 — LX 负责" },
+    { "name": "边缘端配置下发", "description": "§12 物理配置 + §8.3.6 模型下发 — 边缘端配置管理" },
+    { "name": "阀门互锁", "description": "§13 阀门互锁规则模块 — Wjc 负责" }
+  ],
+  "paths": {
+    "/api/v1/alarms": {
+      "get": {
+        "tags": ["告警管理"],
+        "summary": "§3.1 正式告警分页列表",
+        "description": "数据来源 alarms 表，关联 equipment 获取设备名称",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "level", "in": "query", "schema": { "type": "string", "enum": ["urgent","important","normal"] } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["unhandled","acknowledged","disposed"] } },
+          { "name": "type", "in": "query", "schema": { "type": "string" } },
+          { "name": "start_time", "in": "query", "schema": { "type": "string" } },
+          { "name": "end_time", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "ok" }
+        }
+      }
+    },
+    "/api/v1/alarms/{id}/acknowledge": {
+      "put": {
+        "tags": ["告警管理"],
+        "summary": "§3.2 确认告警",
+        "description": "更新 alarms.status = 'acknowledged'，记录确认人",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "ok" }
+        }
+      }
+    },
+    "/api/v1/alarms/{id}/dispose": {
+      "put": {
+        "tags": ["告警管理"],
+        "summary": "§3.3 处置告警",
+        "description": "更新 alarms.status = 'disposed'，写入处置备注",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["dispose_note"],
+                "properties": {
+                  "dispose_note": { "type": "string", "description": "处置备注，10~500字" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "ok" }
+        }
+      }
+    },
+    "/api/v1/alarms/exceed-logs": {
+      "get": {
+        "tags": ["告警管理"],
+        "summary": "§3.4 瞬时超限日志",
+        "description": "记录 < 30s 的瞬时超限，数据来源 alarm_exceed_logs 表",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer" } },
+          { "name": "equipment_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "metric", "in": "query", "schema": { "type": "string" } },
+          { "name": "start_time", "in": "query", "schema": { "type": "string" } },
+          { "name": "end_time", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "ok" }
+        }
+      }
+    },
+    "/api/v1/alarms/{id}": {
+      "get": {
+        "tags": ["告警管理"],
+        "summary": "告警详情（补充接口）",
+        "description": "查询单条告警完整信息。需求来源：前端WarningPage告警详情弹窗",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "返回 AlarmRecord 完整字段" } }
+      }
+    },
+    "/api/v1/dispatch/predictions": {
+      "get": {
+        "tags": ["调度决策"],
+        "summary": "§4.1 获取 LSTM 预测数据",
+        "parameters": [
+          { "name": "reservoir_id", "in": "query", "required": true, "schema": { "type": "integer" } },
+          { "name": "predict_term", "in": "query", "required": true, "schema": { "type": "integer", "enum": [1,2,3], "description": "1=1h 2=3h 3=6h" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/dispatch/decisions": {
+      "get": {
+        "tags": ["调度决策"],
+        "summary": "§4.3 调度决策历史列表",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer" } },
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "decision_mode", "in": "query", "schema": { "type": "string", "enum": ["L1","L2","L3"] } },
+          { "name": "execution_status", "in": "query", "schema": { "type": "string", "enum": ["pending","executed","rejected","failed"] } },
+          { "name": "start_time", "in": "query", "schema": { "type": "string" } },
+          { "name": "end_time", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/dispatch/decisions/{id}": {
+      "get": {
+        "tags": ["调度决策"],
+        "summary": "§4.2 AI 决策详情",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/dispatch/execute": {
+      "post": {
+        "tags": ["调度决策"],
+        "summary": "§4.4 人工下发调度指令",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reservoir_id","target_opening"],
+                "properties": {
+                  "reservoir_id": { "type": "integer" },
+                  "decision_id": { "type": "integer", "description": "关联AI决策ID，纯手动则不传" },
+                  "target_opening": { "type": "number", "description": "目标阀门开度(%)" },
+                  "operate_note": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "返回 command_id" } }
+      }
+    },
+    "/api/v1/dispatch/commands/{command_id}/trace": {
+      "get": {
+        "tags": ["调度决策"],
+        "summary": "§4.5 指令全链路追踪",
+        "description": "查询 云端→边缘→PLC 完整链路",
+        "parameters": [
+          { "name": "command_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/dispatch/gate-actions": {
+      "get": {
+        "tags": ["调度决策"],
+        "summary": "§4.6 阀门动作历史",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer" } },
+          { "name": "equipment_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "action_type", "in": "query", "schema": { "type": "string", "enum": ["open","close","maintain","emergency"] } },
+          { "name": "start_time", "in": "query", "schema": { "type": "string" } },
+          { "name": "end_time", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/dispatch/emergency-stop": {
+      "post": {
+        "tags": ["调度决策"],
+        "summary": "§4.7 全局急停",
+        "description": "最高优先级指令，写入 emergency_stops、control_commands 表",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reservoir_id","stop_reason"],
+                "properties": {
+                  "reservoir_id": { "type": "integer" },
+                  "stop_reason": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "返回 stop_log_id + command_id" } }
+      }
+    },
+    "/api/v1/dispatch/stop-recover/{id}": {
+      "put": {
+        "tags": ["调度决策"],
+        "summary": "§4.8 恢复阀门自动模式",
+        "description": "更新 emergency_stops.recover_time，解除急停锁定",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/dispatch/emergency-stops": {
+      "get": {
+        "tags": ["调度决策"],
+        "summary": "§4.9 急停日志列表",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer" } },
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "start_time", "in": "query", "schema": { "type": "string" } },
+          { "name": "end_time", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/reservoirs": {
+      "get": {
+        "tags": ["水库管理"],
+        "summary": "§5.1 水库列表",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["active","inactive","maintenance"] } },
+          { "name": "keyword", "in": "query", "schema": { "type": "string", "description": "名称/编码关键字搜索" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      },
+      "post": {
+        "tags": ["水库管理"],
+        "summary": "§5.3 新增水库",
+        "description": "role.admin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name","code","type","dead_water_level","normal_water_level","flood_limit_level","design_flood_level","check_flood_level","total_capacity","ecological_flow"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "code": { "type": "string", "description": "水库编码，唯一" },
+                  "type": { "type": "string", "enum": ["daily_regulation","seasonal","multi_year"] },
+                  "dead_water_level": { "type": "number" },
+                  "normal_water_level": { "type": "number" },
+                  "flood_limit_level": { "type": "number" },
+                  "design_flood_level": { "type": "number" },
+                  "check_flood_level": { "type": "number" },
+                  "total_capacity": { "type": "number" },
+                  "installed_capacity": { "type": "number" },
+                  "ecological_flow": { "type": "number" },
+                  "location_lat": { "type": "number" },
+                  "location_lng": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/reservoirs/{id}": {
+      "get": {
+        "tags": ["水库管理"],
+        "summary": "§5.2 水库详情",
+        "description": "返回 reservoirs 表全部字段 + 关联节点数 + 设备数。注意：无 v1 前缀",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/reservoirs/{id}": {
+      "put": {
+        "tags": ["水库管理"],
+        "summary": "§5.4 更新水库",
+        "description": "role.admin。全部字段可选",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      },
+      "delete": {
+        "tags": ["水库管理"],
+        "summary": "§5.5 删除水库",
+        "description": "软删除，role.admin。关联有设备/节点时返回 30006",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/edge-nodes": {
+      "get": {
+        "tags": ["边缘节点管理"],
+        "summary": "§6.1 边缘节点列表",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer" } },
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["online","offline","fault"] } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      },
+      "post": {
+        "tags": ["边缘节点管理"],
+        "summary": "§6.3 注册边缘节点",
+        "description": "role.admin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name","code","reservoir_id"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "code": { "type": "string", "description": "节点编号，唯一" },
+                  "reservoir_id": { "type": "integer" },
+                  "location": { "type": "string" },
+                  "ip": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/edge-nodes/{id}": {
+      "get": {
+        "tags": ["边缘节点管理"],
+        "summary": "§6.2 边缘节点详情",
+        "description": "含关联设备列表",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      },
+      "delete": {
+        "tags": ["边缘节点管理"],
+        "summary": "§6.5 删除边缘节点",
+        "description": "软删除，role.admin；关联有设备时返回 30006",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/edge-nodes/{id}/heartbeat": {
+      "post": {
+        "tags": ["边缘节点管理"],
+        "summary": "§6.4 心跳上报",
+        "description": "边缘端每30s调用一次，更新运行状态",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": { "type": "string", "enum": ["online","fault"] },
+                  "cpu_usage": { "type": "number" },
+                  "memory_usage": { "type": "number" },
+                  "disk_usage": { "type": "number" },
+                  "plc_status": { "type": "string" },
+                  "autonomy_mode": { "type": "integer" },
+                  "cache_size": { "type": "integer" },
+                  "model_version": { "type": "string" },
+                  "threshold_version": { "type": "string" },
+                  "weight_version": { "type": "string" },
+                  "physics_config_version": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/scenarios": {
+      "get": {
+        "tags": ["数字孪生"],
+        "summary": "§9.1 获取仿真场景列表",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer" } },
+          { "name": "type", "in": "query", "schema": { "type": "string", "enum": ["production","energy","fault"] } },
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["active","inactive","draft"] } },
+          { "name": "keyword", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/simulation/scenarios": {
+      "post": {
+        "tags": ["数字孪生"],
+        "summary": "§9.2 创建仿真场景",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name","type"],
+                "properties": {
+                  "name": { "type": "string", "maxLength": 100 },
+                  "type": { "type": "string", "enum": ["production","energy","fault"] },
+                  "description": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active","inactive","draft"], "default": "draft" },
+                  "model_id": { "type": "integer" },
+                  "scenario_config": { "type": "object" },
+                  "duration": { "type": "integer", "default": 3600 },
+                  "speed": { "type": "number", "minimum": 0.1, "maximum": 10, "default": 1 }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/simulation/scenarios/{id}": {
+      "put": {
+        "tags": ["数字孪生"],
+        "summary": "§9.3 更新仿真场景",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "type": { "type": "string" },
+                  "description": { "type": "string" },
+                  "status": { "type": "string" },
+                  "model_id": { "type": "integer" },
+                  "scenario_config": { "type": "object" },
+                  "duration": { "type": "integer" },
+                  "speed": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      },
+      "delete": {
+        "tags": ["数字孪生"],
+        "summary": "§9.4 删除仿真场景",
+        "description": "usage_count > 0 时拒绝删除",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/start": {
+      "post": {
+        "tags": ["数字孪生"],
+        "summary": "§9.5 启动仿真",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["scenario_id","model_id","reservoir_id"],
+                "properties": {
+                  "scenario_id": { "type": "integer" },
+                  "model_id": { "type": "integer" },
+                  "reservoir_id": { "type": "integer" },
+                  "duration": { "type": "integer", "default": 3600 },
+                  "speed": { "type": "number", "maximum": 10, "default": 1 },
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "initial_water_level": { "type": "number" },
+                      "inflow_rate": { "type": "number" },
+                      "gate_opening": { "type": "number" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "返回 simulation_id" } }
+      }
+    },
+    "/api/simulation/{id}/result": {
+      "get": {
+        "tags": ["数字孪生"],
+        "summary": "§9.7 获取仿真结果",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "metric_type", "in": "query", "schema": { "type": "string" } },
+          { "name": "aggregation", "in": "query", "schema": { "type": "string", "enum": ["raw","avg","max","min"] } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/{id}/report": {
+      "post": {
+        "tags": ["数字孪生"],
+        "summary": "§9.8 生成仿真报告",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["report_type"],
+                "properties": {
+                  "report_type": { "type": "string", "enum": ["full","summary","anomaly"] },
+                  "format": { "type": "string", "enum": ["pdf","html"], "default": "pdf" },
+                  "include_charts": { "type": "boolean", "default": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "返回 report_id" } }
+      }
+    },
+    "/api/simulation/incidents": {
+      "get": {
+        "tags": ["数字孪生"],
+        "summary": "§9.9 故障复盘列表",
+        "parameters": [
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer" } },
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "severity", "in": "query", "schema": { "type": "string", "enum": ["low","medium","high","critical"] } },
+          { "name": "start_time", "in": "query", "schema": { "type": "string" } },
+          { "name": "end_time", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/import-incident": {
+      "post": {
+        "tags": ["数字孪生"],
+        "summary": "§9.10 导入故障进行仿真复盘",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["incident_name","severity","equipment_id","occurred_at","raw_data"],
+                "properties": {
+                  "incident_name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "severity": { "type": "string", "enum": ["low","medium","high","critical"] },
+                  "equipment_id": { "type": "integer" },
+                  "occurred_at": { "type": "string" },
+                  "resolved_at": { "type": "string" },
+                  "raw_data": { "type": "object" },
+                  "scenario_config": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "auto_run": { "type": "boolean", "default": false }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/pause": {
+      "post": {
+        "tags": ["数字孪生"],
+        "summary": "暂停仿真（补充接口）",
+        "description": "暂停正在运行的仿真任务。需求来源：项目汇报§图6 开始/暂停/重置",
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/resume": {
+      "post": {
+        "tags": ["数字孪生"],
+        "summary": "恢复仿真（补充接口）",
+        "description": "恢复已暂停的仿真任务",
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/reset": {
+      "post": {
+        "tags": ["数字孪生"],
+        "summary": "重置仿真（补充接口）",
+        "description": "重置仿真到初始状态",
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/gate": {
+      "put": {
+        "tags": ["数字孪生"],
+        "summary": "仿真中调节阀门开度（补充接口）",
+        "description": "仿真运行中手动调整阀门开度。需求来源：项目汇报§图6 开度滑块控制",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["gate_opening"],
+                "properties": {
+                  "gate_opening": { "type": "integer", "minimum": 0, "maximum": 100, "description": "阀门开度(%)" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/simulation/training": {
+      "post": {
+        "tags": ["数字孪生"],
+        "summary": "启动模型训练（预留）",
+        "description": "需求来源：项目汇报§图6 模型训练Tab预留。后续实现",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "model_id": { "type": "integer" },
+                  "epochs": { "type": "integer", "default": 100 },
+                  "learning_rate": { "type": "number", "default": 0.001 },
+                  "batch_size": { "type": "integer", "default": 32 },
+                  "data_source": { "type": "string", "enum": ["history","csv"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "返回 task_id" } }
+      }
+    },
+    "/api/simulation/training/{task_id}": {
+      "get": {
+        "tags": ["数字孪生"],
+        "summary": "查询训练进度（预留）",
+        "description": "需求来源：项目汇报§图6 模型训练Tab预留。后续实现",
+        "parameters": [
+          { "name": "task_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "返回 progress/loss_curve/status" } }
+      }
+    },
+    "/api/edge/monitoring-data": {
+      "post": {
+        "tags": ["边缘端上报"],
+        "summary": "§11.1 上报监测数据",
+        "description": "边缘端批量写入 monitoring_data 表，单次最多1000条。认证：EdgeToken",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/EdgeMonitoringReport" }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/edge/dispatch-decisions": {
+      "post": {
+        "tags": ["边缘端上报"],
+        "summary": "§11.2 上报调度决策结果",
+        "description": "边缘端写入 dispatch_decisions 表，含 LSTM预测+DQN决策+物理校验",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["trace_id","reservoir_id","edge_node_id","prediction_id","decision_time","decision_mode","risk_rank","upstream_level","downstream_level","inflow_rate","current_opening","lstm_predictions","recommended_opening","confidence","factors","alternatives","weights_used"],
+                "properties": {
+                  "trace_id": { "type": "string" },
+                  "reservoir_id": { "type": "integer" },
+                  "edge_node_id": { "type": "integer" },
+                  "prediction_id": { "type": "integer" },
+                  "decision_time": { "type": "string" },
+                  "decision_mode": { "type": "string", "enum": ["L1","L2","L3"] },
+                  "risk_rank": { "type": "integer", "enum": [1,2,3] },
+                  "upstream_level": { "type": "number" },
+                  "downstream_level": { "type": "number" },
+                  "inflow_rate": { "type": "number" },
+                  "current_opening": { "type": "number" },
+                  "lstm_predictions": { "type": "object" },
+                  "recommended_opening": { "type": "number" },
+                  "confidence": { "type": "number", "minimum": 0, "maximum": 100 },
+                  "factors": { "type": "array", "items": { "type": "object" } },
+                  "alternatives": { "type": "array", "items": { "type": "object" } },
+                  "weights_used": { "type": "object" },
+                  "reward_score": { "type": "number" },
+                  "physics_validation": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/edge/control-commands/{command_id}/feedback": {
+      "put": {
+        "tags": ["边缘端上报"],
+        "summary": "§11.3 上报执行回执",
+        "description": "更新 control_commands 执行状态，写入 gate_actions 表",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          { "name": "command_id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status","executed_at"],
+                "properties": {
+                  "status": { "type": "string", "enum": ["executed","failed"] },
+                  "executed_at": { "type": "string" },
+                  "actual_opening": { "type": "number" },
+                  "duration_ms": { "type": "integer" },
+                  "actuator_current": { "type": "number" },
+                  "is_smoothed": { "type": "boolean" },
+                  "execution_result": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/edge/alarms": {
+      "post": {
+        "tags": ["边缘端上报"],
+        "summary": "§11.4 上报告警",
+        "description": "边缘端写入 alarms 表",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reservoir_id","edge_node_id","equipment_id","type","level","message","metric_value","threshold_value","duration","exceed_start"],
+                "properties": {
+                  "reservoir_id": { "type": "integer" },
+                  "edge_node_id": { "type": "integer" },
+                  "equipment_id": { "type": "integer" },
+                  "type": { "type": "string", "enum": ["water_level","flow","gate","power","equipment","physics_violation","comm_loss"] },
+                  "level": { "type": "string", "enum": ["urgent","important","normal"] },
+                  "message": { "type": "string" },
+                  "threshold_id": { "type": "integer" },
+                  "metric_value": { "type": "number" },
+                  "threshold_value": { "type": "number" },
+                  "duration": { "type": "integer" },
+                  "exceed_start": { "type": "string" },
+                  "trace_id": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/edge/physics-config/{reservoir_id}": {
+      "get": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.1 边缘端拉取物理参数",
+        "description": "边缘端启动时/定时拉取（建议30分钟）。认证：EdgeToken。包含 §12.10 物理防护配置",
+        "parameters": [
+          { "name": "reservoir_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "返回 level_area_map + validation + physics_guard" } }
+      }
+    },
+    "/api/admin/physical-parameters": {
+      "get": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.2 物理参数管理列表（后台）",
+        "description": "role.admin",
+        "parameters": [
+          { "name": "reservoir_id", "in": "query", "required": true, "schema": { "type": "integer" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      },
+      "post": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.3 新增/更新物理参数（后台）",
+        "description": "UPSERT 逻辑，role.admin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reservoir_id","water_level","surface_area"],
+                "properties": {
+                  "reservoir_id": { "type": "integer" },
+                  "water_level": { "type": "number" },
+                  "surface_area": { "type": "number" },
+                  "max_discharge": { "type": "number" },
+                  "remark": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/admin/physical-parameters/{id}": {
+      "delete": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.4 删除物理参数（后台）",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/admin/physics-guard": {
+      "get": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.5 获取物理防护配置（后台）",
+        "parameters": [
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/admin/physics-guard/{id}": {
+      "put": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.6 更新物理防护配置（后台）",
+        "description": "自动递增版本号，旧版本标记 inactive",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "upstream_danger": { "type": "number" },
+                  "upstream_emergency": { "type": "number" },
+                  "upstream_warning": { "type": "number" },
+                  "upstream_min": { "type": "number" },
+                  "ideal_min": { "type": "number" },
+                  "ideal_max": { "type": "number" },
+                  "downstream_danger": { "type": "number" },
+                  "downstream_max": { "type": "number" },
+                  "downstream_min": { "type": "number" },
+                  "eco_flow_min": { "type": "number" },
+                  "reservoir_area": { "type": "integer" },
+                  "max_level_change_per_hour": { "type": "number" },
+                  "shadow_lookahead_steps": { "type": "integer" },
+                  "shadow_danger_offset": { "type": "number" },
+                  "deadband_percent": { "type": "number" },
+                  "max_rate_per_hour": { "type": "number" },
+                  "fusion_l3_confidence": { "type": "number" },
+                  "fusion_l3_risk": { "type": "number" },
+                  "fusion_l2_confidence": { "type": "number" },
+                  "fusion_l2_risk": { "type": "number" },
+                  "gate_max_discharge": { "type": "array", "items": { "type": "number" } },
+                  "description": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/admin/physics-guard/history": {
+      "get": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.7 物理防护配置变更历史（后台）",
+        "parameters": [
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer", "default": 1 } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/admin/physics-guard/{id}/rollback": {
+      "post": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.8 回滚物理防护配置（后台）",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/admin/physics-guard/clone": {
+      "post": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§12.9 跨水库复制物理防护配置（后台）",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["from_reservoir_id","to_reservoir_id"],
+                "properties": {
+                  "from_reservoir_id": { "type": "integer" },
+                  "to_reservoir_id": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/settings/models/{id}/deploy": {
+      "post": {
+        "tags": ["边缘端配置下发"],
+        "summary": "§8.3.6 下发模型至边缘端",
+        "description": "写入 settings_model_deployments 表，role.admin",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["edge_node_ids"],
+                "properties": {
+                  "edge_node_ids": { "type": "array", "items": { "type": "integer" } },
+                  "strategy": { "type": "string", "enum": ["immediate","gradual","scheduled"], "default": "immediate" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/edge/gate-interlock-logs": {
+      "post": {
+        "tags": ["边缘端上报"],
+        "summary": "§13.6 边缘端上报互锁触发事件",
+        "description": "认证方式：EdgeToken HMAC-SHA256",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["reservoir_id","rule_id","gate1_opening_before","gate2_opening_before","gate3_opening_before","upstream_level","downstream_level","inflow_rate","gate1_opening_after","gate2_opening_after","gate3_opening_after"],
+                "properties": {
+                  "reservoir_id": { "type": "integer" },
+                  "rule_id": { "type": "integer" },
+                  "decision_id": { "type": "integer" },
+                  "trigger_time": { "type": "string" },
+                  "gate1_opening_before": { "type": "number" },
+                  "gate2_opening_before": { "type": "number" },
+                  "gate3_opening_before": { "type": "number" },
+                  "upstream_level": { "type": "number" },
+                  "downstream_level": { "type": "number" },
+                  "inflow_rate": { "type": "number" },
+                  "gate1_opening_after": { "type": "number" },
+                  "gate2_opening_after": { "type": "number" },
+                  "gate3_opening_after": { "type": "number" },
+                  "action_detail": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/settings/gate-interlock/rules": {
+      "get": {
+        "tags": ["阀门互锁"],
+        "summary": "§13.1 互锁规则列表",
+        "description": "返回全局默认 + 指定水库专属规则，按 priority 排序",
+        "parameters": [
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer" }, "description": "不传仅返回全局默认规则" }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/settings/gate-interlock/rules/{id}": {
+      "put": {
+        "tags": ["阀门互锁"],
+        "summary": "§13.2 更新互锁规则",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "rule_name": { "type": "string" },
+                  "description": { "type": "string" },
+                  "enabled": { "type": "boolean" },
+                  "priority": { "type": "integer" },
+                  "trigger_conditions": { "type": "object" },
+                  "constraint_action": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/settings/gate-interlock/rules/{id}/toggle": {
+      "post": {
+        "tags": ["阀门互锁"],
+        "summary": "§13.3 启用/禁用规则",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["enabled"],
+                "properties": {
+                  "enabled": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/settings/gate-interlock/logs": {
+      "get": {
+        "tags": ["阀门互锁"],
+        "summary": "§13.4 互锁触发日志",
+        "description": "查询互锁规则触发历史，支持按水库/规则/时间筛选",
+        "parameters": [
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "rule_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "start_time", "in": "query", "schema": { "type": "string" } },
+          { "name": "end_time", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "page_size", "in": "query", "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": { "200": { "description": "ok" } }
+      }
+    },
+    "/api/v1/settings/gate-interlock/stats": {
+      "get": {
+        "tags": ["阀门互锁"],
+        "summary": "§13.5 互锁触发统计",
+        "parameters": [
+          { "name": "reservoir_id", "in": "query", "schema": { "type": "integer" } },
+          { "name": "days", "in": "query", "schema": { "type": "integer", "default": 7 } }
+        ],
+        "responses": { "200": { "description": "返回各规则触发次数" } }
+      }
+    }
+  }
+}

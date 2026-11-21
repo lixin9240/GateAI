@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>智慧水电站数字孪生可视化系统</title>
+<style>
+  :root { --bg: #060d16; --accent: #00d4ff; --accent2: #1890ff; --text: #c8ddf0; --text-dim: #7a9ab8; --danger: #ff4757; --warn: #ffa502; --ok: #2ed573; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #040a12; overflow: hidden; font-family: 'Microsoft YaHei','PingFang SC',sans-serif; width: 100vw; height: 100vh; user-select: none; }
+  #app { position: relative; width: 100%; height: 100%; }
+  canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block; }
+  #webgl { z-index: 1; }
+  #hud { z-index: 2; pointer-events: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="webgl"></canvas>
+  <canvas id="hud"></canvas>
+</div>
+
+<script type="module">
+import * as THREE from 'https://esm.sh/three@0.170.0';
+import { OrbitControls } from 'https://esm.sh/three@0.170.0/examples/jsm/controls/OrbitControls.js';
+import { EffectComposer } from 'https://esm.sh/three@0.170.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://esm.sh/three@0.170.0/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://esm.sh/three@0.170.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'https://esm.sh/three@0.170.0/examples/jsm/postprocessing/OutputPass.js';
+
+// ===== DOM REFS =====
+const webglCanvas = document.getElementById('webgl');
+const hudCanvas = document.getElementById('hud');
+const hudCtx = hudCanvas.getContext('2d');
+const appDiv = document.getElementById('app');
+
+// ===== 1. DATA LAYER =====
+const XIANGJIABA = { name:'向家坝水电站',river:'金沙江',crestElevation:384,normalPoolLevel:380,deadLevel:374,floodLimitLevel:380,warningLevel:381.5,downstreamNormalLevel:278.42,normalInflow:1850 };
+
+const SENSOR_DEFS = [
+  {id:'s01',name:'上游水位计 #1',x:-22,y:0,z:8,type:'hydrology',baseVal:380,unit:'m',range:[374,384]},
+  {id:'s02',name:'上游水位计 #2',x:-18,y:0,z:-8,type:'hydrology',baseVal:379.8,unit:'m',range:[374,384]},
+  {id:'s03',name:'下游水位计',x:28,y:1,z:2,type:'hydrology',baseVal:278.5,unit:'m',range:[277,280]},
+  {id:'s04',name:'入库流量计',x:-24,y:2,z:12,type:'flow',baseVal:1850,unit:'m³/s',range:[500,5000]},
+  {id:'s05',name:'1号阀门开度',x:6.2,y:16,z:-15.75,type:'gate',baseVal:45,unit:'%',range:[0,100]},
+  {id:'s06',name:'2号阀门开度',x:6.2,y:16,z:-8.75,type:'gate',baseVal:42,unit:'%',range:[0,100]},
+  {id:'s07',name:'3号阀门开度',x:6.2,y:16,z:-1.75,type:'gate',baseVal:48,unit:'%',range:[0,100]},
+  {id:'s08',name:'4号阀门开度',x:6.2,y:16,z:5.25,type:'gate',baseVal:44,unit:'%',range:[0,100]},
+  {id:'s09',name:'5号阀门开度',x:6.2,y:16,z:12.25,type:'gate',baseVal:46,unit:'%',range:[0,100]},
+  {id:'s10',name:'坝体应力监测',x:-2,y:15,z:0,type:'structural',baseVal:12.5,unit:'MPa',range:[8,25]},
+  {id:'s11',name:'坝体位移监测',x:2,y:10,z:-10,type:'structural',baseVal:1.2,unit:'mm',range:[0.5,5]},
+  {id:'s12',name:'库区渗流计',x:-10,y:2,z:15,type:'structural',baseVal:0.08,unit:'L/s',range:[0.02,0.5]},
+  {id:'s13',name:'厂房振动监测',x:-14,y:6,z:-14,type:'structural',baseVal:0.15,unit:'mm/s',range:[0.05,2]},
+  {id:'s14',name:'水质监测站 A',x:-20,y:0.5,z:18,type:'waterQuality',baseVal:7.2,unit:'PH',range:[6.5,8.5]},
+  {id:'s15',name:'水质监测站 B',x:-12,y:0.5,z:-18,type:'waterQuality',baseVal:7.1,unit:'PH',range:[6.5,8.5]},
+  {id:'s16',name:'雨量站',x:-30,y:8,z:20,type:'weather',baseVal:0,unit:'mm/h',range:[0,80]},
+  {id:'s17',name:'风速仪',x:-28,y:9,z:18,type:'weather',baseVal:3.5,unit:'m/s',range:[0,30]},
+  {id:'s18',name:'温度传感器',x:5,y:24,z:0,type:'weather',baseVal:22,unit:'°C',range:[-5,45]},
+  {id:'s19',name:'左岸边坡监测',x:-35,y:6,z:-18,type:'geological',baseVal:0.5,unit:'mm/day',range:[0.1,5]},
+  {id:'s20',name:'右岸边坡监测',x:30,y:5,z:-18,type:'geological',baseVal:0.3,unit:'mm/day',range:[0.1,5]},
+  {id:'s21',name:'泄洪道超声波',x:12,y:3,z:0,type:'flow',baseVal:0,unit:'m/s',range:[0,25]},
+  {id:'s22',name:'机组1号振动',x:-16,y:5,z:-16,type:'structural',baseVal:0.22,unit:'mm/s',range:[0.05,2]},
+  {id:'s23',name:'变压器温度',x:-14,y:4,z:-18,type:'electrical',baseVal:65,unit:'°C',range:[40,120]},
+  {id:'s24',name:'GIS局放监测',x:-10,y:3,z:-20,type:'electrical',baseVal:8,unit:'pC',range:[2,50]},
+];
+
+let sensorStates = SENSOR_DEFS.map(s=>({...s,value:s.baseVal,alert:false,alertLevel:0}));
+let systemUptime = 0;
+let anomalyCount = 0;
+
+function updateSensorData(elapsed){
+  const t = elapsed * 0.001;
+  sensorStates.forEach((s,i)=>{
+    const noise = (Math.sin(t*0.7+i*1.3)*0.5 + Math.cos(t*1.1+i*0.6)*0.3 + (Math.random()-0.5)*0.4);
+    const range = s.range[1]-s.range[0];
+    s.value = +(s.baseVal + noise*range*0.025).toFixed(2);
+    s.alert=false; s.alertLevel=0;
+  });
+  // Inject anomalies periodically
+  if(Math.sin(t*0.13)>0.72){ let s=sensorStates[5]; s.value=92; s.alert=true; s.alertLevel=2; }
+  if(Math.sin(t*0.11+2)>0.75){ let s=sensorStates[22]; s.value=1.75; s.alert=true; s.alertLevel=2; }
+  if(Math.sin(t*0.09+1)>0.8){ let s=sensorStates[10]; s.value=4.2; s.alert=true; s.alertLevel=1; }
+  if(Math.sin(t*0.14+3)>0.78){ let s=sensorStates[23]; s.value=108; s.alert=true; s.alertLevel=2; }
+  anomalyCount = sensorStates.filter(s=>s.alert).length;
+  systemUptime = Math.floor(elapsed*0.001);
+}
+
+// ===== 2. THREE.JS INIT =====
+const renderer = new THREE.WebGLRenderer({canvas:webglCanvas,antialias:true,alpha:false,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.85;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.localClippingEnabled = true;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060d16);
+scene.fog = new THREE.FogExp2(0x081420, 0.0014);
+
+const camera = new THREE.PerspectiveCamera(40, 2, 0.5, 500);
+camera.position.set(45, 38, 48);
+camera.lookAt(0, 12, 0);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(2, 14, 0);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI / 2.1;
+controls.minDistance = 15; controls.maxDistance = 100;
+controls.autoRotate = true; controls.autoRotateSpeed = 0.12;
+controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+controls.update();
+
+// ===== 3. LIGHTS =====
+scene.add(new THREE.AmbientLight(0x2a4058, 0.55));
+scene.add(new THREE.HemisphereLight(0x4a6880, 0x1a2830, 0.48));
+const sunLight = new THREE.DirectionalLight(0xd0dce8, 0.55);
+sunLight.position.set(60,80,40); sunLight.castShadow=true;
+sunLight.shadow.mapSize.set(2048,2048); sunLight.shadow.bias=-0.0005;
+sunLight.shadow.camera.near=10; sunLight.shadow.camera.far=250;
+sunLight.shadow.camera.left=-80; sunLight.shadow.camera.right=80;
+sunLight.shadow.camera.top=80; sunLight.shadow.camera.bottom=-80;
+scene.add(sunLight);
+const fillLight = new THREE.DirectionalLight(0x8899aa, 0.28);
+fillLight.position.set(-40,25,-30); scene.add(fillLight);
+
+// ===== 4. TERRAIN =====
+function terrainHeight(x,z){
+  const rx=(x+8)*0.045, rz=z*0.05;
+  const r1=Math.sin(rx*1.4+1.2)*Math.cos(rz*0.7)*12;
+  const r2=Math.cos(rx*0.9-0.5)*Math.sin(rz*1.1+0.8)*9;
+  const valley = -Math.exp(-z*z*0.006)*3.5 - Math.exp(-(z-8)*(z-8)*0.008)*2;
+  const micro = Math.sin(rx*3.5)*Math.cos(rz*2.8)*1.2 + Math.sin(rx*7+rz*5)*0.6;
+  let h = 4+r1+r2+valley+micro;
+  if(x<-4 && Math.abs(z)<18) h=Math.min(h,3);
+  if(Math.abs(x)<10 && Math.abs(z)<26) h=Math.max(0, h-Math.max(0,8-Math.abs(x))*0.8);
+  return Math.max(-4,h);
+}
+
+const terrainGeo = new THREE.PlaneGeometry(110, 70, 180, 120);
+terrainGeo.rotateX(-Math.PI/2);
+const tPos = terrainGeo.attributes.position;
+for(let i=0;i<tPos.count;i++){
+  tPos.setZ(i, terrainHeight(tPos.getX(i), tPos.getY(i)));
+}
+terrainGeo.computeVertexNormals();
+terrainGeo.translate(0,-3,0);
+
+// Clip plane: cut away z > 8
+const clipPlanes = [new THREE.Plane(new THREE.Vector3(0,0,-1), 8)];
+const terrainTex = createTerrainTexture(1024);
+const terrainMat = new THREE.MeshStandardMaterial({
+  map:terrainTex.map, roughness:0.88, metalness:0.02, color:new THREE.Color(0x6a8068),
+  side:THREE.DoubleSide, clippingPlanes:clipPlanes, clipShadows:true
+});
+const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+terrainMesh.position.y=-2; terrainMesh.receiveShadow=true; terrainMesh.castShadow=true;
+terrainMesh.renderOrder=-1; terrainMesh.name='DEM地形';
+scene.add(terrainMesh);
+
+// Terrain edges
+const tEdgesGeo = new THREE.EdgesGeometry(terrainGeo, 15);
+const tEdges = new THREE.LineSegments(tEdgesGeo,
+  new THREE.LineBasicMaterial({color:0x00bbdd,transparent:true,opacity:0.3,depthTest:true}));
+tEdges.position.copy(terrainMesh.position); tEdges.renderOrder=1;
+scene.add(tEdges);
+
+// ===== 5. CROSS-SECTION CAP =====
+const capMat = new THREE.ShaderMaterial({
+  uniforms:{uTime:{value:0}},
+  vertexShader:`varying vec3 vPos;varying vec2 vUv;void main(){vec4 wp=modelMatrix*vec4(position,1.0);vPos=wp.xyz;vUv=uv;gl_Position=projectionMatrix*viewMatrix*wp;}`,
+  fragmentShader:`varying vec3 vPos;varying vec2 vUv;uniform float uTime;
+    float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+    float noise(vec2 p){vec2 i=floor(p);vec2 f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
+    void main(){float h=vPos.y;float n=noise(vPos.xz*1.5)*0.5+noise(vPos.xz*3.0)*0.3+noise(vPos.xz*7.0)*0.15;vec3 col;
+      if(h>7.5)col=mix(vec3(0.42,0.28,0.15),vec3(0.55,0.40,0.22),n);
+      else if(h>4.0)col=mix(vec3(0.50,0.38,0.25),vec3(0.60,0.48,0.32),n);
+      else if(h>1.5)col=mix(vec3(0.58,0.50,0.38),vec3(0.65,0.55,0.42),n);
+      else if(h>-1.0)col=mix(vec3(0.48,0.44,0.40),vec3(0.55,0.50,0.45),n);
+      else col=mix(vec3(0.35,0.35,0.38),vec3(0.42,0.40,0.42),n);
+      gl_FragColor=vec4(col,1.0);}`,
+  side:THREE.DoubleSide
+});
+const capGeo = new THREE.PlaneGeometry(90,18,1,30);
+const capMesh = new THREE.Mesh(capGeo, capMat);
+capMesh.rotation.y=-Math.PI/2; capMesh.position.set(0,-0.5,7.9);
+capMesh.receiveShadow=true;
+scene.add(capMesh);
+
+// Cyan outline around cap
+const capEdgeGeo = new THREE.EdgesGeometry(capGeo);
+const capEdgeLine = new THREE.LineSegments(capEdgeGeo,
+  new THREE.LineBasicMaterial({color:0x00ddff,transparent:true,opacity:0.9,depthTest:true}));
+capEdgeLine.rotation.y=-Math.PI/2; capEdgeLine.position.copy(capMesh.position);
+scene.add(capEdgeLine);
+
+// Geological layer boxes
+const layerColors=[0x6B5340,0x8B7355,0x9B8B6B,0x6B6B72];
+for(let i=0;i<4;i++){
+  const box=new THREE.Mesh(new THREE.BoxGeometry(0.3,2.8,52),
+    new THREE.MeshStandardMaterial({color:layerColors[i],roughness:0.9,metalness:0.05}));
+  box.position.set(7.8,6.5-i*3,0); box.receiveShadow=true; box.name='geoLayer_'+i;
+  scene.add(box);
+}
+// Layer boundary lines
+for(let i=0;i<5;i++){
+  const ly=8.2-i*2.9;
+  const lnGeo=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(7.85,ly,-25),new THREE.Vector3(7.85,ly,25)]);
+  scene.add(new THREE.Line(lnGeo,
+    new THREE.LineBasicMaterial({color:i===0?0x00ddff:0x338899,transparent:true,opacity:0.6,depthTest:true})));
+}
+
+// ===== 6. DAM =====
+const damGroup = new THREE.Group();
+damGroup.name='向家坝大坝';
+const damGeo = new THREE.BoxGeometry(14,28,52,12,28,24);
+const dPos=damGeo.attributes.position;
+for(let i=0;i<dPos.count;i++){
+  dPos.setX(i,dPos.getX(i)+Math.sin(dPos.getX(i)*1.8+dPos.getY(i)*1.4)*0.06);
+  dPos.setZ(i,dPos.getZ(i)+Math.cos(dPos.getX(i)*2.2+dPos.getY(i)*1.1)*0.04);
+}
+damGeo.computeVertexNormals();
+const damBody = new THREE.Mesh(damGeo,
+  new THREE.MeshStandardMaterial({color:0xb8c0c8,roughness:0.72,metalness:0.10}));
+damBody.position.set(-2,14,0); damBody.castShadow=true; damBody.receiveShadow=true;
+damBody.name='向家坝大坝';
+damGroup.add(damBody);
+
+// Piers + gates
+const pierZs=[-18,-10.5,-3,4.5,12,19.5];
+const pierMat=new THREE.MeshStandardMaterial({color:0xa0a8b0,roughness:0.68,metalness:0.15});
+const steelMat=new THREE.MeshStandardMaterial({color:0x889098,roughness:0.35,metalness:0.88});
+const darkSteel=new THREE.MeshStandardMaterial({color:0x667078,roughness:0.3,metalness:0.9});
+pierZs.forEach((z,i)=>{
+  const pier=new THREE.Mesh(new THREE.BoxGeometry(2.2,26,3.5,4,12,3),pierMat);
+  pier.position.set(5.8,13.5,z); pier.castShadow=true; pier.receiveShadow=true; pier.name='pier_'+i;
+  damGroup.add(pier);
+  if(i<pierZs.length-1){
+    const midZ=(z+pierZs[i+1])/2;
+    const bay=new THREE.Group(); bay.name=(i+1)+'号阀门';
+    const frame=new THREE.Mesh(new THREE.BoxGeometry(0.6,9,3.1),steelMat);
+    frame.position.set(6.6,9,midZ); frame.castShadow=true; bay.add(frame);
+    const gate=new THREE.Mesh(new THREE.BoxGeometry(0.45,8,2.7),steelMat);
+    gate.name='gateLeaf_'+i; gate.position.set(6.6,5.5,midZ); gate.castShadow=true; bay.add(gate);
+    const lintel=new THREE.Mesh(new THREE.BoxGeometry(1.1,0.6,3.3),darkSteel);
+    lintel.position.set(6.6,16,midZ); bay.add(lintel);
+    const hoist=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.35,2.2,12),
+      new THREE.MeshStandardMaterial({color:0x556068,roughness:0.25,metalness:0.92}));
+    hoist.position.set(6.6,17.5,midZ); bay.add(hoist);
+    damGroup.add(bay);
+  }
+});
+// Crest
+const crest=new THREE.Mesh(new THREE.BoxGeometry(12,1.4,54,8,2,16),
+  new THREE.MeshStandardMaterial({color:0xc8cdd2,roughness:0.6,metalness:0.08}));
+crest.position.set(-1,28.8,0); crest.receiveShadow=true; crest.name='坝顶';
+damGroup.add(crest);
+// Powerhouse
+const phGroup=new THREE.Group(); phGroup.name='向家坝电站厂房';
+const phBody=new THREE.Mesh(new THREE.BoxGeometry(14,9,18,6,4,6),
+  new THREE.MeshStandardMaterial({color:0xc0c5ca,roughness:0.7,metalness:0.08}));
+phBody.position.set(-13,4.5,-14); phBody.castShadow=true; phBody.receiveShadow=true; phGroup.add(phBody);
+for(let r=0;r<2;r++) for(let c=0;c<4;c++){
+  const win=new THREE.Mesh(new THREE.PlaneGeometry(1.6,2),
+    new THREE.MeshStandardMaterial({color:0xffdd88,emissive:0xffaa44,emissiveIntensity:1.2,roughness:0.1}));
+  win.name='phWindow_'+r+'_'+c; win.position.set(-13,3+r*3,-20+c*4.2); win.rotation.y=Math.PI/2; phGroup.add(win);
+}
+damGroup.add(phGroup);
+// Apron
+const apron=new THREE.Mesh(new THREE.BoxGeometry(10,1,40,6,2,12),
+  new THREE.MeshStandardMaterial({color:0xa8aeb4,roughness:0.75,metalness:0.06}));
+apron.position.set(10.5,1.5,0); apron.receiveShadow=true; damGroup.add(apron);
+damGroup.position.set(1,1,0);
+scene.add(damGroup);
+
+// ===== 7. WATER =====
+function createWaterMaterial(opts={}){
+  const clr=new THREE.Color(opts.color||0x1a5080);
+  const deep=new THREE.Color(opts.deepColor||0x0a2540);
+  const gClr=new THREE.Color(opts.gridColor||0x00aaff);
+  return new THREE.ShaderMaterial({
+    uniforms:{
+      uTime:{value:0},uColor:{value:clr},uDeepColor:{value:deep},uOpacity:{value:opts.opacity||0.9},
+      uFlowSpeed:{value:opts.flowSpeed||0.8},uSunDir:{value:new THREE.Vector3(0.5,0.35,0.4).normalize()},
+      uGridColor:{value:gClr},uGridDensity:{value:opts.gridDensity||1.5},uGridOpacity:{value:opts.gridOpacity||0.2}
+    },
+    vertexShader:`uniform float uTime;uniform float uFlowSpeed;
+      varying vec3 vWorldPos;varying vec3 vNormal;varying vec3 vViewDir;varying float vWave;
+      void main(){vec3 pos=position;float t=uTime*uFlowSpeed;
+        float w1=sin(pos.x*0.28+t*0.9)*0.38;float w2=cos(pos.z*0.22+t*0.72)*0.28;
+        float w3=sin((pos.x*0.45+pos.z*0.35)+t*1.2)*0.18;float w4=cos(pos.x*0.15-pos.z*0.2+t*0.5)*0.12;
+        pos.y+=w1+w2+w3+w4;vWave=w1+w2+w3;
+        float dx=cos(pos.x*0.28+t*0.9)*0.28*0.38+cos((pos.x*0.45+pos.z*0.35)+t*1.2)*0.45*0.18;
+        float dz=-sin(pos.z*0.22+t*0.72)*0.22*0.28+sin((pos.x*0.45+pos.z*0.35)+t*1.2)*0.35*0.18;
+        vNormal=normalize(normalMatrix*vec3(-dx,1.0,-dz));
+        vec4 wp=modelMatrix*vec4(pos,1.0);vWorldPos=wp.xyz;vViewDir=normalize(cameraPosition-vWorldPos);
+        gl_Position=projectionMatrix*viewMatrix*wp;}`,
+    fragmentShader:`uniform vec3 uColor;uniform vec3 uDeepColor;uniform float uOpacity;
+      uniform vec3 uSunDir;uniform float uTime;uniform vec3 uGridColor;uniform float uGridDensity;uniform float uGridOpacity;
+      varying vec3 vWorldPos;varying vec3 vNormal;varying vec3 vViewDir;varying float vWave;
+      void main(){vec3 N=normalize(vNormal);vec3 V=normalize(vViewDir);vec3 L=normalize(uSunDir);
+        float fresnel=pow(1.0-max(dot(V,N),0.0),4.0);
+        vec3 col=mix(uDeepColor,uColor,0.45+vWave*0.12+fresnel*0.25);
+        float spec=pow(max(dot(reflect(-L,N),V),0.0),180.0)+pow(max(dot(reflect(-L,N),V),0.0),35.0)*0.5;
+        col+=vec3(0.12,0.8,1.0)*spec*0.9;
+        vec2 grid=abs(fract(vWorldPos.xz*uGridDensity)-0.5);
+        float gridLine=1.0-smoothstep(0.0,0.03,min(grid.x,grid.y));
+        col=mix(col,uGridColor,gridLine*uGridOpacity);
+        float foam=smoothstep(0.22,0.45,vWave)*0.1;col+=vec3(foam);
+        gl_FragColor=vec4(col,uOpacity);}`,
+    transparent:true,side:THREE.DoubleSide,depthWrite:true
+  });
+}
+
+const upstreamWM = createWaterMaterial({color:0x1a5080,deepColor:0x0a2540,opacity:0.94,gridColor:0x00aaff,gridDensity:1.2,gridOpacity:0.18,flowSpeed:0.7});
+const upstreamWater = new THREE.Mesh(new THREE.PlaneGeometry(50,40,64,48), upstreamWM);
+upstreamWater.rotation.x=-Math.PI/2; upstreamWater.position.set(-17,1.2,0); upstreamWater.name='上游水面'; upstreamWater.receiveShadow=true;
+scene.add(upstreamWater);
+
+const downstreamWM = createWaterMaterial({color:0x124870,deepColor:0x081830,opacity:0.88,gridColor:0x0088cc,gridDensity:1.4,gridOpacity:0.15,flowSpeed:0.9});
+const downstreamWater = new THREE.Mesh(new THREE.PlaneGeometry(50,28,64,36), downstreamWM);
+downstreamWater.rotation.x=-Math.PI/2; downstreamWater.position.set(26,0.5,0); downstreamWater.name='下游水面'; downstreamWater.receiveShadow=true;
+scene.add(downstreamWater);
+
+// Foam zone
+const foamGeo = new THREE.PlaneGeometry(20,16,48,36);
+const fp=foamGeo.attributes.position;
+for(let i=0;i<fp.count;i++) fp.setZ(i,Math.sin(fp.getX(i)*0.7+fp.getY(i)*0.5)*0.3+Math.sin(fp.getX(i)*1.1+fp.getY(i)*0.8)*0.1);
+foamGeo.computeVertexNormals();
+const foamMesh = new THREE.Mesh(foamGeo,
+  new THREE.MeshStandardMaterial({color:0xd0e8f8,roughness:0.3,metalness:0.03,transparent:true,opacity:0.8}));
+foamMesh.rotation.x=-Math.PI/2; foamMesh.position.set(18,0.45,0); foamMesh.name='湍流泡沫区'; foamMesh.receiveShadow=true;
+scene.add(foamMesh);
+
+// ===== 8. BACKGROUND WAVE =====
+const bgWaveMat = new THREE.ShaderMaterial({
+  uniforms:{uTime:{value:0},uColor:{value:new THREE.Color(0x0a3a6a)}},
+  vertexShader:`varying vec3 vPos;varying float vH;uniform float uTime;
+    void main(){vec3 pos=position;
+      pos.y+=sin(pos.x*0.12+uTime*0.2)*1.5+cos(pos.z*0.1+uTime*0.15)*1.2+sin(pos.z*0.18+uTime*0.25)*0.8;
+      vH=pos.y-position.y;vPos=pos;gl_Position=projectionMatrix*modelViewMatrix*vec4(pos,1.0);}`,
+  fragmentShader:`uniform vec3 uColor;varying float vH;
+    void main(){gl_FragColor=vec4(uColor,0.06+abs(vH)*0.015);}`,
+  transparent:true,depthWrite:false,side:THREE.DoubleSide
+});
+const bgWaveMesh = new THREE.Mesh(new THREE.PlaneGeometry(160,100,64,40), bgWaveMat);
+bgWaveMesh.rotation.x=-Math.PI/2; bgWaveMesh.position.y=-5; bgWaveMesh.renderOrder=-10; bgWaveMesh.name='底部波浪曲面';
+scene.add(bgWaveMesh);
+
+// ===== 9. SENSOR POINTS =====
+const sensorGroup = new THREE.Group();
+sensorGroup.name='传感器组';
+const sensorGeo = new THREE.SphereGeometry(0.35,12,8);
+const sensorMeshes = [];
+SENSOR_DEFS.forEach((def,i)=>{
+  const mat = new THREE.MeshStandardMaterial({color:0x22cc88,emissive:0x22cc88,emissiveIntensity:1.8,roughness:0.2,metalness:0.1});
+  const mesh = new THREE.Mesh(sensorGeo, mat);
+  mesh.position.set(def.x,def.y,def.z);
+  if(def.type==='hydrology'||def.type==='waterQuality') mesh.position.y=1.5;
+  mesh.name=def.name; mesh.userData={sensorId:def.id,index:i,type:def.type};
+  sensorGroup.add(mesh); sensorMeshes.push(mesh);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(0.5,0.08,8,16),
+    new THREE.MeshBasicMaterial({color:0x22cc88,transparent:true,opacity:0.7,depthTest:true}));
+  ring.position.copy(mesh.position); ring.rotation.x=Math.PI/2;
+  ring.userData={parentSensorIndex:i}; ring.name='ring_'+def.id;
+  sensorGroup.add(ring);
+});
+scene.add(sensorGroup);
+
+function updateSensorVisuals(t){
+  sensorMeshes.forEach((mesh,i)=>{
+    const state=sensorStates[i]; if(!state) return;
+    const mat=mesh.material;
+    if(state.alert){
+      mat.color.set(state.alertLevel>=2?0xff2244:0xffa502);
+      mat.emissive.set(state.alertLevel>=2?0xff2244:0xffa502);
+      mat.emissiveIntensity=2.5+Math.sin(t*8+i)*1.5;
+    }else{
+      mat.color.set(0x22cc88); mat.emissive.set(0x22cc88); mat.emissiveIntensity=1.8;
+    }
+    mesh.scale.setScalar(1+Math.sin(t*3+i*0.7)*0.08);
+  });
+  sensorGroup.children.forEach(child=>{
+    if(child.name?.startsWith('ring_')){
+      const idx=child.userData.parentSensorIndex;
+      if(idx!==undefined&&sensorStates[idx]){
+        const state=sensorStates[idx];
+        child.material.color.set(state.alert?(state.alertLevel>=2?0xff3344:0xffa502):0x22cc88);
+        child.material.opacity=0.4+Math.sin(t*5+idx)*0.3;
+        child.scale.setScalar(1+Math.sin(t*4+idx)*0.12);
+      }
+    }
+  });
+}
+
+// ===== 10. POST-PROCESSING =====
+const composer = new EffectComposer(renderer);
+const renderPass = new RenderPass(scene,camera);
+composer.addPass(renderPass);
+const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth,window.innerHeight),0.55,0.5,0.85);
+bloomPass.threshold=0.5; bloomPass.strength=0.55; bloomPass.radius=0.45;
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
+
+// ===== 11. TERRAIN TEXTURE =====
+function createTerrainTexture(size){
+  const canvas=document.createElement('canvas'); canvas.width=canvas.height=size;
+  const ctx=canvas.getContext('2d'); const img=ctx.createImageData(size,size);
+  for(let y=0;y<size;y++) for(let x=0;x<size;x++){
+    const u=x/size,v=y/size;
+    const n=fbm2(u*6,v*6,5,12);
+    let r,g,b;
+    if(n>0.75){r=65;g=82;b=60;}else if(n>0.55){r=35+n*40;g=72+n*58;b=28+n*24;}else{r=40+n*35;g=72+n*48;b=26+n*20;}
+    const idx=(y*size+x)*4;
+    img.data[idx]=Math.min(255,r);img.data[idx+1]=Math.min(255,g);img.data[idx+2]=Math.min(255,b);img.data[idx+3]=255;
+  }
+  ctx.putImageData(img,0,0);
+  const tex=new THREE.CanvasTexture(canvas); tex.wrapS=tex.wrapT=THREE.RepeatWrapping;
+  tex.repeat.set(4,4); tex.colorSpace=THREE.SRGBColorSpace;
+  return {map:tex};
+}
+function fbm2(x,y,octaves,seed){let v=0,a=0.5,f=1;for(let i=0;i<octaves;i++){v+=a*hash2d(x*f+seed+i*17.3,y*f+seed+i*13.7);a*=0.48;f*=2.15;}return v;}
+function hash2d(x,y){const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n);}
+
+// ===== 12. RAYCASTER =====
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let popupData = null;
+
+function getCanvasCoords(e){
+  const rect=webglCanvas.getBoundingClientRect();
+  return {mx:((e.clientX-rect.left)/rect.width)*2-1,my:-((e.clientY-rect.top)/rect.height)*2+1,px:e.clientX-rect.left,py:e.clientY-rect.top};
+}
+
+webglCanvas.addEventListener('click',(e)=>{
+  const {mx,my,px,py}=getCanvasCoords(e);
+  mouse.set(mx,my); raycaster.setFromCamera(mouse,camera);
+  if(popupData){
+    const bx=popupData.x,by=popupData.y,bw=300,bh=180;
+    if(px>=bx+bw-35&&px<=bx+bw-5&&py>=by+5&&py<=by+35){popupData=null;return;}
+    if(px>=bx&&px<=bx+bw&&py>=by&&py<=by+bh) return;
+  }
+  const hits=raycaster.intersectObjects(sensorGroup.children.filter(c=>c.name&&!c.name.startsWith('ring_')),true);
+  if(hits.length>0){
+    let obj=hits[0].object;
+    while(obj){
+      if(obj.userData?.sensorId){
+        const s=sensorStates.find(st=>st.id===obj.userData.sensorId);
+        if(s){popupData={name:s.name,detail:s.value+' '+s.unit+' | 范围:'+s.range[0]+'~'+s.range[1]+' '+s.unit+' | 状态:'+(s.alert?'⚠ 告警':'● 正常'),x:Math.min(px,webglCanvas.width-320),y:Math.min(py,webglCanvas.height-200),color:s.alert?'#ff4757':'#00d4ff'};}
+        return;
+      }
+      obj=obj.parent;
+    }
+    const name=hits[0].object.name;
+    if(name&&(name.includes('坝')||name.includes('阀门')||name.includes('厂房')||name.startsWith('pier_'))){
+      popupData={name:name,detail:'向家坝水电站 BIM 构件 | 金沙江流域 | 坝顶高程 '+XIANGJIABA.crestElevation+'m',x:Math.min(px,webglCanvas.width-320),y:Math.min(py,webglCanvas.height-200),color:'#00d4ff'};
+    }
+  }else{popupData=null;}
+});
+webglCanvas.addEventListener('contextmenu',e=>e.preventDefault());
+
+// ===== 13. 2D HUD =====
+function drawTechBorder(ctx,x,y,w,h,accent){
+  ctx.save(); ctx.strokeStyle=accent; ctx.lineWidth=1.5;
+  ctx.shadowColor=accent; ctx.shadowBlur=6;
+  const cl=14;
+  ctx.beginPath();
+  ctx.moveTo(x,y+cl);ctx.lineTo(x,y);ctx.lineTo(x+cl,y);
+  ctx.moveTo(x+w-cl,y);ctx.lineTo(x+w,y);ctx.lineTo(x+w,y+cl);
+  ctx.moveTo(x+w,y+h-cl);ctx.lineTo(x+w,y+h);ctx.lineTo(x+w-cl,y+h);
+  ctx.moveTo(x+cl,y+h);ctx.lineTo(x,y+h);ctx.lineTo(x,y+h-cl);
+  ctx.stroke();
+  ctx.shadowBlur=0;
+  ctx.beginPath();ctx.roundRect(x+2,y+2,w-4,h-4,4);ctx.lineWidth=0.8;ctx.globalAlpha=0.45;ctx.stroke();
+  ctx.restore();
+}
+
+function drawGauge(ctx,cx,cy,r,val,max,label,unit,color,alert){
+  ctx.save();
+  const ratio=Math.min(1,Math.max(0,val/max));
+  const sa=0.75*Math.PI,ea=2.25*Math.PI,sw=ea-sa;
+  ctx.beginPath();ctx.arc(cx,cy,r,sa,ea);
+  ctx.strokeStyle='rgba(255,255,255,0.08)';ctx.lineWidth=8;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,r,sa,sa+sw*ratio);
+  const g=ctx.createLinearGradient(cx-r,cy,cx+r,cy);
+  g.addColorStop(0,alert?'#ff4757':color);g.addColorStop(1,alert?'#ffa502':'#3b82f6');
+  ctx.strokeStyle=g;ctx.lineWidth=8;ctx.shadowColor=alert?'#ff4757':color;ctx.shadowBlur=10;ctx.stroke();ctx.shadowBlur=0;
+  const pa=sa+sw*ratio;
+  ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(pa)*(r-12),cy+Math.sin(pa)*(r-12));
+  ctx.strokeStyle=alert?'#ff4757':'#fff';ctx.lineWidth=2.5;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle=alert?'#ff4757':'#fff';ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='bold 15px "Microsoft YaHei"';ctx.textAlign='center';
+  ctx.fillText(val.toFixed(1),cx,cy-12);
+  ctx.fillStyle='#7a9ab8';ctx.font='10px "Microsoft YaHei"';ctx.fillText(unit,cx,cy+2);
+  ctx.fillStyle='#c8ddf0';ctx.font='11px "Microsoft YaHei"';ctx.fillText(label,cx,cy-r-12);
+  ctx.restore();
+}
+
+function drawRingChart(ctx,cx,cy,r,segments,colors){
+  ctx.save();
+  const tot=segments.reduce((a,s)=>a+s.value,0)||1;
+  let sa=-0.5*Math.PI; const lw=14;
+  segments.forEach((seg,i)=>{
+    const sw2=(seg.value/tot)*Math.PI*2;
+    ctx.beginPath();ctx.arc(cx,cy,r,sa,sa+sw2);
+    ctx.strokeStyle=colors[i];ctx.lineWidth=lw;ctx.shadowColor=colors[i];ctx.shadowBlur=6;ctx.stroke();
+    sa+=sw2;
+  });ctx.shadowBlur=0;
+  ctx.beginPath();ctx.arc(cx,cy,r-lw,0,Math.PI*2);ctx.fillStyle='rgba(6,14,28,0.9)';ctx.fill();
+  ctx.fillStyle='#fff';ctx.font='bold 13px "Microsoft YaHei"';ctx.textAlign='center';ctx.fillText(''+tot,cx,cy+4);
+  ctx.fillStyle='#7a9ab8';ctx.font='10px "Microsoft YaHei"';ctx.fillText('站点',cx,cy+18);
+  segments.forEach((seg,i)=>{
+    const ly=cy+r+22+i*16;
+    ctx.fillStyle=colors[i];ctx.fillRect(cx-r+4,ly-5,10,10);
+    ctx.fillStyle='#c8ddf0';ctx.font='10px "Microsoft YaHei"';ctx.textAlign='left';
+    ctx.fillText(seg.label+': '+seg.value,cx-r+20,ly+4);
+  });
+  ctx.restore();
+}
+
+function drawProgressCard(ctx,x,y,w,h,title,progress,label){
+  ctx.save(); drawTechBorder(ctx,x,y,w,h,'#1890ff');
+  ctx.fillStyle='#c8ddf0';ctx.font='bold 12px "Microsoft YaHei"';ctx.textAlign='left';ctx.fillText(title,x+12,y+22);
+  const bx=x+12,by=y+38,bw2=w-24,bh=10;
+  ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fillRect(bx,by,bw2,bh);
+  const pg=ctx.createLinearGradient(bx,by,bx+bw2,by);
+  pg.addColorStop(0,'#1890ff');pg.addColorStop(1,'#00d4ff');
+  ctx.fillStyle=pg;ctx.fillRect(bx,by,bw2*(progress/100),bh);
+  ctx.shadowColor='#00d4ff';ctx.shadowBlur=4;ctx.fillRect(bx,by,bw2*(progress/100),bh);ctx.shadowBlur=0;
+  ctx.fillStyle='#fff';ctx.font='bold 14px "Microsoft YaHei"';ctx.textAlign='center';ctx.fillText(Math.round(progress)+'%',x+w/2,by+bh+22);
+  ctx.fillStyle='#7a9ab8';ctx.font='10px "Microsoft YaHei"';ctx.fillText(label,x+w/2,by+bh+36);
+  ctx.restore();
+}
+
+function drawPopup(ctx){
+  if(!popupData) return;
+  const {x,y,name,detail,color}=popupData; const w=300,h=180;
+  ctx.save();
+  ctx.fillStyle='rgba(8,14,26,0.96)';ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.fill();
+  ctx.strokeStyle=color;ctx.lineWidth=1.5;ctx.shadowColor=color;ctx.shadowBlur=12;
+  ctx.beginPath();ctx.roundRect(x,y,w,h,10);ctx.stroke();ctx.shadowBlur=0;
+  ctx.fillStyle=color;ctx.font='bold 15px "Microsoft YaHei"';ctx.textAlign='left';ctx.fillText(name,x+14,y+30);
+  ctx.strokeStyle='rgba(255,255,255,0.15)';ctx.lineWidth=0.8;
+  ctx.beginPath();ctx.moveTo(x+14,y+40);ctx.lineTo(x+w-14,y+40);ctx.stroke();
+  ctx.fillStyle='#c8ddf0';ctx.font='12px "Microsoft YaHei"';
+  const parts=detail.split(' | '); parts.forEach((p,i)=>{ctx.fillText(p,x+14,y+60+i*22);});
+  const cx2=x+w-18,cy=y+18;
+  ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(cx2-6,cy-6);ctx.lineTo(cx2+6,cy+6);ctx.moveTo(cx2+6,cy-6);ctx.lineTo(cx2-6,cy+6);ctx.stroke();
+  ctx.restore();
+}
+
+function renderHUD(t){
+  const dpr=window.devicePixelRatio;
+  const cw=hudCanvas.width/dpr,ch=hudCanvas.height/dpr;
+  hudCtx.clearRect(0,0,cw,ch);
+
+  // Top bar
+  hudCtx.save();
+  hudCtx.fillStyle='rgba(6,13,22,0.85)';hudCtx.fillRect(0,0,cw,48);
+  hudCtx.strokeStyle='rgba(0,180,255,0.25)';hudCtx.lineWidth=1;
+  hudCtx.beginPath();hudCtx.moveTo(0,48);hudCtx.lineTo(cw,48);hudCtx.stroke();
+  hudCtx.strokeStyle='rgba(0,180,255,0.4)';hudCtx.beginPath();hudCtx.roundRect(16,10,200,28,6);hudCtx.stroke();
+  hudCtx.fillStyle='#7a9ab8';hudCtx.font='12px "Microsoft YaHei"';hudCtx.textAlign='left';hudCtx.fillText('\u{1F50D} 数字孪生水电站',28,29);
+  hudCtx.fillStyle='#fff';hudCtx.font='bold 16px "Microsoft YaHei"';hudCtx.textAlign='center';hudCtx.fillText('智慧水电站数字孪生可视化系统',cw/2,24);
+  const now=new Date();
+  const ds=Math.floor(systemUptime/86400);
+  const hs=String(Math.floor((systemUptime%86400)/3600)).padStart(2,'0');
+  const ms=String(Math.floor((systemUptime%3600)/60)).padStart(2,'0');
+  const ss=String(systemUptime%60).padStart(2,'0');
+  hudCtx.fillStyle='#c8ddf0';hudCtx.font='12px "Microsoft YaHei"';hudCtx.textAlign='right';
+  hudCtx.fillText('系统运行 '+ds+' 天 '+hs+':'+ms+':'+ss,cw-16,18);
+  hudCtx.fillText(now.toLocaleDateString('zh-CN')+' '+now.toLocaleTimeString('zh-CN',{hour12:false}),cw-16,36);
+  hudCtx.restore();
+
+  // Left panel
+  const lx=12,lw=220;
+  const envY=62;
+  drawTechBorder(hudCtx,lx,envY,lw,150,'#1890ff');
+  hudCtx.fillStyle='#c8ddf0';hudCtx.font='bold 13px "Microsoft YaHei"';hudCtx.textAlign='left';hudCtx.fillText('\u{1F33F} 环境监测',lx+12,envY+22);
+  [{l:'气温',v:22.5+Math.sin(t*0.3)*3,u:'°C'},{l:'湿度',v:65+Math.sin(t*0.2+1)*10,u:'%'},{l:'风速',v:3.5+Math.sin(t*0.35+2)*2,u:'m/s'},{l:'降雨量',v:Math.max(0,Math.sin(t*0.15+3)*5),u:'mm/h'}].forEach((it,i)=>{
+    const iy=envY+48+i*26;
+    hudCtx.fillStyle='#7a9ab8';hudCtx.font='11px "Microsoft YaHei"';hudCtx.fillText(it.l,lx+16,iy+14);
+    hudCtx.fillStyle='#fff';hudCtx.font='bold 14px "Microsoft YaHei"';hudCtx.fillText(it.v.toFixed(1),lx+60,iy+14);
+    hudCtx.fillStyle='#7a9ab8';hudCtx.font='10px "Microsoft YaHei"';hudCtx.fillText(it.u,lx+108,iy+14);
+  });
+  const wlY=envY+162;
+  drawTechBorder(hudCtx,lx,wlY,lw,130,'#00d4ff');
+  hudCtx.fillStyle='#c8ddf0';hudCtx.font='bold 13px "Microsoft YaHei"';hudCtx.textAlign='left';hudCtx.fillText('\u{1F4A7} 水位数据',lx+12,wlY+22);
+  [{lab:'上游水位',val:sensorStates[0]?.value||380,unt:'m',al:sensorStates[0]?.alert},{lab:'下游水位',val:sensorStates[2]?.value||278.5,unt:'m',al:sensorStates[2]?.alert}].forEach((it,i)=>{
+    const iy=wlY+48+i*30;
+    hudCtx.fillStyle='#7a9ab8';hudCtx.font='11px "Microsoft YaHei"';hudCtx.fillText(it.lab,lx+16,iy+14);
+    hudCtx.fillStyle=it.al?'#ff4757':'#00d4ff';hudCtx.font='bold 18px "Microsoft YaHei"';
+    hudCtx.shadowColor=it.al?'#ff4757':'#00d4ff';hudCtx.shadowBlur=6;hudCtx.fillText(it.val.toFixed(2),lx+80,iy+14);hudCtx.shadowBlur=0;
+    hudCtx.fillStyle='#7a9ab8';hudCtx.font='10px "Microsoft YaHei"';hudCtx.fillText(it.unt,lx+148,iy+14);
+  });
+
+  // Right panel
+  const rx=cw-240,rw=226;
+  const gY=58;
+  drawTechBorder(hudCtx,rx,gY,rw,175,'#00d4ff');
+  hudCtx.fillStyle='#c8ddf0';hudCtx.font='bold 13px "Microsoft YaHei"';hudCtx.textAlign='center';hudCtx.fillText('\u{1F52C} 水质仪表盘',rx+rw/2,gY+22);
+  const wT=sensorStates.find(s=>s.id==='s18')?.value||22;
+  const wPh=sensorStates.find(s=>s.id==='s14')?.value||7.2;
+  const wCond=450+Math.sin(t*0.4)*50;
+  drawGauge(hudCtx,rx+38,gY+115,28,wT,45,'水温','°C','#00d4ff',wT>35);
+  drawGauge(hudCtx,rx+113,gY+115,28,wPh,14,'PH','','#2ed573',wPh>8||wPh<6.5);
+  drawGauge(hudCtx,rx+188,gY+115,28,wCond,1000,'电导率','μS','#ffa502',wCond>800);
+
+  const rcY=gY+186;
+  drawTechBorder(hudCtx,rx,rcY,rw,218,'#1890ff');
+  hudCtx.fillStyle='#c8ddf0';hudCtx.font='bold 13px "Microsoft YaHei"';hudCtx.textAlign='center';hudCtx.fillText('\u{1F4CD} 监测站点分布',rx+rw/2,rcY+22);
+  drawRingChart(hudCtx,rx+60,rcY+90,35,[{label:'水文',value:6},{label:'结构',value:5},{label:'水质',value:2},{label:'气象',value:3},{label:'电气',value:2},{label:'地质',value:2}],['#00d4ff','#ffa502','#2ed573','#ff6b9d','#a78bfa','#f59e0b']);
+
+  const ppY=rcY+228;
+  drawProgressCard(hudCtx,rx,ppY,rw,88,'\u{1F4CB} 巡检进度统计',78+Math.sin(t*0.1)*5,'本月已完成 12/15 项');
+
+  if(anomalyCount>0){
+    const ax=cw-260,ay=ppY+100;
+    hudCtx.fillStyle='rgba(255,30,30,0.15)';hudCtx.beginPath();hudCtx.roundRect(ax,ay,250,40,8);hudCtx.fill();
+    hudCtx.strokeStyle='rgba(255,71,87,0.6)';hudCtx.lineWidth=1.5;hudCtx.beginPath();hudCtx.roundRect(ax,ay,250,40,8);hudCtx.stroke();
+    hudCtx.fillStyle='#ff4757';hudCtx.font='bold 13px "Microsoft YaHei"';hudCtx.textAlign='center';
+    hudCtx.shadowColor='#ff4757';hudCtx.shadowBlur=8;hudCtx.fillText('⚠ 系统告警：'+anomalyCount+' 个传感器异常',ax+125,ay+27);hudCtx.shadowBlur=0;
+  }
+
+  drawPopup(hudCtx);
+}
+
+// ===== 14. MAIN LOOP =====
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=clock.getDelta(); const t=clock.getElapsedTime();
+  controls.update();
+  updateSensorData(t*1000);
+  upstreamWM.uniforms.uTime.value=t;
+  downstreamWM.uniforms.uTime.value=t;
+  bgWaveMat.uniforms.uTime.value=t;
+  capMat.uniforms.uTime.value=t;
+  updateSensorVisuals(t);
+  composer.render();
+  hudCanvas.width=webglCanvas.clientWidth*window.devicePixelRatio;
+  hudCanvas.height=webglCanvas.clientHeight*window.devicePixelRatio;
+  hudCtx.setTransform(1,0,0,1,0,0); hudCtx.scale(window.devicePixelRatio,window.devicePixelRatio);
+  renderHUD(t);
+}
+
+// ===== 15. RESIZE + START =====
+function handleResize(){
+  const w=appDiv.clientWidth,h=appDiv.clientHeight;
+  renderer.setSize(w,h); composer.setSize(w,h);
+  camera.aspect=w/Math.max(h,1); camera.updateProjectionMatrix();
+  hudCanvas.width=w*window.devicePixelRatio; hudCanvas.height=h*window.devicePixelRatio;
+  hudCtx.setTransform(1,0,0,1,0,0); hudCtx.scale(window.devicePixelRatio,window.devicePixelRatio);
+}
+window.addEventListener('resize',handleResize);
+handleResize();
+animate();
+
+console.log('\u{1F680} 智慧水电站数字孪生可视化系统已就绪');
+console.log('  左键拖拽旋转 | 滚轮缩放 | 右键平移');
+console.log('  点击传感器/设备查看详情 | 自动告警模拟中...');
+</script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Cesium 3D 数字孪生（不提交）
+node_modules/cesium
+node_modules/vite-plugin-cesium
+src/views/simulation/SimulationPage.vue
+public/dam-generator.html
+public/models/
+water-conservancy-dist-20260704.zip

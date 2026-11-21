@@ -1,0 +1,102 @@
+// ============================================================
+// 全局文本风格 — 所有页面通过 @use 引用
+// ============================================================
+@use './design-tokens.scss' as *;
+
+// ── 面板 / 区块标题 (17px / 600 / #1e293b) ──
+@mixin text-section-title {
+  font-size: $font-size-section-title;
+  font-weight: 600;
+  color: $color-heading;
+}
+
+// ── KPI 数值 (24px / 700 / #1e293b / 等宽) ──
+@mixin text-kpi-value {
+  font-size: $font-size-kpi-value;
+  font-weight: 700;
+  color: $color-heading;
+  font-family: $font-mono;
+}
+
+// ── KPI 单位 (12px / 400 / 副色) ──
+@mixin text-kpi-unit {
+  font-size: $font-size-xs;
+  font-weight: 400;
+  color: $color-cell-dim;
+}
+
+// ── KPI 标签 (13px / 500 / #64748b) ──
+@mixin text-kpi-label {
+  font-size: $font-size-sm;
+  font-weight: 500;
+  color: $color-label;
+}
+
+// ── 表格表头 (14px / 600 / #64748b) ──
+@mixin text-table-header {
+  font-size: $font-size-table-header;
+  font-weight: 600;
+  color: $color-label;
+}
+
+// ── 表格正文数值 (15px / 400 / #334155 / 等宽) ──
+@mixin text-table-cell {
+  font-size: $font-size-table-cell;
+  font-weight: 400;
+  color: $color-cell;
+}
+
+// ── 表格数值列 (15px / 700 / #1e293b / 等宽) ──
+@mixin text-table-number {
+  font-size: $font-size-table-cell;
+  font-weight: 700;
+  color: $color-heading;
+  font-family: $font-mono;
+}
+
+// ── 表格时间/名称列 (15px / 500 / #1e293b) ──
+@mixin text-table-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: $color-heading;
+}
+
+// ── 筛选标签 (14px / 500 / #64748b) ──
+@mixin text-tag {
+  font-size: $font-size-base;
+  font-weight: 500;
+  color: $color-label;
+}
+
+// ── 筛选标签激活态 — 由组件自行设置 background / color ──
+@mixin text-tag-active {
+  color: #fff;
+}
+
+// ── 列表 / 日志正文 (15px / 400 / #475569) ──
+@mixin text-log {
+  font-size: 15px;
+  font-weight: 400;
+  color: #475569;
+}
+
+// ── 时间戳 (14px / 400 / 副色 / 等宽) ──
+@mixin text-timestamp-mono {
+  font-size: 15px;
+  font-weight: 400;
+  color: $color-cell-dim;
+  font-family: $font-mono;
+}
+
+// ── 按钮文字 (15px / 600) ──
+@mixin text-btn {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+// ── 输入框文字 (15px / 500 / #1e293b) ──
+@mixin text-input {
+  font-size: 15px;
+  font-weight: 500;
+  color: $color-heading;
+}

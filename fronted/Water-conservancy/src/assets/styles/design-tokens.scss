@@ -1,0 +1,89 @@
+// ============================================================
+// 设计 Token — 全局 CSS 变量
+// 按《前端开发规范与最佳实践》1.3 节要求集中管理
+// ============================================================
+
+// ---------- 品牌色 ----------
+$color-primary: #1890ff;
+$color-accent: #00d4ff;
+$color-secondary: #6b7280;
+$color-success: #22c55e;
+$color-warning: #f59e0b;
+$color-error: #ef4444;
+$color-info: #3b82f6;
+
+// ---------- 布局色（明亮登录背景蓝 — 页眉 / 侧边栏） ----------
+$color-layout-blue: #1a3a5c;
+$color-layout-blue-header: #1e5090;
+$color-layout-blue-deep: #2563ab;
+$color-layout-blue-accent: #2e66b8;
+$color-layout-blue-bright: #4a90d9;
+$color-layout-blue-mid: #3572b8;
+$color-layout-blue-border: rgba(255, 255, 255, 0.2);
+$color-layout-blue-active: rgba(255, 255, 255, 0.14);
+$color-layout-blue-active-border: #8ec5ff;
+$color-layout-blue-text: #ffffff;
+$color-layout-blue-text-secondary: rgba(255, 255, 255, 0.78);
+$color-layout-blue-brand: #a8d4ff;
+$color-layout-blue-glow: rgba(110, 179, 255, 0.45);
+
+// ---------- 中性色（内容区浅色） ----------
+$color-bg: #ffffff;
+$color-bg-dark: #f0f4f8;
+$color-bg-panel: #{$color-layout-blue-header};
+$color-bg-sidebar: #{$color-layout-blue};
+$color-text: #1d2129;
+$color-text-secondary: #6b7280;
+$color-text-disabled: #c0c4cc;
+$color-sidebar-text: #4e5969;
+$color-border: #e5e6eb;
+
+// ---------- 字体 ----------
+$font-size-xs: 12px;
+$font-size-sm: 13px;
+$font-size-base: 14px;
+$font-size-lg: 16px;
+$font-size-xl: 20px;
+
+// 业务常用字号
+$font-size-kpi-value: 24px;   // KPI 数值
+$font-size-section-title: 17px; // 面板标题
+$font-size-table-cell: 16px;   // 表格单元格
+$font-size-table-header: 15px; // 表格表头
+
+// ECharts 坐标轴字号
+$font-size-chart-axis: 13px;
+
+// 等宽字体栈
+$font-mono: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'Fira Code', monospace;
+
+// 业务常用字色
+$color-heading: #1e293b;       // 标题/名称
+$color-label: #64748b;         // 标签/副文本
+$color-cell: #334155;          // 表格正文
+$color-cell-dim: #94a3b8;      // 表格单位/次要
+
+// ---------- 间距 ----------
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 12px;
+$spacing-lg: 16px;
+$spacing-xl: 24px;
+
+// ---------- 圆角 ----------
+$border-radius-sm: 4px;
+$border-radius-base: 6px;
+$border-radius-lg: 8px;
+
+// ---------- 阴影 ----------
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-base: 0 2px 8px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.12);
+
+// ---------- 布局 ----------
+$sider-width: 240px;
+$header-height: 56px;
+$tabs-height: 44px;
+$footer-height: 48px;
+$content-min-width: 1200px;
+$content-max-width: 1440px;
