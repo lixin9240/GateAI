@@ -80,10 +80,21 @@ class EquipmentSeeder extends Seeder
     private function reservoirShortCodes($reservoirs): array
     {
         $map = [];
+        $partsMap = [];
         foreach ($reservoirs as $r) {
             $parts = explode('_', str_replace('-', '_', $r->code));
+            $partsMap[$r->id] = $parts;
             $map[$r->id] = strtoupper($parts[0]);
         }
+
+        // 多个水库前缀相同时（如 RES-UP / RES-DOWN），追加第二段避免设备编码重复
+        $counts = array_count_values($map);
+        foreach ($map as $id => $code) {
+            if ($counts[$code] > 1) {
+                $map[$id] = strtoupper(implode('', array_slice($partsMap[$id], 0, 2)));
+            }
+        }
+
         return $map;
     }
 
