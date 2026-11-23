@@ -53,7 +53,7 @@ Nginx（宝塔站点，根目录指向前端 dist）
 ### 4.1 上传代码并安装依赖
 
 ```bash
-cd /www/wwwroot/GateAI/GateAI
+cd /www/wwwroot/GateAI/backend
 composer install --no-dev --optimize-autoloader
 cp .env.example .env      # 如果 .env 不存在
 ```
@@ -157,7 +157,7 @@ location / {
 server {
     listen 8089;
     server_name _;
-    root /www/wwwroot/GateAI/GateAI/public;
+    root /www/wwwroot/GateAI/backend/public;
     index index.php;
 
     location / {
@@ -203,13 +203,13 @@ memory_limit = 256M
 **队列 worker**
 
 ```bash
-/www/server/php/82/bin/php /www/wwwroot/GateAI/GateAI/artisan queue:work --sleep=3 --tries=3 --timeout=600
+/www/server/php/82/bin/php /www/wwwroot/GateAI/backend/artisan queue:work --sleep=3 --tries=3 --timeout=600
 ```
 
 **Reverb WebSocket**
 
 ```bash
-/www/server/php/82/bin/php /www/wwwroot/GateAI/GateAI/artisan reverb:start --host=127.0.0.1 --port=8080
+/www/server/php/82/bin/php /www/wwwroot/GateAI/backend/artisan reverb:start --host=127.0.0.1 --port=8080
 ```
 
 要求：
