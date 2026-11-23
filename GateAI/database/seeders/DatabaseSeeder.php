@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             AlarmSeeder::class,
             EquipmentSeeder::class,
             MonitoringDataSeeder::class,
+            RecentMonitoringDataSeeder::class,
             PhysicsGuardConfigSeeder::class,
             ModelMetricSeeder::class,
             GateInterlockRuleSeeder::class,
